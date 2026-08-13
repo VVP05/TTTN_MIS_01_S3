@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sinh viên - QUẢN LÝ TTTN</title>
+    
+    <!-- Link Font & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin-students.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- SIDEBAR (Khớp 100% theo ảnh) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                <span class="brand-name">QUẢN LÝ TTTN</span>
+            </div>
+
+            <div class="sidebar-menu-wrapper">
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-dashboard.html">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">QUẢN LÝ NGƯỜI DÙNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item active">
+                        <a href="admin-students.html">
+                            <i class="fa-solid fa-user-graduate"></i>
+                            <span>Quản lý sinh viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-lecturers.html">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <span>Quản lý giảng viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-accounts.html">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <span>Tài khoản Admin</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">QUẢN LÝ NGHIỆP VỤ</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-topics.html">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                            <span>Duyệt đề tài</span>
+                            <span class="sidebar-badge">7</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-teams.html">
+                            <i class="fa-solid fa-users-rectangle"></i>
+                            <span>Nhóm & Phân công</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-milestones.html">
+                            <i class="fa-regular fa-calendar-check"></i>
+                            <span>Milestone & Hạn nộp</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-notifications.html">
+                            <i class="fa-bullhorn fa-solid"></i>
+                            <span>Thông báo hệ thống</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">HỆ THỐNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-logs.html">
+                            <i class="fa-solid fa-newspaper"></i>
+                            <span>Nhật ký hoạt động</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-content">
+            
+            <!-- TOPBAR (Khớp chuẩn theo ảnh) -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="topbar-right">
+                    <div class="semester-pill">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <select class="semester-select">
+                            <option>Học kỳ 2 (2025 - 2026)</option>
+                            <option>Học kỳ 1 (2025 - 2026)</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </div>
+
+                    <div class="notification-icon">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="notif-badge">12</span>
+                    </div>
+
+                    <div class="user-info">
+                        <i class="fa-solid fa-circle-user avatar"></i>
+                        <span class="user-name">Quản Trị Viên</span>
+                        <span class="role-badge">ADMIN</span>
+                    </div>
+
+                    <button class="btn-logout-top" id="openLogoutBtn">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTAINER NỘI DUNG QUẢN LÝ SINH VIÊN -->
+            <main class="page-body">
+                
+                <div class="page-title-box">
+                    <div>
+                        <h2>Danh sách Sinh viên</h2>
+                        <p class="subtitle">Quản lý danh sách sinh viên tham gia đợt Thực tập tốt nghiệp.</p>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-export"></i> Xuất Excel</button>
+                        <button class="btn btn-outline btn-success-light" id="openImportBtn"><i class="fa-solid fa-file-excel"></i> Import Excel</button>
+                        <button class="btn btn-primary" id="openAddBtn"><i class="fa-solid fa-plus"></i> Thêm sinh viên</button>
+                    </div>
+                </div>
+
+                <!-- BỘ LỌC TÌM KIẾM -->
+                <div class="card-panel">
+                    <div class="filter-bar">
+                        <div class="search-input-group">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm theo MSSV, Họ và tên...">
+                        </div>
+
+                        <div class="filter-controls">
+                            <select id="classFilter" class="select-box">
+                                <option value="">Tất cả Lớp</option>
+                                <option value="IT1">IT1 - Kỹ thuật phần mềm</option>
+                                <option value="IT2">IT2 - Hệ thống thông tin</option>
+                            </select>
+
+                            <select id="statusFilter" class="select-box">
+                                <option value="">Trạng thái Đề tài</option>
+                                <option value="APPROVED">Đã có đề tài</option>
+                                <option value="PENDING">Chờ phê duyệt</option>
+                                <option value="NONE">Chưa có nhóm</option>
+                            </select>
+
+                            <button id="resetFilterBtn" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BẢNG DỮ LIỆU -->
+                <div class="card-panel margin-top-16">
+                    <div class="table-container">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th width="40"><input type="checkbox" id="checkAll"></th>
+                                    <th>MSSV</th>
+                                    <th>Họ và Tên</th>
+                                    <th>Lớp</th>
+                                    <th>Chuyên ngành</th>
+                                    <th>Email</th>
+                                    <th>Trạng thái Đề tài</th>
+                                    <th class="text-center" width="100">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody">
+                                <!-- JS render vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PHÂN TRANG -->
+                    <div class="table-footer">
+                        <span class="pagination-text" id="paginationInfo">Hiển thị 1 - 5 trên tổng số 5 sinh viên</span>
+                        <div class="pagination-btns">
+                            <button class="page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA SINH VIÊN -->
+    <div id="studentModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 id="modalTitle">Thêm Sinh viên mới</h3>
+                <span class="close-modal" id="closeStudentModal">&times;</span>
+            </div>
+            <form id="studentForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Mã Sinh Viên (MSSV) *</label>
+                        <input type="text" id="studentIdInput" placeholder="SV220101" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và Tên *</label>
+                        <input type="text" id="studentNameInput" placeholder="Nguyễn Văn A" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Lớp học *</label>
+                        <input type="text" id="studentClassInput" placeholder="IT1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Chuyên ngành</label>
+                        <select id="studentMajorInput" class="select-box full-width">
+                            <option value="Kỹ thuật Phần mềm">Kỹ thuật Phần mềm</option>
+                            <option value="Hệ thống Thông tin">Hệ thống Thông tin</option>
+                            <option value="Mạng máy tính">Mạng máy tính</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label>Email *</label>
+                        <input type="email" id="studentEmailInput" placeholder="student@st.vnu.edu.vn" required>
+                    </div>
+                </div>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-outline" id="cancelStudentModal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-card modal-sm text-center">
+            <div class="modal-icon-red"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p class="margin-top-8">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
+            <div class="modal-foot center margin-top-16">
+                <button class="btn btn-outline" id="cancelLogout">Hủy</button>
+                <button class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/admin-students.js"></script>
+</body>
+</html>

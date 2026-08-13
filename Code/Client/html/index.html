@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Đăng nhập | Hệ thống Quản lý TTTN</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <!-- ===== BACKGROUND ===== -->
+    <div class="background-decoration">
+        <div class="wave wave-1"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-3"></div>
+    </div>
+
+
+    <!-- ===== LOGIN PAGE ===== -->
+    <main class="login-page">
+
+        <!-- ===== LOGIN CARD ===== -->
+        <div class="login-container">
+
+            <!-- Logo -->
+            <div class="login-header">
+
+                <div class="logo-circle">
+                    🎓
+                </div>
+
+                <h2>
+                    QUẢN LÝ THỰC TẬP TỐT NGHIỆP
+                </h2>
+
+                <p>
+                    
+                </p>
+
+            </div>
+
+
+            <!-- ===== LOGIN FORM ===== -->
+            <form id="loginForm" class="login-form">
+
+                <!-- Mã định danh -->
+                <div class="form-group">
+
+                    <label for="userCode">
+                        Mã định danh
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                        
+                        </span>
+
+                        <input
+                            type="text"
+                            id="userCode"
+                            placeholder="Nhập MSSV / Mã GV "
+                            autocomplete="off"
+                            required
+                        />
+
+                    </div>
+
+                </div>
+
+
+                <!-- Mật khẩu -->
+                <div class="form-group">
+
+                    <label for="password">
+                        Mật khẩu
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                    
+                        </span>
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="••••••••••"
+                            required
+                        />
+
+                    </div>
+
+                </div>
+
+
+                <!-- Thông báo lỗi -->
+                <div
+                    id="errorMessage"
+                    class="error-message">
+                </div>
+
+
+                <!-- Nút đăng nhập -->
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="btn-submit">
+
+                    <span>
+                        Đăng nhập hệ thống
+                    </span>
+
+                </button>
+
+            </form>
+
+
+            <!-- ===== FOOTER ===== -->
+            <div class="login-footer">
+
+                <p>
+                   
+                </p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script src="../js/login.js"></script>
+
+</body>
+</html>

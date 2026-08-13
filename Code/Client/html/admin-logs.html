@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật Ký Hoạt Động - QUẢN LÝ TTTN</title>
+
+    <!-- Font & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin-logs.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                <span class="brand-name">QUẢN LÝ TTTN</span>
+            </div>
+
+            <div class="sidebar-menu-wrapper">
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-dashboard.html">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">QUẢN LÝ NGƯỜI DÙNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-students.html">
+                            <i class="fa-solid fa-user-graduate"></i>
+                            <span>Quản lý sinh viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-lecturers.html">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <span>Quản lý giảng viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-accounts.html">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <span>Tài khoản Admin</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">QUẢN LÝ NGHIỆP VỤ</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-topics.html">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                            <span>Duyệt đề tài</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-teams.html">
+                            <i class="fa-solid fa-users-rectangle"></i>
+                            <span>Nhóm & Phân công</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-milestones.html">
+                            <i class="fa-regular fa-calendar-check"></i>
+                            <span>Milestone & Hạn nộp</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-notifications.html">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            <span>Thông báo hệ thống</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">HỆ THỐNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item active">
+                        <a href="admin-logs.html">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Nhật ký hoạt động</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="topbar-right">
+                    <div class="semester-pill">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <select class="semester-select">
+                            <option>Học kỳ 2 (2025 - 2026)</option>
+                            <option>Học kỳ 1 (2025 - 2026)</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </div>
+
+                    <div class="notification-icon">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="notif-badge">12</span>
+                    </div>
+
+                    <div class="user-info">
+                        <i class="fa-solid fa-circle-user avatar"></i>
+                        <span class="user-name">Quản Trị Viên</span>
+                        <span class="role-badge">ADMIN</span>
+                    </div>
+
+                    <button class="btn-logout-top" id="openLogoutBtn">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- PAGE BODY -->
+            <main class="page-body">
+                <div class="page-title-box">
+                    <div>
+                        <h2>Nhật Ký Hoạt Động Hệ Thống</h2>
+                        <p class="subtitle">Theo dõi và truy vết tất cả các thao tác của người dùng trên hệ thống.</p>
+                    </div>
+                    <button class="btn btn-outline" id="exportLogBtn">
+                        <i class="fa-solid fa-file-export"></i> Xuất File Log (.CSV)
+                    </button>
+                </div>
+
+                <!-- SUMMARY CARDS -->
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-icon blue"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="summary-info">
+                            <span class="summary-label">Tổng số thao tác</span>
+                            <strong class="summary-value" id="totalLogs">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-icon green"><i class="fa-solid fa-user-shield"></i></div>
+                        <div class="summary-info">
+                            <span class="summary-label">Thao tác Admin</span>
+                            <strong class="summary-value" id="adminLogs">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-icon purple"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <div class="summary-info">
+                            <span class="summary-label">Thao tác Giảng viên</span>
+                            <strong class="summary-value" id="lecturerLogs">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-icon orange"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="summary-info">
+                            <span class="summary-label">Thao tác Sinh viên</span>
+                            <strong class="summary-value" id="studentLogs">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BẢNG DỮ LIỆU & BỘ LỌC -->
+                <div class="card-panel margin-top-20">
+                    <div class="filter-bar">
+                        <div class="search-input-group">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm theo Tên người thực hiện, Hành động...">
+                        </div>
+
+                        <div class="filter-controls">
+                            <select id="roleFilter" class="select-box">
+                                <option value="">Tất cả Vai trò</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="LECTURER">Giảng viên</option>
+                                <option value="STUDENT">Sinh viên</option>
+                            </select>
+
+                            <select id="actionTypeFilter" class="select-box">
+                                <option value="">Tất cả Thao tác</option>
+                                <option value="CREATE">Tạo mới / Thêm</option>
+                                <option value="UPDATE">Cập nhật / Sửa</option>
+                                <option value="DELETE">Xóa dữ liệu</option>
+                                <option value="AUTH">Đăng nhập / Đăng xuất</option>
+                            </select>
+
+                            <button id="resetFilterBtn" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container margin-top-16">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th width="160">Thời Gian</th>
+                                    <th width="200">Người Thực Hiện</th>
+                                    <th width="120">Vai Trò</th>
+                                    <th width="120">Thao Tác</th>
+                                    <th>Nội Dung Chi Tiết Hành Động</th>
+                                    <th width="130" class="text-center">Địa Chỉ IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <!-- JS render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-card modal-sm text-center">
+            <div class="modal-icon-red"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p class="margin-top-8">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
+            <div class="modal-foot center margin-top-16">
+                <button class="btn btn-outline" id="cancelLogout">Hủy</button>
+                <button class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/admin-logs.js"></script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý TTTN | Cổng Quản Trị Viên</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Thư viện Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item active"><a href="admin-dashboard.html"><i class="fa-solid fa-layer-group"></i> Tổng quan</a></li>
+                    </ul>
+
+                    <div class="menu-group-title">QUẢN LÝ NGƯỜI DÙNG</div>
+                    <ul>
+                        <li class="menu-item"><a href="admin-students.html"><i class="fa-solid fa-user-graduate"></i> Quản lý sinh viên</a></li>
+                        <li class="menu-item"><a href="admin-lecturers.html"><i class="fa-solid fa-chalkboard-user"></i> Quản lý giảng viên</a></li>
+                        <li class="menu-item"><a href="admin-accounts.html"><i class="fa-solid fa-user-shield"></i> Tài khoản Admin</a></li>
+                    </ul>
+
+                    <div class="menu-group-title">QUẢN LÝ NGHIỆP VỤ</div>
+                    <ul>
+                        <li class="menu-item">
+                            <a href="admin-topics.html">
+                                <i class="fa-solid fa-book-bookmark"></i> Duyệt đề tài 
+                                <span class="badge-menu blue" id="pendingTopicsBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="menu-item"><a href="admin-groups.html"><i class="fa-solid fa-users-viewfinder"></i> Nhóm & Phân công</a></li>
+                        <li class="menu-item"><a href="admin-milestones.html"><i class="fa-solid fa-calendar-check"></i> Milestone & Hạn nộp</a></li>
+                        <li class="menu-item"><a href="admin-notifications.html"><i class="fa-solid fa-bullhorn"></i> Thông báo hệ thống</a></li>
+                    </ul>
+
+                    <div class="menu-group-title">HỆ THỐNG</div>
+                    <ul>
+                        <li class="menu-item"><a href="admin-logs.html"><i class="fa-solid fa-clipboard-list"></i> Nhật ký hoạt động</a></li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <div class="semester-filter">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <select id="semesterSelect" class="select-clean">
+                            <option value="HK1-2025-2026">Học kỳ 1 (2025 - 2026)</option>
+                            <option value="HK2-2025-2026" selected>Học kỳ 2 (2025 - 2026)</option>
+                            <option value="HK1-2026-2027">Học kỳ 1 (2026 - 2027)</option>
+                        </select>
+                    </div>
+                    <div class="notification-btn" id="notificationBtn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge-count" id="notificationBadge">0</span>
+                    </div>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Đang tải...</span>
+                        <span class="user-badge">ADMIN</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <main class="content-body">
+                
+                <!-- WELCOME BANNER -->
+                <div class="welcome-banner">
+                    <h1>Tổng quan hệ thống</h1>
+                    <p>Chào mừng quay trở lại, <span id="welcomeAdminName">Admin</span>. Dưới đây là tình hình hoạt động đợt Thực tập tốt nghiệp.</p>
+                </div>
+
+                <!-- 1. HÀNG 5 THẺ KPI THỐNG KÊ -->
+                <div class="kpi-grid-5">
+                    <div class="kpi-card card-blue">
+                        <div class="kpi-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="kpi-info">
+                            <h2 class="kpi-value" id="kpiStudents">0</h2>
+                            <span class="kpi-title">Sinh viên</span>
+                            <small class="kpi-trend text-green" id="kpiStudentsTrend">Tổng số sinh viên</small>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card card-green">
+                        <div class="kpi-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <div class="kpi-info">
+                            <h2 class="kpi-value" id="kpiLecturers">0</h2>
+                            <span class="kpi-title">Giảng viên</span>
+                            <small class="kpi-trend text-green" id="kpiLecturersTrend">Tổng số giảng viên</small>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card card-orange">
+                        <div class="kpi-icon"><i class="fa-solid fa-folder-open"></i></div>
+                        <div class="kpi-info">
+                            <h2 class="kpi-value" id="kpiTotalTopics">0</h2>
+                            <span class="kpi-title">Đề tài đăng ký</span>
+                            <small class="kpi-trend text-green" id="kpiTopicsTrend">Tổng đề tài hệ thống</small>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card card-purple">
+                        <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="kpi-info">
+                            <h2 class="kpi-value" id="kpiApprovedTopics">0</h2>
+                            <span class="kpi-title">Đã phê duyệt</span>
+                            <small class="kpi-trend text-blue" id="kpiApprovedRatio">
+                                <span class="mini-stat"><i class="fa-solid fa-chalkboard-user"></i> GV: 0</span>
+                                <span class="mini-stat"><i class="fa-solid fa-user-graduate"></i> SV: 0</span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card card-red">
+                        <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        <div class="kpi-info">
+                            <h2 class="kpi-value" id="kpiPendingTopics">0</h2>
+                            <span class="kpi-title">Chờ phê duyệt</span>
+                            <small class="kpi-trend text-red">Cần xử lý ngay</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. KHU VỰC BIỂU ĐỒ & HOẠT ĐỘNG GẦN ĐÂY -->
+                <div class="grid-3-col margin-top-24">
+                    <div class="card-box">
+                        <div class="card-header">
+                            <h3>Thống kê đăng ký theo tháng</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="registrationChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card-box">
+                        <div class="card-header">
+                            <h3>Tỷ lệ trạng thái đề tài</h3>
+                        </div>
+                        <div class="chart-container doughnut-wrapper">
+                            <canvas id="statusChart"></canvas>
+                            <div class="chart-center-text">
+                                <span class="total-num" id="doughnutTotal">0</span>
+                                <span class="total-label">Tổng đề tài</span>
+                            </div>
+                        </div>
+                        <div class="chart-legend-list" id="statusLegend"></div>
+                    </div>
+
+                    <div class="card-box">
+                        <div class="card-header">
+                            <h3>Hoạt động mới nhất</h3>
+                            <a href="admin-logs.html" class="link-more">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                        <div class="activity-list" id="recentActivitiesList">
+                            <div class="text-center p-3 text-muted">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Đang tải hoạt động...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. KHU VỰC BẢNG ĐỀ TÀI & THAO TÁC NHANH -->
+                <div class="grid-2-1 margin-top-24">
+                    <div class="card-box">
+                        <div class="card-header">
+                            <h3>Đề tài chờ phê duyệt</h3>
+                            <a href="admin-topics.html" class="link-more">Duyệt tất cả <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                               <thead>
+                                   <tr>
+                                       <th>Mã DT</th>
+                                       <th>Tên đề tài</th>
+                                       <th>Nhóm SV</th>
+                                       <th>GV Hướng dẫn</th>
+                                       <th>Thao tác</th>
+                                   </tr>
+                               </thead>
+                               <tbody id="pendingTopicsTable">
+                                   <tr>
+                                       <td colspan="5" style="text-align: center; padding: 20px;">
+                                           <i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                                       </td>
+                                   </tr>
+                               </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Thao tác nhanh -->
+                    <div class="card-box">
+                        <div class="card-header">
+                            <h3>Thao tác nhanh</h3>
+                        </div>
+                        <div class="quick-action-grid">
+                            <a href="admin-students.html?action=import" class="quick-card">
+                                <div class="qa-icon green"><i class="fa-solid fa-file-excel"></i></div>
+                                <span>Import Danh sách</span>
+                            </a>
+                            <a href="admin-students.html?action=add" class="quick-card">
+                                <div class="qa-icon blue"><i class="fa-solid fa-user-plus"></i></div>
+                                <span>Thêm người dùng</span>
+                            </a>
+                            <a href="admin-notifications.html?action=create" class="quick-card">
+                                <div class="qa-icon orange"><i class="fa-solid fa-bullhorn"></i></div>
+                                <span>Tạo thông báo</span>
+                            </a>
+                            <a href="admin-milestones.html?action=create" class="quick-card">
+                                <div class="qa-icon purple"><i class="fa-solid fa-flag"></i></div>
+                                <span>Tạo Milestone</span>
+                            </a>
+                            <a href="#" id="exportReportBtn" class="quick-card">
+                                <div class="qa-icon red"><i class="fa-solid fa-file-export"></i></div>
+                                <span>Xuất báo cáo</span>
+                            </a>
+                            <a href="#" id="backupDbBtn" class="quick-card">
+                                <div class="qa-icon gray"><i class="fa-solid fa-database"></i></div>
+                                <span>Sao lưu dữ liệu</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="page-footer">
+                    © 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp.
+                </footer>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
+                <button id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+</body>
+</html>

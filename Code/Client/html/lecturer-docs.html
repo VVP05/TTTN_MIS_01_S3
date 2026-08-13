@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài Liệu & Biểu Mẫu | Cổng Giảng Viên</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/lecturer.css">
+    <link rel="stylesheet" href="../css/lecturer-docs.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- 1. SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item">
+                            <a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu & Biểu mẫu</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 2. MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <a href="lecturer-notifications.html" class="notification-btn" aria-label="Xem thông báo">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge-count">3</span>
+                    </a>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">TS. Nguyễn Văn A</span>
+                        <span id="userCode" class="user-badge">GV01</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT BODY -->
+            <main class="content-body">
+                
+                <!-- PAGE HEADER -->
+                <div class="page-header-container">
+                    <div class="page-header-text">
+                        <h1>Tài Liệu & Biểu Mẫu</h1>
+                        <p>Quản lý biểu mẫu quy định của Khoa và chia sẻ tài liệu hướng dẫn cho nhóm sinh viên.</p>
+                    </div>
+                    <button id="openUploadModalBtn" class="btn-primary">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> + Tải tài liệu mới lên
+                    </button>
+                </div>
+
+                <!-- SECTION 1: BIỂU MẪU CHUẨN CỦA KHOA (GIẢNG VIÊN TẢI VỀ DÙNG) -->
+                <div class="docs-section">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-folder-open text-blue"></i> Biểu Mẫu Quy Định Từ Khoa / Bộ Môn</h2>
+                    </div>
+                    <div class="docs-grid">
+                        <div class="doc-card">
+                            <div class="doc-icon pdf"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div class="doc-info">
+                                <h3>Quy định & Thang điểm chấm TTTN 2026</h3>
+                                <p>Cập nhật: 10/05/2026 • 1.2 MB</p>
+                            </div>
+                            <a href="#" class="btn-download" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
+                        </div>
+
+                        <div class="doc-card">
+                            <div class="doc-icon word"><i class="fa-solid fa-file-word"></i></div>
+                            <div class="doc-info">
+                                <h3>Mẫu Phiếu nhận xét của GV hướng dẫn</h3>
+                                <p>Cập nhật: 12/05/2026 • 450 KB</p>
+                            </div>
+                            <a href="#" class="btn-download" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
+                        </div>
+
+                        <div class="doc-card">
+                            <div class="doc-icon word"><i class="fa-solid fa-file-word"></i></div>
+                            <div class="doc-info">
+                                <h3>Mẫu Biên bản chấm bảo vệ Hội đồng</h3>
+                                <p>Cập nhật: 12/05/2026 • 510 KB</p>
+                            </div>
+                            <a href="#" class="btn-download" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: TÀI LIỆU GV CHIA SẺ CHO SINH VIÊN -->
+                <div class="docs-section margin-top-24">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-share-nodes text-green"></i> Tài Liệu Tôi Chia Sẻ Cho Sinh Viên</h2>
+                        <span class="table-subtitle">Sinh viên thuộc nhóm hướng dẫn có thể nhìn thấy và tải về</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tên Tài Liệu</th>
+                                    <th>Phân Loại</th>
+                                    <th>Chia Sẻ Cho</th>
+                                    <th>Ngày Đăng</th>
+                                    <th>Lượt Tải</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myDocsTableBody">
+                                <tr>
+                                    <td>
+                                        <div class="file-name-cell">
+                                            <i class="fa-solid fa-file-word text-blue"></i>
+                                            <strong>Mau_Bao_Cao_TTTN_Chuan_2026.docx</strong>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-info">Biểu mẫu SV</span></td>
+                                    <td>Tất cả nhóm hướng dẫn</td>
+                                    <td>15/06/2026</td>
+                                    <td>18</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="#" class="btn-icon" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
+                                            <button class="btn-icon text-red btn-delete-doc" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="file-name-cell">
+                                            <i class="fa-solid fa-file-pdf text-red"></i>
+                                            <strong>Huong_Dan_Viet_API_RESTful_Chuan.pdf</strong>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-success">Tài liệu kỹ thuật</span></td>
+                                    <td>Nhóm N01, N05</td>
+                                    <td>18/06/2026</td>
+                                    <td>6</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="#" class="btn-icon" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
+                                            <button class="btn-icon text-red btn-delete-doc" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL TẢI TÀI LIỆU MỚI -->
+    <div id="uploadModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Chia sẻ tài liệu mới cho Sinh viên</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="uploadDocForm">
+                <div class="form-group">
+                    <label>Tên tài liệu hiển thị <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="docTitle" required placeholder="VD: Hướng dẫn trình bày báo cáo slide...">
+                </div>
+                <div class="form-group">
+                    <label>Phân loại <span class="required">*</span></label>
+                    <select class="form-control" id="docCategory">
+                        <option value="Biểu mẫu SV">Biểu mẫu cho Sinh viên</option>
+                        <option value="Tài liệu kỹ thuật">Tài liệu tham khảo / Kỹ thuật</option>
+                        <option value="Thông báo chung">Quy định / Hướng dẫn chung</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quyền xem <span class="required">*</span></label>
+                    <select class="form-control" id="docTarget">
+                        <option value="Tất cả nhóm hướng dẫn">Tất cả nhóm tôi đang hướng dẫn</option>
+                        <option value="Nhóm N01">Chỉ Nhóm N01</option>
+                        <option value="Nhóm N05">Chỉ Nhóm N05</option>
+                        <option value="Nhóm N07">Chỉ Nhóm N07</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Chọn file tải lên (.pdf, .docx, .zip) <span class="required">*</span></label>
+                    <input type="file" class="form-control" id="docFile" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel btn-close-modal">Hủy</button>
+                    <button type="submit" class="btn-submit">Tải lên & Chia sẻ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/lecturer-docs.js"></script>
+</body>
+</html>

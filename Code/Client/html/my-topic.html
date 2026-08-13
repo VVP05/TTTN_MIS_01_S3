@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý TTTN | Đề tài của tôi</title>
+    
+    <!-- CSS & FONT AWESOME ICONS -->
+    <link rel="stylesheet" href="../css/student.css">
+    <link rel="stylesheet" href="../css/my-topic.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item">
+                            <a href="student-dashboard.html"><span class="icon"><i class="fa-solid fa-file-pen"></i></span> Đăng ký đề tài</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="my-topic.html"><span class="icon"><i class="fa-solid fa-users"></i></span> Đề tài của tôi</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="work-schedule.html"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Lịch làm việc</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="notifications.html"><span class="icon"><i class="fa-solid fa-bell"></i></span> Thông báo</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="guidelines.html"><span class="icon"><i class="fa-solid fa-file-lines"></i></span> Tài liệu hướng dẫn</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="change-password.html"><span class="icon"><i class="fa-solid fa-key"></i></span> Đổi mật khẩu</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-illustration">
+                    <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 110 Q 100 80 190 110 L 190 120 L 10 120 Z" fill="#2563eb" opacity="0.15"/>
+                        <rect x="60" y="50" width="80" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
+                        <polygon points="100,20 50,55 150,55" fill="#2563eb" opacity="0.5"/>
+                        <rect x="85" y="70" width="30" height="30" fill="#2563eb" opacity="0.4"/>
+                        <circle cx="100" cy="40" r="8" fill="#1d4ed8"/>
+                    </svg>
+                </div>
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle" aria-label="Toggle Navigation"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <div class="notification-btn" title="Thông báo">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge-count">3</span>
+                    </div>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Đang tải...</span>
+                        <span id="userCode" class="user-badge">...</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <main class="content-body">
+                
+                <!-- HEADER TRANG -->
+                <div class="page-title-card">
+                    <div class="title-left">
+                        <h1>Đề tài Thực tập Tốt nghiệp của tôi</h1>
+                        <p>Theo dõi tiến độ, chi tiết đề tài và nộp báo cáo định kỳ cho Giảng viên hướng dẫn.</p>
+                    </div>
+                    <div class="title-right" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        
+                            
+                        </button>
+                        <div class="status-banner pending" id="topicStatusBanner">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                            <span>Trạng thái: <strong id="topicStatusText">Đang kiểm tra...</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- KHỐI THÔNG TIN CHI TIẾT (CHUẨN THEO CLASS CSS CÓ SẴN) -->
+                <div class="card-box margin-top-20">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-circle-info text-blue"></i> Thông tin chi tiết</h3>
+                    </div>
+
+                    <div class="topic-detail-grid">
+                        <!-- Mã đề tài -->
+                        <div class="detail-item">
+                            <span class="label">Mã đề tài:</span>
+                            <span class="value font-bold" id="topicCode">--</span>
+                        </div>
+
+                        <!-- Ngày đăng ký -->
+                        <div class="detail-item">
+                            <span class="label">Ngày đăng ký:</span>
+                            <span class="value" id="topicCreatedDate">--</span>
+                        </div>
+
+                        <!-- Tên đề tài chính thức (Chiếm trọn 2 cột) -->
+                        <div class="detail-item full-width">
+                            <span class="label">Tên đề tài chính thức:</span>
+                            <span class="value title-highlight" id="topicTitle">--</span>
+                        </div>
+
+                        <!-- CỘT 1 (BÊN TRÁI): GIẢNG VIÊN & THÀNH VIÊN NHÓM -->
+                        <div class="detail-item">
+                            <div class="team-members-group">
+                                <div>
+                                    <span class="label">Giảng viên hướng dẫn:</span>
+                                    <div class="value font-bold" id="topicLecturer">--</div>
+                                </div>
+                                <div>
+                                    <span class="label">Trưởng nhóm:</span>
+                                    <div class="value" id="topicLeader">--</div>
+                                </div>
+                                <div>
+                                    <span class="label">Thành viên cùng làm:</span>
+                                    <div class="value" id="topicMember2">--</div>
+                                </div>
+                                <div>
+                                    <span class="label">Thành viên cùng làm:</span>
+                                    <div class="value" id="topicMember3">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+        <!-- CỘT 2 (BÊN PHẢI): MÔ TẢ & NHẬN XÉT -->
+        <div class="detail-item">
+            <div class="team-members-group">
+                <div>
+                    <span class="label">Mô tả mục tiêu / Phạm vi đề tài:</span>
+                    <div class="description-box" id="topicDesc">--</div>
+                </div>
+                <div>
+                    <span class="label">Nhận xét / Phản hồi từ GVHD:</span>
+                    <div class="lecturer-feedback" id="topicFeedback">
+                        <i class="fa-regular fa-comment-dots"></i> Chưa có nhận xét mới từ giảng viên.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                <!-- 2. KHU VỰC NỘP BÁO CÁO TIẾN ĐỘ (5 MILESTONES) -->
+                <div class="section-header-row margin-top-24">
+                    <h3 class="section-title"><i class="fa-solid fa-list-check text-blue"></i> Tiến độ nộp báo cáo (5 Mốc tiến độ)</h3>
+                    <span class="sub-text">Sinh viên cần tuân thủ đúng thời hạn nộp bài của từng mốc.</span>
+                </div>
+                
+                <div class="milestone-list margin-top-12">
+                    
+                    <!-- Milestone 1 -->
+                    <div class="milestone-card locked" id="milestoneCard1">
+                        <div class="milestone-header">
+                            <div class="m-title">
+                                <span class="m-badge gray" id="statusBadge1"><i class="fa-solid fa-lock"></i> Chưa mở</span>
+                                <h4>Mốc 1: Nộp đặc tả yêu cầu & Đề cương chi tiết</h4>
+                            </div>
+                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 25/08/2026</span>
+                        </div>
+                        <div class="milestone-body" id="milestoneBody1">
+                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Đang tải thông tin mốc...</p>
+                        </div>
+                    </div>
+
+                    <!-- Milestone 2 -->
+                    <div class="milestone-card locked" id="milestoneCard2">
+                        <div class="milestone-header">
+                            <div class="m-title">
+                                <span class="m-badge gray" id="statusBadge2"><i class="fa-solid fa-lock"></i> Chưa mở</span>
+                                <h4>Mốc 2: Báo cáo phân tích thiết kế hệ thống & Database</h4>
+                            </div>
+                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 05/09/2026</span>
+                        </div>
+                        <div class="milestone-body" id="milestoneBody2">
+                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 1.</p>
+                        </div>
+                    </div>
+
+                    <!-- Milestone 3 -->
+                    <div class="milestone-card locked" id="milestoneCard3">
+                        <div class="milestone-header">
+                            <div class="m-title">
+                                <span class="m-badge gray" id="statusBadge3"><i class="fa-solid fa-lock"></i> Chưa mở</span>
+                                <h4>Mốc 3: Báo cáo tiến độ giữa kỳ & Demo giao diện (Prototype)</h4>
+                            </div>
+                            <span class="m-deadline text-red"><i class="fa-regular fa-clock"></i> Hạn nộp: 20/09/2026</span>
+                        </div>
+                        <div class="milestone-body" id="milestoneBody3">
+                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 2.</p>
+                        </div>
+                    </div>
+
+                    <!-- Milestone 4 -->
+                    <div class="milestone-card locked" id="milestoneCard4">
+                        <div class="milestone-header">
+                            <div class="m-title">
+                                <span class="m-badge gray" id="statusBadge4"><i class="fa-solid fa-lock"></i> Chưa mở</span>
+                                <h4>Mốc 4: Báo cáo thử nghiệm, kiểm thử & Hoàn thiện chức năng</h4>
+                            </div>
+                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 05/10/2026</span>
+                        </div>
+                        <div class="milestone-body" id="milestoneBody4">
+                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 3.</p>
+                        </div>
+                    </div>
+
+                    <!-- Milestone 5 -->
+                    <div class="milestone-card locked" id="milestoneCard5">
+                        <div class="milestone-header">
+                            <div class="m-title">
+                                <span class="m-badge gray" id="statusBadge5"><i class="fa-solid fa-lock"></i> Chưa mở</span>
+                                <h4>Mốc 5: Nộp báo cáo tổng kết & Source code hoàn chỉnh</h4>
+                            </div>
+                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 20/10/2026</span>
+                        </div>
+                        <div class="milestone-body" id="milestoneBody5">
+                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 4.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <footer class="page-footer">
+                    © 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp
+                </footer>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon warning"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn kết thúc phiên làm việc hiện tại không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
+                <button id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS APP -->
+    <script src="../js/my-topic.js"></script>
+</body>
+</html>

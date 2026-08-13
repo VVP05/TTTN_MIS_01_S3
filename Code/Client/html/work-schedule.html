@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý TTTN | Lịch làm việc</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/work-schedule.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item">
+                            <a href="student-dashboard.html"><span class="icon"><i class="fa-solid fa-file-pen"></i></span> Đăng ký đề tài</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="my-topic.html"><span class="icon"><i class="fa-solid fa-users"></i></span> Đề tài của tôi</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="work-schedule.html"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Lịch làm việc</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="notifications.html"><span class="icon"><i class="fa-solid fa-bell"></i></span> Thông báo</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="guidelines.html"><span class="icon"><i class="fa-solid fa-file-lines"></i></span> Tài liệu hướng dẫn</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="change-password.html"><span class="icon"><i class="fa-solid fa-key"></i></span> Đổi mật khẩu</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-illustration">
+                    <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 90 Q 100 60 190 90 L 190 100 L 10 100 Z" fill="#2563eb" opacity="0.15"/>
+                        <rect x="70" y="40" width="60" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
+                        <polygon points="100,15 60,45 140,45" fill="#2563eb" opacity="0.5"/>
+                    </svg>
+                </div>
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <div class="notification-btn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge-count">3</span>
+                    </div>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Đang tải...</span>
+                        <span id="userCode" class="user-badge">...</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <main class="content-body">
+                
+                <!-- HEADER TRANG -->
+                <div class="page-header-row">
+                    <div>
+                        <h1>Lịch làm việc & Tiến độ thực tập</h1>
+                        <p>Quản lý lịch họp với Giảng viên hướng dẫn và theo dõi kế hoạch từng tuần.</p>
+                    </div>
+                    <div>
+                        <button id="btnOpenBookingModal" class="btn-primary">
+                            <i class="fa-solid fa-calendar-plus"></i> Đăng ký lịch hẹn GVHD
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STATS CARDS -->
+                <div class="stats-grid margin-top-20">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Lịch hẹn sắp tới</span>
+                            <h3 id="statUpcomingMeetings" class="stat-value">00 buổi</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Tiến độ kỳ thực tập</span>
+                            <h3 id="statWeekProgress" class="stat-value">Tuần 01 <small>/ 15</small></h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        
+                        
+                    </div>
+                </div>
+
+                <!-- MAIN GRID -->
+                <div class="schedule-grid margin-top-24">
+                    
+                    <!-- CỘT TRÁI (70%) -->
+                    <div class="left-column">
+                        
+                        <!-- 1. DANH SÁCH LỊCH HẸN VỚI GVHD -->
+                        <div class="card-box">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-users text-blue"></i> Lịch họp / Báo cáo với Giảng viên</h3>
+                                <span class="badge-filter">Học kỳ II - 2025/2026</span>
+                            </div>
+
+                            <!-- Khối chứa danh sách lịch họp do JS render -->
+                            <div id="meetingsListContainer" class="meeting-list">
+                                <p style="text-align: center; color: #64748b; padding: 20px;">Đang tải dữ liệu...</p>
+                            </div>
+                        </div>
+
+                        <!-- 2. LỘ TRÌNH THỰC TẬP TỔNG THỂ -->
+                        <div class="card-box margin-top-20">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-route text-blue"></i> Lộ trình thực tập tốt nghiệp (15 Tuần)</h3>
+                            </div>
+                            <div class="timeline-container">
+                                <div class="timeline-item done">
+                                    <div class="t-dot"></div>
+                                    <div class="t-text">
+                                        <h5>Tuần 1 - Tuần 3: Chọn đề tài & Viết đề cương</h5>
+                                        <p>Đăng ký đề tài, phân công nhóm và nộp đặc tả yêu cầu.</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item active">
+                                    <div class="t-dot"></div>
+                                    <div class="t-text">
+                                        <h5>Tuần 4 - Tuần 9: Triển khai ứng dụng & Báo cáo giữa kỳ</h5>
+                                        <p>Xây dựng Database, Phát triển API, Giao diện frontend và họp đánh giá giữa kỳ.</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="t-dot"></div>
+                                    <div class="t-text">
+                                        <h5>Tuần 10 - Tuần 13: Hoàn thiện tính năng & Kiểm thử</h5>
+                                        <p>Căn chỉnh UI/UX, viết Unit Test, Fix bugs và đóng gói ứng dụng.</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="t-dot"></div>
+                                    <div class="t-text">
+                                        <h5>Tuần 14 - Tuần 15: Nộp quyển báo cáo & Bảo vệ TTTN</h5>
+                                        <p>Hoàn thiện báo cáo tổng kết, chuẩn bị slide trình bày và phản biện trước Hội đồng.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CỘT PHẢI (30%) -->
+                    <div class="right-column">
+                        
+                        <!-- WIDGET CHECKLIST -->
+                        <div class="card-box">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-list-check text-blue"></i> Việc cần làm tuần này</h3>
+                                <span id="todoCounter" class="task-count">0/0</span>
+                            </div>
+                            <!-- Khối chứa To-do list do JS render -->
+                            <div class="todo-list" id="todoList">
+                                <p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 10px 0;">Đang tải...</p>
+                            </div>
+                            <div class="todo-add">
+                                <input type="text" id="newTodoInput" placeholder="Thêm việc mới...">
+                                <button id="btnAddTodo"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- WIDGET THÔNG TIN HỖ TRỢ -->
+                        <div class="card-box margin-top-20 tip-box">
+                            <div class="tip-header">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <h4>Lưu ý từ Khoa CNTT</h4>
+                            </div>
+                            <p>Sinh viên cần chủ động liên hệ Giảng viên hướng dẫn <strong>ít nhất 1 lần/2 tuần</strong> để báo cáo tiến độ. Mọi buổi họp online/offline cần ghi lại biên bản làm việc.</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <footer class="page-footer">
+                    © 2026 Khoa CNTT - All rights reserved.
+                </footer>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG KÝ LỊCH HẸN VỚI GVHD -->
+    <div id="bookingModal" class="modal-overlay">
+        <div class="modal-box large">
+            <div class="modal-header">
+                <h3>Đăng ký lịch họp / Báo cáo với GVHD</h3>
+                <button id="btnCloseModal" class="btn-close">&times;</button>
+            </div>
+            <form id="bookingForm" class="modal-body">
+                <div class="form-group">
+                    <label>Tiêu đề buổi làm việc <span class="text-red">*</span></label>
+                    <input type="text" id="bookingTitle" required placeholder="VD: Báo cáo tiến độ Module Đăng ký đề tài">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ngày đề xuất <span class="text-red">*</span></label>
+                        <input type="date" required id="bookingDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ bắt đầu <span class="text-red">*</span></label>
+                        <input type="time" id="bookingTimeStart" value="09:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ kết thúc <span class="text-red">*</span></label>
+                        <input type="time" id="bookingTimeEnd" value="10:00" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Hình thức làm việc</label>
+                    <select id="bookingType">
+                        <option value="ONLINE">Online (Google Meet / Zoom)</option>
+                        <option value="OFFLINE">Trực tiếp (Tại Văn phòng / Phòng họp)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Địa điểm / Ghi chú link cuộc họp</label>
+                    <input type="text" id="bookingLocation" placeholder="VD: Phòng B5-201 hoặc dán Link Google Meet...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnCancelModal" class="btn-secondary">Hủy</button>
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu đặt lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-box small">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi phiên làm việc không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
+                <button id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/work-schedule.js"></script>
+</body>
+</html>
