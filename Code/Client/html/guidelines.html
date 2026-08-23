@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý TTTN | Tài liệu hướng dẫn</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/guidelines.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+    <ul>
+        <li class="menu-item">
+            <a href="student-dashboard.html"><span class="icon"><i class="fa-solid fa-file-pen"></i></span> Đăng ký đề tài</a>
+        </li>
+        <li class="menu-item">
+            <a href="my-topic.html"><span class="icon"><i class="fa-solid fa-users"></i></span> Đề tài của tôi</a>
+        </li>
+        <li class="menu-item">
+            <a href="work-schedule.html"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Lịch làm việc</a>
+        </li>
+        <li class="menu-item">
+            <a href="notifications.html"><span class="icon"><i class="fa-solid fa-bell"></i></span> Thông báo</a>
+        </li>
+        <li class="menu-item active">
+            <a href="guidelines.html"><span class="icon"><i class="fa-solid fa-file-lines"></i></span> Tài liệu hướng dẫn</a>
+        </li>
+        <li class="menu-item">
+            <a href="change-password.html"><span class="icon"><i class="fa-solid fa-key"></i></span> Đổi mật khẩu</a>
+        </li>
+    </ul>
+</nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-illustration">
+                    <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 90 Q 100 60 190 90 L 190 100 L 10 100 Z" fill="#2563eb" opacity="0.15"/>
+                        <rect x="70" y="40" width="60" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
+                        <polygon points="100,15 60,45 140,45" fill="#2563eb" opacity="0.5"/>
+                    </svg>
+                </div>
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <a href="notifications.html" class="notification-btn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="headerBadgeCount" class="badge-count">2</span>
+                    </a>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Trần Văn B</span>
+                        <span id="userCode" class="user-badge">SV01</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <main class="content-body">
+                
+                <!-- HEADER TRANG & TÌM KIẾM -->
+                <div class="page-header-row">
+                    <div>
+                        <h1>Tài liệu & Biểu mẫu hướng dẫn TTTN</h1>
+                        <p>Kho tài liệu chính thức từ Khoa CNTT và Giảng viên hướng dẫn phục vụ quá trình thực tập.</p>
+                    </div>
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm kiếm tài liệu, biểu mẫu...">
+                    </div>
+                </div>
+
+                <!-- BỘ LỌC TABS -->
+                <div class="filter-tabs margin-top-20">
+                    <button class="tab-btn active" data-category="ALL">Tất cả tài liệu <span class="tab-count">6</span></button>
+                    <button class="tab-btn" data-category="REGULATION"><i class="fa-solid fa-scale-balanced"></i> Quy chế & Biểu mẫu</button>
+                    <button class="tab-btn" data-category="REPORT"><i class="fa-solid fa-book-open"></i> Mẫu báo cáo & Khóa luận</button>
+                    <button class="tab-btn" data-category="SLIDE"><i class="fa-solid fa-desktop"></i> Mẫu Slide thuyết trình</button>
+                </div>
+
+                <!-- DANH SÁCH TÀI LIỆU (GRID) -->
+                <div class="document-grid margin-top-20" id="documentGrid">
+                    
+                    <!-- Tài liệu 1 -->
+                    <div class="doc-card" data-category="REGULATION" data-title="Quy chế & Mốc thời gian Thực tập tốt nghiệp 2026">
+                        <div class="doc-file-icon pdf">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div class="doc-info">
+                            <span class="doc-category regulation">Quy chế Khoa</span>
+                            <h4 class="doc-title">Quy chế & Mốc thời gian Thực tập tốt nghiệp 2026</h4>
+                            <p class="doc-desc">Quy định chung về điều kiện tốt nghiệp, số giờ báo cáo, và thời hạn các mốc nghiệm thu.</p>
+                            <div class="doc-meta">
+                                <span><i class="fa-solid fa-calendar"></i> 01/08/2026</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> 1.2 MB</span>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn-preview" onclick="previewDoc('Quy_Che_TTTN_2026.pdf', 'Quy chế Thực tập tốt nghiệp 2026')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            <a href="#" class="btn-download" download><i class="fa-solid fa-download"></i> Tải về</a>
+                        </div>
+                    </div>
+
+                    <!-- Tài liệu 2 -->
+                    <div class="doc-card" data-category="REGULATION" data-title="Biểu mẫu giấy giới thiệu Thực tập tại Doanh nghiệp">
+                        <div class="doc-file-icon docx">
+                            <i class="fa-solid fa-file-word"></i>
+                        </div>
+                        <div class="doc-info">
+                            <span class="doc-category regulation">Biểu mẫu</span>
+                            <h4 class="doc-title">Biểu mẫu Giấy giới thiệu Thực tập tại Doanh nghiệp</h4>
+                            <p class="doc-desc">Mẫu đơn xin cấp giấy giới thiệu thực tập, có xác nhận và con dấu từ Văn phòng Khoa CNTT.</p>
+                            <div class="doc-meta">
+                                <span><i class="fa-solid fa-calendar"></i> 01/08/2026</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> 450 KB</span>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn-preview" onclick="previewDoc('Mau_Giay_Gioi_Thieu.docx', 'Mẫu Giấy giới thiệu Thực tập')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            <a href="#" class="btn-download" download><i class="fa-solid fa-download"></i> Tải về</a>
+                        </div>
+                    </div>
+
+                    <!-- Tài liệu 3 -->
+                    <div class="doc-card" data-category="REPORT" data-title="Hướng dẫn thể thức & mẫu Đề cương chi tiết (Mốc 1)">
+                        <div class="doc-file-icon docx">
+                            <i class="fa-solid fa-file-word"></i>
+                        </div>
+                        <div class="doc-info">
+                            <span class="doc-category report">Mẫu Đề cương</span>
+                            <h4 class="doc-title">Hướng dẫn thể thức & mẫu Đề cương chi tiết (Mốc 1)</h4>
+                            <p class="doc-desc">Cấu trúc chuẩn 5 phần dành cho báo cáo mốc đề cương: Đặt vấn đề, Công nghệ, Yêu cầu hệ thống.</p>
+                            <div class="doc-meta">
+                                <span><i class="fa-solid fa-calendar"></i> 02/08/2026</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> 890 KB</span>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn-preview" onclick="previewDoc('Mau_De_Cuong_Chi_Tiet.docx', 'Mẫu Đề cương chi tiết TTTN')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            <a href="#" class="btn-download" download><i class="fa-solid fa-download"></i> Tải về</a>
+                        </div>
+                    </div>
+
+                    <!-- Tài liệu 4 -->
+                    <div class="doc-card" data-category="REPORT" data-title="Mẫu Quyển báo cáo tổng kết Thực tập tốt nghiệp chính thức">
+                        <div class="doc-file-icon docx">
+                            <i class="fa-solid fa-file-word"></i>
+                        </div>
+                        <div class="doc-info">
+                            <span class="doc-category report">Báo cáo Tổng kết</span>
+                            <h4 class="doc-title">Mẫu Quyển báo cáo tổng kết TTTN chính thức (Mốc 3)</h4>
+                            <p class="doc-desc">Mẫu trình bày quyển báo cáo hoàn chỉnh (Bìa cứng, bìa lót, phụ lục, tài liệu tham khảo chuẩn IEEE).</p>
+                            <div class="doc-meta">
+                                <span><i class="fa-solid fa-calendar"></i> 03/08/2026</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> 2.4 MB</span>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn-preview" onclick="previewDoc('Mau_Quyen_Bao_Cao_Chinh_Thuc.docx', 'Mẫu Quyển báo cáo TTTN chính thức')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            <a href="#" class="btn-download" download><i class="fa-solid fa-download"></i> Tải về</a>
+                        </div>
+                    </div>
+
+                    <!-- Tài liệu 5 -->
+                    <div class="doc-card" data-category="SLIDE" data-title="Template Slide thuyết trình bảo vệ trước Hội đồng (16:9)">
+                        <div class="doc-file-icon pptx">
+                            <i class="fa-solid fa-file-powerpoint"></i>
+                        </div>
+                        <div class="doc-info">
+                            <span class="doc-category slide">Slide thuyết trình</span>
+                            <h4 class="doc-title">Template Slide thuyết trình bảo vệ trước Hội đồng (16:9)</h4>
+                            <p class="doc-desc">Bộ mẫu slide PowerPoint chính thức của Khoa CNTT với bố cục tối ưu cho thuyết trình Demo đề tài.</p>
+                            <div class="doc-meta">
+                                <span><i class="fa-solid fa-calendar"></i> 03/08/2026</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> 5.1 MB</span>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn-preview" onclick="previewDoc('Template_Slide_TTTN_2026.pptx', 'Mẫu Slide bảo vệ TTTN')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            <a href="#" class="btn-download" download><i class="fa-solid fa-download"></i> Tải về</a>
+                        </div>
+                    </div>
+
+                    <!-- Tài liệu 6 -->
+                    <div class="doc-card" data-category="REGULATION" data-title="Phiếu nhận xét của Đơn vị thực tập (dành cho thực tập ngoài)">
+                        <div class="doc-file-icon pdf">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div class="doc-info">
+                            <span class="doc-category regulation">Biểu mẫu</span>
+                            <h4 class="doc-title">Phiếu nhận xét của Đơn vị thực tập doanh nghiệp</h4>
+                            <p class="doc-desc">Phiếu chấm điểm thái độ làm việc và năng lực chuyên môn cần có chữ ký & xác nhận từ công ty.</p>
+                            <div class="doc-meta">
+                                <span><i class="fa-solid fa-calendar"></i> 04/08/2026</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> 620 KB</span>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn-preview" onclick="previewDoc('Phieu_Nhan_Xet_Doanh_Nghiep.pdf', 'Phiếu nhận xét từ Doanh nghiệp')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            <a href="#" class="btn-download" download><i class="fa-solid fa-download"></i> Tải về</a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- THÔNG BÁO KHÔNG TÌM THẤY TÀI LIỆU -->
+                <div id="noDocResult" class="no-result-box" style="display: none;">
+                    <i class="fa-solid fa-folder-open no-result-icon"></i>
+                    <h4>Không tìm thấy tài liệu nào phù hợp</h4>
+                    <p>Vui lòng thử từ khóa tìm kiếm khác hoặc chọn chuyên mục "Tất cả tài liệu".</p>
+                </div>
+
+                <footer class="page-footer">
+                    © 2026 Khoa CNTT - All rights reserved.
+                </footer>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL XEM TRƯỚC TÀI LIỆU -->
+    <div id="previewModal" class="modal-overlay">
+        <div class="modal-box large">
+            <div class="modal-header">
+                <div>
+                    <span class="sender-tag regulation">Xem trước văn bản</span>
+                    <h3 id="previewTitle" class="notif-detail-title margin-top-8">Tên tài liệu</h3>
+                </div>
+                <button id="btnClosePreviewModal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body preview-container">
+                <div class="preview-placeholder">
+                    <i class="fa-solid fa-file-lines preview-icon"></i>
+                    <h4>Hệ thống đang mô phỏng chế độ xem tài liệu</h4>
+                    <p>Tệp tin <strong id="previewFileName">Mau_Bao_Cao.docx</strong> đã sẵn sàng để xem hoặc tải xuống máy tính của bạn.</p>
+                    <a href="#" class="btn-primary margin-top-16" download><i class="fa-solid fa-cloud-arrow-down"></i> Tải tập tin này về ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-box small">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi phiên làm việc không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
+                <button id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/notif-badge.js"></script>
+    <script src="../js/guidelines.js"></script>
+</body>
+</html>

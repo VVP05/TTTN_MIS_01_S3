@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài Đặt Tài Khoản | Cổng Giảng Viên</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/lecturer.css">
+    <link rel="stylesheet" href="../css/lecturer-settings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- 1. SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item">
+                            <a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu & Biểu mẫu</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 2. MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <a href="lecturer-notifications.html" class="notification-btn" aria-label="Xem thông báo">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="headerBadgeCount" class="badge-count">0</span>
+                    </a>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">TS. Nguyễn Văn A</span>
+                        <span id="userCode" class="user-badge">GV01</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT BODY -->
+            <main class="content-body">
+                
+                <div class="page-header-container">
+                    <div class="page-header-text">
+                        <h1>Cài Đặt Tài Khoản</h1>
+                        <p>Quản lý thông tin hồ sơ giảng viên, chỉ tiêu hướng dẫn và bảo mật tài khoản.</p>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    
+                    <!-- BÊN TRÁI: THÔNG TIN HỒ SƠ & CHỈ TIÊU HƯỚNG DẪN -->
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-id-card text-blue"></i> Hồ Sơ Giảng Viên</h2>
+                        </div>
+                        <form id="profileForm" class="settings-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Mã giảng viên</label>
+                                    <input type="text" class="form-control" value="GV01" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Học hàm / Học vị</label>
+                                    <input type="text" class="form-control" value="Tiến sĩ (TS.)" disabled>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Họ và tên giảng viên</label>
+                                <input type="text" class="form-control" value="Nguyễn Văn A" disabled>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email liên hệ <span class="required">*</span></label>
+                                    <input type="email" class="form-control" id="lecturerEmail" value="a.nguyen@fit.edu.vn" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Số điện thoại <span class="required">*</span></label>
+                                    <input type="tel" class="form-control" id="lecturerPhone" value="0912345678" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Văn phòng bộ môn</label>
+                                    <input type="text" class="form-control" id="lecturerRoom" value="Phòng 402 - Tòa nhà B3">
+                                </div>
+                                <div class="form-group">
+                                    <label>Chỉ tiêu nhận nhóm tối đa (Đợt này)</label>
+                                    <input type="number" class="form-control" id="maxGroups" value="8" min="1" max="15">
+                                    <small class="form-hint">Hiện đang hướng dẫn: <strong>5 / 8</strong> nhóm</small>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Lĩnh vực chuyên môn / Hướng nghiên cứu</label>
+                                <textarea class="form-control" rows="3">Trí tuệ nhân tạo (AI), Học máy (Machine Learning), Xây dựng hệ thống Web & Microservices.</textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Lưu thay đổi hồ sơ</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- BÊN PHẢI: ĐỔI MẬT KHẨU -->
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-lock text-red"></i> Đổi Mật Khẩu</h2>
+                        </div>
+                        <form id="changePasswordForm" class="settings-form">
+                            <div class="form-group">
+                                <label>Mật khẩu hiện tại <span class="required">*</span></label>
+                                <input type="password" class="form-control" id="oldPassword" required placeholder="Nhập mật khẩu đang dùng...">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Mật khẩu mới <span class="required">*</span></label>
+                                <input type="password" class="form-control" id="newPassword" required placeholder="Ít nhất 8 ký tự...">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Xác nhận mật khẩu mới <span class="required">*</span></label>
+                                <input type="password" class="form-control" id="confirmPassword" required placeholder="Nhập lại mật khẩu mới...">
+                            </div>
+
+                            <div class="form-actions" style="margin-top: 32px;">
+                                <button type="submit" class="btn-submit-red">Cập nhật mật khẩu</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/notif-badge.js"></script>
+    <script src="../js/lecturer-settings.js"></script>
+</body>
+</html>

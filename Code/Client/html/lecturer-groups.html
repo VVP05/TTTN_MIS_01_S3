@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhóm SV Hướng Dẫn | Cổng Giảng Viên</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/lecturer.css">
+    <link rel="stylesheet" href="../css/lecturer-groups.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- 1. SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item">
+                            <a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu & Biểu mẫu</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 2. MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <a href="lecturer-notifications.html" class="notification-btn" aria-label="Xem thông báo">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="headerBadgeCount" class="badge-count">0</span>
+                    </a>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">TS. Nguyễn Văn A</span>
+                        <span id="userCode" class="user-badge">GV01</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT BODY -->
+            <main class="content-body">
+                
+                <!-- PAGE HEADER -->
+                <div class="page-header-container">
+                    <div class="page-header-text">
+                        <h1>Nhóm SV Hướng Dẫn</h1>
+                        <p>Quản lý danh sách sinh viên, theo dõi tiến độ tổng thể và liên lạc nhanh với các nhóm.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="exportExcelBtn" class="btn-outline">
+                            <i class="fa-solid fa-file-excel"></i> Xuất Excel
+                        </button>
+                        <button id="openBroadcastModalBtn" class="btn-primary">
+                            <i class="fa-solid fa-paper-plane"></i> Gửi thông báo chung
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MINI STATS BAR -->
+                <div class="groups-stats-bar">
+                    <div class="stat-box">
+                        <span class="stat-label">Tổng số nhóm đang HD</span>
+                        <strong id="stat-total-groups" class="stat-number">0</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Tổng số sinh viên</span>
+                        <strong id="stat-total-students" class="stat-number">0</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Đang đúng tiến độ</span>
+                        <strong id="stat-on-track" class="stat-number text-green">0</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Cần nhắc nhở / Trễ hạn</span>
+                        <strong id="stat-warning" class="stat-number text-red">0</strong>
+                    </div>
+                </div>
+
+                <!-- FILTER & SEARCH TOOLBAR -->
+                <div class="groups-toolbar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchGroupInput" placeholder="Tìm mã nhóm, tên đề tài, tên SV...">
+                    </div>
+                    <div class="filter-controls">
+                        <select id="statusFilter" class="select-filter">
+                            <option value="ALL">Tất cả tình trạng</option>
+                            <option value="ON_TRACK">Đúng tiến độ</option>
+                            <option value="WARNING">Cần lưu ý / Trễ hạn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- GROUPS GRID (LƯỚI THẺ NHÓM - RỖNG ĐỂ JS RENDER) -->
+                <div class="groups-grid" id="groupsGridContainer">
+                    <!-- Dữ liệu thẻ nhóm sẽ được render tự động từ API thông qua lecturer-groups.js -->
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL: GỬI THÔNG BÁO / NHẮC NHỞ NHÓM -->
+    <div id="messageModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalMessageTitle">Gửi nhắc nhở cho Nhóm</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="sendMessageForm">
+                <div class="form-group">
+                    <label>Tiêu đề lời nhắn <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="messageSubject" required placeholder="VD: Nhắc nhở nộp báo cáo Milestone 2...">
+                </div>
+                <div class="form-group">
+                    <label>Nội dung chi tiết <span class="required">*</span></label>
+                    <textarea class="form-control" id="messageBody" rows="4" required placeholder="Nhập nội dung nhắc nhở hoặc yêu cầu chuẩn bị cho buổi gặp tới..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" checked> Gửi bản sao thông báo qua Email sinh viên
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel btn-close-modal">Hủy</button>
+                    <button type="submit" class="btn-submit">Gửi thông báo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/notif-badge.js"></script>
+    <script src="../js/lecturer-groups.js"></script>
+</body>
+</html>

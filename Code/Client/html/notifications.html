@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý TTTN | Thông báo</title>
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../css/notifications.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <ul>
+                        <li class="menu-item">
+                            <a href="student-dashboard.html"><span class="icon"><i class="fa-solid fa-file-pen"></i></span> Đăng ký đề tài</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="my-topic.html"><span class="icon"><i class="fa-solid fa-users"></i></span> Đề tài của tôi</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="work-schedule.html"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Lịch làm việc</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="notifications.html"><span class="icon"><i class="fa-solid fa-bell"></i></span> Thông báo</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="guidelines.html"><span class="icon"><i class="fa-solid fa-file-lines"></i></span> Tài liệu hướng dẫn</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="change-password.html"><span class="icon"><i class="fa-solid fa-key"></i></span> Đổi mật khẩu</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-illustration">
+                    <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 90 Q 100 60 190 90 L 190 100 L 10 100 Z" fill="#2563eb" opacity="0.15"/>
+                        <rect x="70" y="40" width="60" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
+                        <polygon points="100,15 60,45 140,45" fill="#2563eb" opacity="0.5"/>
+                    </svg>
+                </div>
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                </div>
+                <div class="navbar-right">
+                    <div class="notification-btn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="headerBadgeCount" class="badge-count">0</span>
+                    </div>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Sinh viên</span>
+                        <span id="userCode" class="user-badge">SV--</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <main class="content-body">
+                
+                <!-- HEADER TRANG -->
+                <div class="page-header-row">
+                    <div>
+                        <h1>Thông báo hệ thống & Giảng viên</h1>
+                        <p>Cập nhật tiến độ duyệt đề tài, lịch họp và các thông báo chính thức từ Khoa CNTT.</p>
+                    </div>
+                    <div>
+                        <button id="btnMarkAllRead" class="btn-secondary">
+                            <i class="fa-solid fa-check-double"></i> Đánh dấu tất cả đã đọc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BỘ LỌC TABS -->
+                <div class="filter-tabs margin-top-20">
+                    <button class="tab-btn active" data-filter="ALL">Tất cả <span id="countAll" class="tab-count">0</span></button>
+                    <button class="tab-btn" data-filter="UNREAD">Chưa đọc <span id="countUnread" class="tab-count unread-count">0</span></button>
+                    <button class="tab-btn" data-filter="LECTURER">Từ Giảng viên</button>
+                    <button class="tab-btn" data-filter="FACULTY">Từ Khoa / Hệ thống</button>
+                </div>
+
+                <!-- DANH SÁCH THÔNG BÁO -->
+                <div class="notifications-wrapper margin-top-16">
+                    
+                    <!-- Khối hiển thị khi chưa có thông báo (Đứng độc lập bên ngoài container card) -->
+                    <div id="emptyNotif" class="empty-state" style="display: none; text-align: center; padding: 50px 20px; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                        <i class="fa-regular fa-bell-slash" style="font-size: 48px; color: #94a3b8; margin-bottom: 16px;"></i>
+                        <h3 style="color: #334155; font-size: 18px; margin-bottom: 8px;">Chưa có thông báo nào</h3>
+                        <p style="color: #64748b; font-size: 14px;">Bạn sẽ nhận được thông báo khi có cập nhật mới từ Giảng viên hoặc Khoa.</p>
+                    </div>
+
+                    <!-- Container danh sách card thông báo thật do JS Render -->
+                    <div class="notifications-list" id="notifContainer"></div>
+
+                </div>
+
+                <footer class="page-footer">
+                    © 2026 Khoa CNTT - All rights reserved.
+                </footer>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT THÔNG BÁO -->
+    <div id="notifModal" class="modal-overlay">
+        <div class="modal-box large">
+            <div class="modal-header">
+                <div>
+                    <span id="modalSenderTag" class="sender-tag lecturer">Giảng viên hướng dẫn</span>
+                    <span id="modalTime" class="modal-date">Vừa xong</span>
+                </div>
+                <button id="btnCloseNotifModal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3 id="modalTitle" class="notif-detail-title">Tiêu đề thông báo</h3>
+                <div class="sender-info">
+                    <i class="fa-solid fa-user-check"></i> <strong>Người gửi:</strong> <span id="modalSender">Người gửi</span>
+                </div>
+                <div class="divider"></div>
+                <div id="modalContent" class="notif-detail-content">
+                    Nội dung chi tiết thông báo...
+                </div>
+                
+                <!-- Vùng hiển thị file đính kèm nếu có -->
+                <div id="modalAttachmentBox" class="attachment-download-box" style="display: none;">
+                    <div class="att-info">
+                        <i class="fa-solid fa-file-word file-icon"></i>
+                        <div>
+                            <span id="modalFileName" class="att-name">Tai_lieu.docx</span>
+                            <small>Tài liệu đính kèm chính thức</small>
+                        </div>
+                    </div>
+                    <a href="#" id="modalFileDownload" class="btn-download" target="_blank"><i class="fa-solid fa-download"></i> Tải về</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnConfirmReadModal" class="btn-primary">Đóng & Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-box small">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3>Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi phiên làm việc không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
+                <button id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CHÍNH -->
+    <script src="../js/notifications.js"></script>
+</body>
+</html>

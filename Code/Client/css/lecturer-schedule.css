@@ -1,0 +1,533 @@
+/* =========================================================
+   1. THANH SỐ LIỆU TÓM TẮT (STATS BAR)
+========================================================= */
+.schedule-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-label {
+    font-size: 12.5px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.stat-number {
+    font-size: 22px;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.text-blue { color: #2563eb; }
+.text-green { color: #16a34a; }
+.text-red { color: #ef4444; }
+
+/* =========================================================
+   2. CONTAINER TỪNG PHẦN & THANH CÔNG CỤ
+========================================================= */
+.section-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 14px;
+}
+
+.section-header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.view-filter, .matrix-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-control-sm {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #334155;
+    background-color: #ffffff;
+    cursor: pointer;
+    outline: none;
+}
+
+.form-control-sm:focus {
+    border-color: #2563eb;
+}
+
+.filter-chip {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-chip.active, .filter-chip:hover {
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+/* =========================================================
+   3. LƯỚI THẺ LỊCH GẶP (MEETING CARDS) & ACTION MENU
+========================================================= */
+.meeting-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 18px;
+}
+
+.meeting-card {
+    display: flex;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.meeting-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+    border-color: #cbd5e1;
+}
+
+.meeting-time-badge {
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    width: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.meeting-time-badge .date {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.meeting-time-badge .time {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.meeting-card.online .meeting-time-badge {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.meeting-card.offline .meeting-time-badge {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.meeting-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+    gap: 10px;
+}
+
+.meeting-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.meeting-top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-group {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.meeting-type {
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.type-online { color: #2563eb; }
+.type-offline { color: #16a34a; }
+
+/* Menu 3 chấm (Sửa/Dời/Hủy lịch) */
+.card-action-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-more-options {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-more-options:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.dropdown-menu-small {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    min-width: 140px;
+    overflow: hidden;
+}
+
+.card-action-dropdown.active .dropdown-menu-small {
+    display: block;
+}
+
+.dropdown-menu-small button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font-size: 12.5px;
+    color: #334155;
+    cursor: pointer;
+}
+
+.dropdown-menu-small button:hover {
+    background: #f8fafc;
+}
+
+.dropdown-menu-small button.action-cancel-meeting:hover {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.meeting-content h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.meeting-desc {
+    font-size: 12.5px;
+    color: #64748b;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.meeting-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 10px;
+}
+
+.btn-meet-link {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #2563eb;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-meet-link:hover {
+    text-decoration: underline;
+}
+
+.location-note {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-outline-small {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-outline-small:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+/* =========================================================
+   4. BẢNG MA TRẬN TIẾN ĐỘ & STICKY COLUMN (CUỘN NGANG)
+========================================================= */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.progress-matrix-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+    min-width: 920px;
+}
+
+.progress-matrix-table th, 
+.progress-matrix-table td {
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #f1f5f9;
+    background: #ffffff;
+    white-space: nowrap;
+}
+
+/* Ghim Cột 1: Mã Nhóm */
+.progress-matrix-table th:nth-child(1),
+.progress-matrix-table td:nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 20;
+    background-color: #f8fafc;
+    font-weight: 700;
+    border-right: 1px solid #cbd5e1;
+    width: 80px;
+}
+
+/* Ghim Cột 2: Tên Đề Tài (Ngay cạnh Mã Nhóm) */
+.progress-matrix-table th:nth-child(2),
+.progress-matrix-table td:nth-child(2) {
+    position: sticky;
+    left: 80px;
+    z-index: 20;
+    background-color: #ffffff;
+    text-align: left;
+    max-width: 240px;
+    white-space: normal;
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.06);
+}
+
+.progress-matrix-table th:nth-child(2) {
+    background-color: #f8fafc;
+}
+
+.progress-matrix-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Nhãn Trạng Thái Tiến Độ */
+.matrix-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+}
+
+.tag-done {
+    background: #dcfce7;
+    color: #16a34a;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    padding: 0;
+}
+
+.btn-quick-review {
+    background: #eff6ff;
+    color: #2563eb;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-quick-review:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    text-decoration: underline;
+}
+
+.tag-late {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.tag-missing {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.tag-pending {
+    color: #94a3b8;
+}
+
+.btn-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   5. MODAL CHUNG & MODAL DUYỆT BÁO CÁO NHANH
+========================================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: #ffffff;
+    width: 540px;
+    max-width: 90vw;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+.required { color: #ef4444; }
+.form-control { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; box-sizing: border-box; }
+
+.file-download-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+}
+
+.btn-download-link {
+    margin-left: auto;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+}
+
+.btn-primary { background: #2563eb; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn-submit { background: #2563eb; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn-warning-action { background: #f59e0b; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
