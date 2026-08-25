@@ -104,6 +104,10 @@
                     class="error-message">
                 </div>
 
+                <!-- Quên mật khẩu -->
+                <div class="forgot-password-link">
+                    <a href="#" id="openForgotPasswordBtn">Quên mật khẩu?</a>
+                </div>
 
                 <!-- Nút đăng nhập -->
                 <button
@@ -132,6 +136,106 @@
         </div>
 
     </main>
+
+
+    <!-- ===== MODAL QUÊN MẬT KHẨU ===== -->
+    <div id="forgotPasswordModal" class="fp-modal-overlay">
+        <div class="fp-modal-box">
+            <button type="button" id="closeForgotPasswordBtn" class="fp-modal-close">&times;</button>
+
+            <h3>Khôi phục mật khẩu</h3>
+            <p class="fp-modal-desc">
+                Nhập Mã định danh và Email đã đăng ký với tài khoản. Hệ thống sẽ đặt lại mật khẩu tạm thời cho bạn.
+            </p>
+
+            <form id="forgotPasswordForm" novalidate>
+                <div class="form-group">
+                    <label for="fpUserCode">Mã định danh</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="fpUserCode" placeholder="Nhập MSSV / Mã GV" autocomplete="off" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fpEmail">Email đã đăng ký</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="fpEmail" placeholder="Nhập email đã đăng ký" autocomplete="off" required />
+                    </div>
+                </div>
+
+                <div id="forgotPasswordMessage" class="fp-message"></div>
+
+                <button type="submit" id="fpSubmitBtn" class="btn-submit">
+                    <span>Xác nhận khôi phục</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== STYLE RIÊNG CHO MODAL QUÊN MẬT KHẨU ===== -->
+    <style>
+        .forgot-password-link {
+            text-align: right;
+            margin: -8px 0 16px;
+        }
+        .forgot-password-link a {
+            font-size: 0.9rem;
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .forgot-password-link a:hover {
+            text-decoration: underline;
+        }
+        .fp-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .fp-modal-overlay.active {
+            display: flex;
+        }
+        .fp-modal-box {
+            background: #fff;
+            width: 90%;
+            max-width: 420px;
+            border-radius: 14px;
+            padding: 28px 24px;
+            position: relative;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+        }
+        .fp-modal-box h3 {
+            margin: 0 0 8px;
+            font-size: 1.25rem;
+        }
+        .fp-modal-desc {
+            font-size: 0.88rem;
+            color: #64748b;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+        .fp-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .fp-message {
+            font-size: 0.85rem;
+            margin: 4px 0 14px;
+            line-height: 1.5;
+        }
+        .fp-message.error { color: #ef4444; }
+        .fp-message.success { color: #10b981; }
+    </style>
 
 
     <!-- ===== JAVASCRIPT ===== -->

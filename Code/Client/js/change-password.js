@@ -116,7 +116,9 @@ document.addEventListener("DOMContentLoaded", () => {
         confirmPasswordError.textContent = "";
     };
 
-    changePasswordForm.addEventListener("submit", (e) => {
+    const submitBtn = changePasswordForm.querySelector('button[type="submit"]');
+
+    changePasswordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         clearErrors();
 
@@ -145,17 +147,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!isValid) return;
 
-        // Mô phỏng đổi mật khẩu thành công -> Hiển thị Modal
-        document.getElementById("successModal").style.display = "flex";
-        changePasswordForm.reset();
-        strengthBar.style.width = "0%";
-        strengthText.textContent = "Chưa nhập";
-        document.querySelectorAll(".password-checklist li").forEach((li) => {
-            li.classList.remove("valid");
-            const icon = li.querySelector("i");
-            icon.classList.replace("fa-circle-check", "fa-circle");
-            icon.classList.replace("fa-solid", "fa-regular");
-        });
+        const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "";
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "<span>Đang xử lý...</span>";
+        }
+
+        try {
+            const response = await fetch("http://localhost:5000/api/auth/change-password", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_code: user.user_code,
+                    currentPassword: currentPass,
+                    newPassword: newPass
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                // Lỗi trả về từ server: sai mật khẩu hiện tại, trùng mật khẩu cũ, v.v.
+                currentPasswordError.textContent = data.message || "Đổi mật khẩu thất bại, vui lòng thử lại!";
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                }
+                return;
+            }
+
+            // Đổi mật khẩu thành công -> Hiển thị Modal
+            document.getElementById("successModal").style.display = "flex";
+            changePasswordForm.reset();
+            strengthBar.style.width = "0%";
+            strengthText.textContent = "Chưa nhập";
+            document.querySelectorAll(".password-checklist li").forEach((li) => {
+                li.classList.remove("valid");
+                const icon = li.querySelector("i");
+                icon.classList.replace("fa-circle-check", "fa-circle");
+                icon.classList.replace("fa-solid", "fa-regular");
+            });
+        } catch (error) {
+            console.error("Lỗi kết nối:", error);
+            currentPasswordError.textContent = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!";
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
+        }
     });
 
     // 5. ĐÓNG MODAL THÀNH CÔNG VÀ CHUYỂN HOẶC Ở LẠI

@@ -11,6 +11,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const activityLogRoutes = require('./routes/activityLogRoutes');
+const documentRoutes = require('./routes/documentRoutes');
 const activityLogger = require('./middlewares/activityLogger');
 const groupController = require('./controllers/groupController');
 
@@ -35,6 +36,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/v1/lecturer/dashboard', dashboardRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/documents', documentRoutes);
 
 app.get('/api/groups/lecturer/:lecturerCode', groupController.getGroupsByLecturer);
 

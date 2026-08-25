@@ -70,10 +70,10 @@
                     <button class="btn-menu-toggle" aria-label="Toggle Navigation"><i class="fa-solid fa-bars"></i></button>
                 </div>
                 <div class="navbar-right">
-                    <div class="notification-btn" title="Thông báo">
+                    <a href="notifications.html" class="notification-btn" title="Thông báo">
                         <i class="fa-solid fa-bell"></i>
-                        <span class="badge-count">3</span>
-                    </div>
+                        <span id="headerBadgeCount" class="badge-count">0</span>
+                    </a>
                     <div class="user-profile">
                         <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
                         <span id="userName" class="user-name">Đang tải...</span>
@@ -271,6 +271,7 @@
     </div>
 
     <!-- JS APP -->
+    <script src="../js/notif-badge.js"></script>
     <script src="../js/my-topic.js"></script>
 </body>
 </html>

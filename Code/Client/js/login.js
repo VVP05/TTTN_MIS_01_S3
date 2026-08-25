@@ -135,4 +135,88 @@ document.addEventListener("DOMContentLoaded", () => {
             submitBtn.innerHTML = "<span>Đăng nhập hệ thống</span>";
         }
     });
+
+    // ===== XỬ LÝ MODAL "QUÊN MẬT KHẨU" =====
+    const forgotPasswordModal = document.getElementById("forgotPasswordModal");
+    const openForgotPasswordBtn = document.getElementById("openForgotPasswordBtn");
+    const closeForgotPasswordBtn = document.getElementById("closeForgotPasswordBtn");
+    const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+    const fpUserCodeInput = document.getElementById("fpUserCode");
+    const fpEmailInput = document.getElementById("fpEmail");
+    const forgotPasswordMessage = document.getElementById("forgotPasswordMessage");
+    const fpSubmitBtn = document.getElementById("fpSubmitBtn");
+
+    const openForgotModal = () => {
+        forgotPasswordMessage.textContent = "";
+        forgotPasswordMessage.className = "fp-message";
+        forgotPasswordForm.reset();
+        forgotPasswordModal.classList.add("active");
+    };
+
+    const closeForgotModal = () => {
+        forgotPasswordModal.classList.remove("active");
+    };
+
+    if (openForgotPasswordBtn) {
+        openForgotPasswordBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openForgotModal();
+        });
+    }
+
+    if (closeForgotPasswordBtn) {
+        closeForgotPasswordBtn.addEventListener("click", closeForgotModal);
+    }
+
+    window.addEventListener("click", (e) => {
+        if (e.target === forgotPasswordModal) closeForgotModal();
+    });
+
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const user_code = fpUserCodeInput.value.trim();
+            const email = fpEmailInput.value.trim();
+
+            forgotPasswordMessage.textContent = "";
+            forgotPasswordMessage.className = "fp-message";
+
+            if (!user_code || !email) {
+                forgotPasswordMessage.textContent = "Vui lòng nhập đầy đủ Mã định danh và Email!";
+                forgotPasswordMessage.classList.add("error");
+                return;
+            }
+
+            fpSubmitBtn.disabled = true;
+            fpSubmitBtn.innerHTML = "<span>Đang xử lý...</span>";
+
+            try {
+                const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_code, email })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    forgotPasswordMessage.textContent = data.message || "Không thể khôi phục mật khẩu, vui lòng thử lại!";
+                    forgotPasswordMessage.classList.add("error");
+                    return;
+                }
+
+                forgotPasswordMessage.textContent = data.message;
+                forgotPasswordMessage.classList.add("success");
+                forgotPasswordForm.reset();
+            } catch (error) {
+                console.error("Lỗi kết nối:", error);
+                forgotPasswordMessage.textContent = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!";
+                forgotPasswordMessage.classList.add("error");
+            } finally {
+                fpSubmitBtn.disabled = false;
+                fpSubmitBtn.innerHTML = "<span>Xác nhận khôi phục</span>";
+            }
+        });
+    }
 });

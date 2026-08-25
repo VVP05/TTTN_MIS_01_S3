@@ -28,18 +28,18 @@ const seedData = async () => {
         const hashedPassword = await bcrypt.hash('123456', salt);
 
         const users = [
-            { user_code: 'ADMIN01', password: hashedPassword, full_name: 'Quản Trị Viên', role: 'ADMIN' },
-            { user_code: 'GV01', password: hashedPassword, full_name: 'TS. Nguyễn Văn An', role: 'LECTURER', max_quota: 5 },
-            { user_code: 'GV02', password: hashedPassword, full_name: 'TS. Lê Thị Bình', role: 'LECTURER', max_quota: 5 },
-            { user_code: 'GV03', password: hashedPassword, full_name: 'TS. Trần Thị Ngọc', role: 'LECTURER', max_quota: 5 },
-            { user_code: 'SV01', password: hashedPassword, full_name: 'Trần Văn Bảo', role: 'STUDENT' },
-            { user_code: 'SV02', password: hashedPassword, full_name: 'Trần Văn Khải', role: 'STUDENT' },
-            { user_code: 'SV03', password: hashedPassword, full_name: 'Nguyễn Thị Chung', role: 'STUDENT' },
-            { user_code: 'SV04', password: hashedPassword, full_name: 'Võ Văn Phụng', role: 'STUDENT' },
-            { user_code: 'SV05', password: hashedPassword, full_name: 'Võ Văn Huy', role: 'STUDENT' },
-            { user_code: 'SV06', password: hashedPassword, full_name: 'Nguyễn Văn Hoàng', role: 'STUDENT' },
-            { user_code: 'SV07', password: hashedPassword, full_name: 'Nguyễn Minh Hoàng', role: 'STUDENT' },
-             { user_code: 'SV08', password: hashedPassword, full_name: 'Võ Văn Hoàng', role: 'STUDENT' },
+            { user_code: 'ADMIN01', password: hashedPassword, full_name: 'Quản Trị Viên', role: 'ADMIN', email: 'admin01@tttn.edu.vn' },
+            { user_code: 'GV01', password: hashedPassword, full_name: 'TS. Nguyễn Văn An', role: 'LECTURER', max_quota: 5, email: 'gv01@tttn.edu.vn' },
+            { user_code: 'GV02', password: hashedPassword, full_name: 'TS. Lê Thị Bình', role: 'LECTURER', max_quota: 5, email: 'gv02@tttn.edu.vn' },
+            { user_code: 'GV03', password: hashedPassword, full_name: 'TS. Trần Thị Ngọc', role: 'LECTURER', max_quota: 5, email: 'gv03@tttn.edu.vn' },
+            { user_code: 'SV01', password: hashedPassword, full_name: 'Trần Văn Bảo', role: 'STUDENT', email: 'sv01@tttn.edu.vn' },
+            { user_code: 'SV02', password: hashedPassword, full_name: 'Trần Văn Khải', role: 'STUDENT', email: 'sv02@tttn.edu.vn' },
+            { user_code: 'SV03', password: hashedPassword, full_name: 'Nguyễn Thị Chung', role: 'STUDENT', email: 'sv03@tttn.edu.vn' },
+            { user_code: 'SV04', password: hashedPassword, full_name: 'Võ Văn Phụng', role: 'STUDENT', email: 'sv04@tttn.edu.vn' },
+            { user_code: 'SV05', password: hashedPassword, full_name: 'Võ Văn Huy', role: 'STUDENT', email: 'sv05@tttn.edu.vn' },
+            { user_code: 'SV06', password: hashedPassword, full_name: 'Nguyễn Văn Hoàng', role: 'STUDENT', email: 'sv06@tttn.edu.vn' },
+            { user_code: 'SV07', password: hashedPassword, full_name: 'Nguyễn Minh Hoàng', role: 'STUDENT', email: 'sv07@tttn.edu.vn' },
+             { user_code: 'SV08', password: hashedPassword, full_name: 'Võ Văn Hoàng', role: 'STUDENT', email: 'sv08@tttn.edu.vn' },
         ];
 
         await User.insertMany(users);

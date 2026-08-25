@@ -69,10 +69,10 @@
                     <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
                 </div>
                 <div class="navbar-right">
-                    <div class="notification-btn">
+                    <a href="notifications.html" class="notification-btn">
                         <span class="bell-icon"><i class="fa-solid fa-bell"></i></span>
-                        <span class="badge-count">3</span>
-                    </div>
+                        <span id="headerBadgeCount" class="badge-count">0</span>
+                    </a>
                     <div class="user-profile">
                         <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
                         <span id="userName" class="user-name">Đang tải...</span>
@@ -250,6 +250,7 @@
         </div>
     </div>
 
+    <script src="../js/notif-badge.js"></script>
     <script src="../js/student.js"></script>
 </body>
 </html>

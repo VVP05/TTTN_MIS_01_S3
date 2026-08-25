@@ -9,10 +9,14 @@ const {
     createStudent,
     updateStudent,
     createLecturer,
-    updateLecturer
+    updateLecturer,
+    changePassword,
+    forgotPassword
 } = require('../controllers/authController');
 
 router.post('/login', login);
+router.put('/change-password', changePassword);
+router.post('/forgot-password', forgotPassword);
 router.get('/admins', getAdmins);
 router.get('/lecturers', getLecturers);
 router.post('/lecturers', createLecturer);

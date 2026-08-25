@@ -43,6 +43,76 @@ exports.login = async (req, res) => {
     }
 };
 
+// Đổi mật khẩu (yêu cầu người dùng đã đăng nhập, xác minh mật khẩu hiện tại)
+exports.changePassword = async (req, res) => {
+    try {
+        const { user_code, currentPassword, newPassword } = req.body;
+
+        if (!user_code || !currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin!' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 8 ký tự!' });
+        }
+
+        const user = await User.findOne({ user_code });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản!' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không đúng!' });
+        }
+
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
+            return res.status(400).json({ success: false, message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại!' });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        return res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công!' });
+    } catch (error) {
+        console.error('Lỗi đổi mật khẩu:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi đổi mật khẩu!', error: error.message });
+    }
+};
+
+// Quên mật khẩu — xác thực bằng Mã định danh + Email đã đăng ký, reset về mật khẩu tạm thời
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { user_code, email } = req.body;
+
+        if (!user_code || !email) {
+            return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ Mã định danh và Email!' });
+        }
+
+        const user = await User.findOne({ user_code });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản với mã định danh này!' });
+        }
+
+        if (!user.email || user.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
+            return res.status(400).json({ success: false, message: 'Email không khớp với email đã đăng ký của tài khoản này!' });
+        }
+
+        const tempPassword = '123456';
+        user.password = await bcrypt.hash(tempPassword, 10);
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `Đã đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu tạm thời "${tempPassword}" rồi đổi lại mật khẩu ngay trong mục Đổi mật khẩu.`
+        });
+    } catch (error) {
+        console.error('Lỗi quên mật khẩu:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ!', error: error.message });
+    }
+};
+
 // Tạo sinh viên mới
 exports.createStudent = async (req, res) => {
     try {
