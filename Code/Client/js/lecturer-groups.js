@@ -9,7 +9,8 @@ let notifyMode = null; // 'GROUP' or 'BROADCAST'
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP (LECTURER)
-    const user = JSON.parse(localStorage.getItem("user"));
+    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const user = auth?.user || null;
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";
         return;

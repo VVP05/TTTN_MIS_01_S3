@@ -3,8 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================
     // 1. KIỂM TRA QUYỀN TRUY CẬP & CẤU HÌNH API
     // =========================================================
-    const token = localStorage.getItem("token") || "";
-    const user = JSON.parse(localStorage.getItem("user"));
+    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const token = auth?.token || "";
+    const user = auth?.user || null;
 
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";

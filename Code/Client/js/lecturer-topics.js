@@ -14,8 +14,15 @@ let currentActionType = null; // 'APPROVE' | 'REJECT' | 'REVISION'
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA ĐĂNG NHẬP (Bắt buộc Token và Role là LECTURER)
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
+    let lecturerAuth = null;
+    try {
+        lecturerAuth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    } catch (error) {
+        lecturerAuth = null;
+    }
+
+    const token = lecturerAuth?.token;
+    const userStr = lecturerAuth?.user ? JSON.stringify(lecturerAuth.user) : null;
 
     if (!token || !userStr) {
         alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục!");
@@ -232,7 +239,7 @@ function renderApprovedTable(list) {
             <td>${members}</td>
             <td>${dateStr}</td>
             <td><span class="badge badge-success">Đang hướng dẫn</span></td>
-            <td><a href="lecturer-progress.html" class="link-action">Xem tiến độ</a></td>
+            <td><a href="lecturer-progress-detail.html?topicId=${encodeURIComponent(topic._id)}" class="link-action">Xem tiến độ</a></td>
         `;
         tbody.appendChild(tr);
     });

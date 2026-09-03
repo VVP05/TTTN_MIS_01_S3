@@ -242,7 +242,7 @@ function calculateCurrentWeek(startDateStr, totalWeeks = 15) {
 // =========================================================
 async function loadScheduleData(studentCode) {
     try {
-        const token = localStorage.getItem("token");
+        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
         const res = await fetch(`http://localhost:5000/api/schedule/my-schedule/${studentCode}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -527,7 +527,7 @@ function renderTodoList(todos) {
 // =========================================================
 async function toggleTodoStatus(todoId) {
     try {
-        const token = localStorage.getItem("token");
+        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
         const res = await fetch(`http://localhost:5000/api/schedule/todos/toggle/${todoId}`, {
             method: "PATCH",
             headers: {
@@ -536,7 +536,8 @@ async function toggleTodoStatus(todoId) {
         });
 
         if (res.ok) {
-            const user = JSON.parse(localStorage.getItem("user"));
+            const auth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+            const user = auth?.user || null;
             if (user && user.user_code) {
                 // Tải lại tiến độ công việc
                 await loadScheduleData(user.user_code);

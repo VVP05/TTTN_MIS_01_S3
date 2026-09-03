@@ -20,10 +20,11 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Mã định danh hoặc mật khẩu không đúng!' });
         }
 
-        // 3. Tạo JWT Token
+        // 3. Tạo JWT Token (fallback nếu .env chưa được tạo)
+        const secretKey = process.env.JWT_SECRET || 'secret_key_tttn_2026';
         const token = jwt.sign(
             { id: user._id, role: user.role, user_code: user.user_code },
-            process.env.JWT_SECRET,
+            secretKey,
             { expiresIn: '1d' }
         );
 
@@ -368,7 +369,7 @@ exports.getStudents = async (req, res) => {
 exports.getUserByCode = async (req, res) => {
     try {
         const { user_code } = req.params;
-        const user = await User.findOne({ user_code }).select('user_code full_name role');
+        const user = await User.findOne({ user_code }).select('user_code full_name role email phone class major');
 
         if (!user) {
             return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
@@ -377,9 +378,44 @@ exports.getUserByCode = async (req, res) => {
         res.json({
             user_code: user.user_code,
             full_name: user.full_name,
-            role: user.role
+            role: user.role,
+            email: user.email || '',
+            phone: user.phone || '',
+            class: user.class || '',
+            major: user.major || ''
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi máy chủ khi tìm người dùng!', error: error.message });
+    }
+};
+
+// Sinh viên tự cập nhật email và số điện thoại của tài khoản
+exports.updateStudentProfile = async (req, res) => {
+    try {
+        const { user_code } = req.params;
+        const { email, phone, class: studentClass, major } = req.body;
+        const student = await User.findOne({ user_code, role: 'STUDENT' });
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản sinh viên.' });
+        }
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ success: false, message: 'Vui lòng nhập email hợp lệ.' });
+        }
+
+        student.email = email.trim();
+        student.phone = (phone || '').trim();
+        student.class = (studentClass || '').trim();
+        student.major = (major || '').trim();
+        await student.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Cập nhật thông tin liên hệ thành công!',
+            data: { user_code: student.user_code, full_name: student.full_name, email: student.email, phone: student.phone }
+        });
+    } catch (error) {
+        console.error('Lỗi cập nhật hồ sơ sinh viên:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi cập nhật hồ sơ.' });
     }
 };

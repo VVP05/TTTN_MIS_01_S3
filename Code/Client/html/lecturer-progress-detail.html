@@ -3,62 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi Tiết Tiến Độ Nhóm N01 | Cổng Giảng Viên</title>
+    <title>Chi Tiết Tiến Độ Nhóm | Cổng Giảng Viên</title>
     <link rel="stylesheet" href="../css/lecturer.css">
+    <link rel="stylesheet" href="../css/lecturer-progress-detail.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        .progress-header-card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
-        .member-list { display: flex; gap: 16px; margin-top: 12px; }
-        .member-item { background: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
-        .milestone-tracker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-        .milestone-box { background: #fff; padding: 16px; border-radius: 10px; border-left: 4px solid #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .progress-bar-bg { background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 8px; }
-        .progress-bar-fill { background: #2563eb; height: 100%; border-radius: 4px; }
-    </style>
 </head>
 <body>
 
-    <div class="main-wrapper" style="margin-left: 0; padding: 24px;">
-        <!-- Nút quay lại -->
-        <a href="lecturer-topics.html" style="text-decoration: none; color: #2563eb; font-weight: 600; font-size: 14px;">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách đề tài
+    <div class="main-wrapper progress-detail-page">
+        <a href="lecturer-topics.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i><span>Quay lại danh sách đề tài</span>
         </a>
 
         <!-- 1. THÔNG TIN CHUNG NHÓM -->
-        <div class="progress-header-card margin-top-12">
-            <span class="badge badge-success">Đang thực hiện</span>
-            <h2 style="margin-top: 8px; font-size: 20px;">[N01] Hệ thống quản lý sinh viên thực tập tốt nghiệp</h2>
-            <p style="color: #64748b; font-size: 13px;">Lĩnh vực: Web / Ứng dụng | Ngày bắt đầu: 10/06/2026</p>
-            
-            <div class="member-list">
-                <div class="member-item"><strong>Trưởng nhóm:</strong> Nguyễn Văn A (SV01) - 0912345678</div>
-                <div class="member-item"><strong>Thành viên:</strong> Trần Thị B (SV02)</div>
-                <div class="member-item"><strong>Thành viên:</strong> Lê Văn C (SV03)</div>
+        <div class="progress-header-card" id="progressHeader">
+            <div class="topic-heading">
+                <span class="status-pill" id="topicStatus">Đang thực hiện</span>
+                <span class="topic-kicker">CHI TIẾT NHÓM HƯỚNG DẪN</span>
             </div>
+            <h2 id="topicTitle">Đang tải dữ liệu...</h2>
+            <p id="topicMeta">Đang tải thông tin đề tài...</p>
+            <div class="members-heading"><i class="fa-solid fa-users"></i> Thành viên nhóm</div>
+            <div class="member-list" id="memberList"></div>
         </div>
 
         <!-- 2. THEO DÕI TIẾN ĐỘ THEO CỘT MỐC (MILESTONES) -->
-        <h3>Tiến độ các giai đoạn</h3>
-        <div class="milestone-tracker margin-top-12">
-            <div class="milestone-box" style="border-color: #16a34a;">
-                <span style="font-size: 12px; color: #16a34a; font-weight: 700;">MILESTONE 1 (HOÀN THÀNH)</span>
-                <h4 style="margin-top: 4px;">Đề cương & Báo cáo TK kiến trúc</h4>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 100%; background: #16a34a;"></div></div>
-            </div>
-            <div class="milestone-box" style="border-color: #2563eb;">
-                <span style="font-size: 12px; color: #2563eb; font-weight: 700;">MILESTONE 2 (ĐANG LÀM - 60%)</span>
-                <h4 style="margin-top: 4px;">Lập trình Chức năng & API</h4>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 60%;"></div></div>
-            </div>
-            <div class="milestone-box" style="border-color: #cbd5e1;">
-                <span style="font-size: 12px; color: #64748b; font-weight: 700;">MILESTONE 3 (CHƯA BẮT ĐẦU)</span>
-                <h4 style="margin-top: 4px;">Kiểm thử & Báo cáo tổng kết</h4>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 0%;"></div></div>
-            </div>
-        </div>
+        <div class="section-heading"><h3>Tiến độ các giai đoạn</h3><span>5 mốc báo cáo</span></div>
+        <div class="milestone-tracker" id="milestoneTracker"></div>
 
         <!-- 3. BẢNG BÁO CÁO HÀNG TUẦN & ĐÁNH GIÁ CỦA GV -->
-        <div class="table-card">
+        <div class="table-card submissions-card">
             <div class="card-header">
                 <h3>Danh sách báo cáo công việc đã nộp</h3>
             </div>
@@ -72,25 +46,10 @@
                         <th>Thao tác</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Tuần 2</strong><br><small>22/06/2026</small></td>
-                        <td>Đã thiết kế xong CSDL MySQL và viết API Đăng nhập/Đăng ký.</td>
-                        <td><a href="#" style="color: #2563eb;"><i class="fa-solid fa-file-word"></i> BaoCao_Tuan2.docx</a></td>
-                        <td><span class="badge badge-success">Đạt</span> - CSDL thiết kế tốt.</td>
-                        <td><button class="btn-primary" style="padding: 4px 10px; font-size: 12px;">Nhận xét</button></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Tuần 1</strong><br><small>15/06/2026</small></td>
-                        <td>Hoàn thành sơ đồ Use Case và Wireframe giao diện.</td>
-                        <td><a href="#" style="color: #2563eb;"><i class="fa-solid fa-file-pdf"></i> Diagram_v1.pdf</a></td>
-                        <td><span class="badge badge-success">Đạt</span> - Đã sửa theo yêu cầu.</td>
-                        <td><button class="btn-primary" style="padding: 4px 10px; font-size: 12px;">Sửa nhận xét</button></td>
-                    </tr>
-                </tbody>
+                <tbody id="submissionTableBody"></tbody>
             </table>
         </div>
     </div>
-
+    <script src="../js/lecturer-progress-detail.js"></script>
 </body>
 </html>

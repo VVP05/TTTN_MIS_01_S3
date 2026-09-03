@@ -2,7 +2,8 @@ const API_BASE = "http://localhost:5000";
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const user = JSON.parse(localStorage.getItem("user"));
+    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const user = auth?.user || null;
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";
         return;
@@ -44,6 +45,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function formatDate(dateString) {
         return new Date(dateString).toLocaleDateString("vi-VN");
+    }
+
+    // 4. TẢI DANH SÁCH NHÓM THỰC TẾ CỦA GIẢNG VIÊN ĐANG ĐĂNG NHẬP
+    const docTargetSelect = document.getElementById("docTarget");
+
+    async function fetchLecturerGroups() {
+        try {
+            const response = await fetch(`${API_BASE}/api/groups/lecturer/${lecturerCode}`);
+            const result = await response.json();
+
+            if (!docTargetSelect) return;
+
+            const groups = result?.data || [];
+            docTargetSelect.innerHTML = "";
+
+            const allOption = document.createElement("option");
+            allOption.value = "Tất cả nhóm hướng dẫn";
+            allOption.textContent = "Tất cả nhóm tôi đang hướng dẫn";
+            docTargetSelect.appendChild(allOption);
+
+            if (!groups.length) {
+                const emptyOption = document.createElement("option");
+                emptyOption.value = "Tất cả nhóm hướng dẫn";
+                emptyOption.textContent = "Bạn chưa có nhóm nào được phân công";
+                emptyOption.disabled = true;
+                docTargetSelect.appendChild(emptyOption);
+                return;
+            }
+
+            groups.forEach((group) => {
+                const option = document.createElement("option");
+                const groupCode = group.group_code || "Nhóm";
+                option.value = groupCode;
+                option.textContent = `Chỉ ${groupCode}`;
+                docTargetSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách nhóm giảng viên:", error);
+            if (!docTargetSelect) return;
+            docTargetSelect.innerHTML = "";
+            const fallback = document.createElement("option");
+            fallback.value = "Tất cả nhóm hướng dẫn";
+            fallback.textContent = "Không tải được danh sách nhóm";
+            fallback.disabled = true;
+            docTargetSelect.appendChild(fallback);
+        }
     }
 
     // 4. TẢI DANH SÁCH TÀI LIỆU ĐÃ CHIA SẺ TỪ SERVER
@@ -242,5 +289,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Tải dữ liệu lần đầu
+    fetchLecturerGroups();
     fetchMyDocuments();
 });

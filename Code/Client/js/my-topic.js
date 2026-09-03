@@ -134,7 +134,7 @@ async function getUserDisplayName(userCode) {
     }
     
     try {
-        const token = localStorage.getItem("token");
+        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
         const res = await fetch(`http://localhost:5000/api/auth/users/${userCode}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -159,7 +159,7 @@ async function getUserDisplayName(userCode) {
 // =========================================================
 async function loadMyTopic(userCode) {
     try {
-        const token = localStorage.getItem("token");
+        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
         const response = await fetch(`http://localhost:5000/api/topics/my-topic/${userCode}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -450,8 +450,9 @@ function initUploadEvents(mIndex) {
             }
 
             const file = fileInput.files[0];
-            const token = localStorage.getItem("token");
-            const user = JSON.parse(localStorage.getItem("user") || "{}");
+            const studentAuth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+            const token = studentAuth?.token;
+            const user = studentAuth?.user || {};
 
             // Disable nút nộp bài tránh click nhiều lần
             btnSubmit.disabled = true;

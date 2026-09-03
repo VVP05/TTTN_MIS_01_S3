@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const user = JSON.parse(localStorage.getItem("user"));
+    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const user = auth?.user || null;
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";
         return;

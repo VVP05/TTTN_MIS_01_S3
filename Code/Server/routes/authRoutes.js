@@ -8,6 +8,7 @@ const {
     getUserByCode,
     createStudent,
     updateStudent,
+    updateStudentProfile,
     createLecturer,
     updateLecturer,
     changePassword,
@@ -24,6 +25,7 @@ router.put('/lecturers/:user_code', updateLecturer);
 router.get('/students', getStudents);
 router.post('/students', createStudent);
 router.put('/students/:user_code', updateStudent);
+router.put('/students/:user_code/profile', updateStudentProfile);
 router.get('/users/:user_code', getUserByCode); // Route mới lấy thông tin sinh viên theo MSSV
 
 module.exports = router;

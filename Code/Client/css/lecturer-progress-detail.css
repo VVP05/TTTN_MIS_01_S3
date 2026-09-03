@@ -1,0 +1,139 @@
+body {
+    background: #eef3f8;
+}
+
+.progress-detail-page {
+    min-height: 100vh;
+    padding: 30px clamp(20px, 4vw, 64px) 64px;
+    background: radial-gradient(circle at 90% 0%, #dbeafe 0, transparent 32%), #eef3f8;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 20px;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.back-link:hover { color: #1e3a8a; }
+
+.progress-header-card {
+    position: relative;
+    max-width: 1280px;
+    padding: 32px 38px;
+    margin: 0 auto 28px;
+    background: #fff;
+    border: 1px solid #dbe5ef;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(30, 64, 95, .08);
+}
+
+.progress-header-card::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    content: "";
+    background: linear-gradient(90deg, #2563eb, #38bdf8);
+    border-radius: 14px 14px 0 0;
+}
+
+.topic-heading, .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.topic-kicker, .section-heading > span {
+    color: #7890a8;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.status-pill {
+    display: inline-flex;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.progress-header-card h2 {
+    margin: 17px 0 8px;
+    color: #172b4d;
+    font-size: clamp(21px, 3vw, 28px);
+    line-height: 1.25;
+}
+
+.progress-header-card p { color: #6b7f93; font-size: 13px; }
+.members-heading { margin-top: 25px; color: #334e68; font-size: 13px; font-weight: 800; }
+.members-heading i { margin-right: 7px; color: #2563eb; }
+
+.member-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+    max-width: 920px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    padding: 13px;
+    background: #f7fafc;
+    border: 1px solid #e5edf5;
+    border-radius: 10px;
+}
+
+.member-avatar {
+    display: grid;
+    flex: 0 0 34px;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.member-item > span:last-child { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.member-item strong { color: #7890a8; font-size: 10px; text-transform: uppercase; }
+.member-item b { overflow: hidden; color: #243b53; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.member-item small { color: #829ab1; font-size: 11px; }
+
+.section-heading { max-width: 1280px; margin: 0 auto 12px; padding: 0 4px; }
+.section-heading h3 { color: #243b53; font-size: 18px; }
+.milestone-tracker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; max-width: 1280px; margin: 0 auto 32px; }
+.milestone-box { min-height: 148px; padding: 17px; background: #fff; border: 1px solid #dbe5ef; border-top: 3px solid #2563eb; border-radius: 10px; box-shadow: 0 7px 18px rgba(30, 64, 95, .06); }
+.milestone-box h4 { min-height: 40px; margin: 10px 0 16px; color: #243b53; font-size: 13px; line-height: 1.45; }
+.milestone-box small { display: block; margin-top: 10px; color: #829ab1; font-size: 11px; }
+.progress-bar-bg { height: 7px; margin-top: 0; overflow: hidden; background: #e6edf3; border-radius: 99px; }
+.progress-bar-fill { height: 100%; border-radius: inherit; transition: width .4s ease; }
+
+.submissions-card { max-width: 1280px; margin: 0 auto; overflow: hidden; border: 1px solid #dbe5ef; box-shadow: 0 10px 24px rgba(30, 64, 95, .06); }
+.submissions-card .card-header { background: #fff; border-bottom: 1px solid #e5edf5; }
+.submissions-card .data-table { min-width: 760px; }
+.submissions-card .data-table td, .submissions-card .data-table th { padding: 14px 16px; }
+
+@media (max-width: 900px) {
+    .milestone-tracker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+    .progress-detail-page { padding: 20px 14px 36px; }
+    .progress-header-card { padding: 25px 18px 21px; }
+    .topic-kicker { display: none; }
+    .member-list, .milestone-tracker { grid-template-columns: 1fr; }
+    .milestone-box { min-height: auto; }
+}

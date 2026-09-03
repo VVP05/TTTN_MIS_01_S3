@@ -24,6 +24,20 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// API GET: /api/submissions/topic/:topic_id
+router.get('/topic/:topic_id', async (req, res) => {
+    try {
+        const submissions = await Submission.find({ topic_id: req.params.topic_id })
+            .sort({ milestone: 1, submitted_at: -1 })
+            .lean();
+
+        return res.status(200).json({ success: true, data: submissions });
+    } catch (error) {
+        console.error("Lỗi khi lấy bài nộp theo đề tài:", error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ: ' + error.message });
+    }
+});
+
 // API POST: /api/submissions/upload
 router.post('/upload', upload.single('file'), async (req, res) => {
     try {

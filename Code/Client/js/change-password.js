@@ -1,6 +1,7 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const user = JSON.parse(localStorage.getItem("user"));
+    const auth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+    const user = auth?.user || null;
     if (!user || user.role !== "STUDENT") {
         window.location.href = "index.html";
         return;
@@ -8,6 +9,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (user.full_name) document.getElementById("userName").textContent = user.full_name;
     if (user.user_code) document.getElementById("userCode").textContent = user.user_code;
+
+    let profileUser = user;
+    try {
+        const profileResponse = await fetch(`http://localhost:5000/api/auth/users/${encodeURIComponent(user.user_code)}`);
+        const profileResult = await profileResponse.json();
+        if (profileResponse.ok && profileResult.user_code) {
+            profileUser = { ...user, ...profileResult };
+            localStorage.setItem("studentAuth", JSON.stringify({ token: auth.token, user: profileUser }));
+            document.getElementById("userName").textContent = profileUser.full_name || user.full_name || "Sinh viên";
+        }
+    } catch (error) {
+        console.error("Không thể tải hồ sơ sinh viên mới nhất:", error);
+    }
+
+    const profileForm = document.getElementById("profileForm");
+    const profileFields = {
+        code: document.getElementById("studentCode"),
+        name: document.getElementById("studentName"),
+        email: document.getElementById("studentEmail"),
+        phone: document.getElementById("studentPhone"),
+        studentClass: document.getElementById("studentClass"),
+        major: document.getElementById("studentMajor")
+    };
+
+    profileFields.code.value = profileUser.user_code || "";
+    profileFields.name.value = profileUser.full_name || "";
+    profileFields.email.value = profileUser.email || "";
+    profileFields.phone.value = profileUser.phone || "";
+    profileFields.studentClass.value = profileUser.class || "";
+    profileFields.major.value = profileUser.major || "";
+
+    if (profileForm) {
+        profileForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const submitButton = profileForm.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/auth/students/${encodeURIComponent(user.user_code)}/profile`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: profileFields.email.value.trim(),
+                        phone: profileFields.phone.value.trim(),
+                        class: profileFields.studentClass.value.trim(),
+                        major: profileFields.major.value.trim()
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || "Cập nhật thất bại");
+
+                const updatedUser = { ...user, ...result.data };
+                localStorage.setItem("studentAuth", JSON.stringify({ token: auth.token, user: updatedUser }));
+                alert(result.message);
+            } catch (error) {
+                alert(error.message || "Không thể cập nhật thông tin.");
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        });
+    }
 
     // 2. ẨN / HIỆN MẬT KHẨU (TOGGLE EYE ICON)
     window.togglePassword = (inputId, btn) => {
@@ -216,8 +281,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cancelLogoutBtn) cancelLogoutBtn.addEventListener("click", () => logoutModal.style.display = "none");
     if (confirmLogoutBtn) {
         confirmLogoutBtn.addEventListener("click", () => {
-            localStorage.clear();
-            sessionStorage.clear();
+            localStorage.removeItem("studentAuth");
+            if (localStorage.getItem("activeRole") === "STUDENT") {
+                localStorage.removeItem("activeRole");
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+            }
             window.location.href = "index.html";
         });
     }
