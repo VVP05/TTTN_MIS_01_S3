@@ -30,6 +30,9 @@ const upload = multer({
 // GET  /api/documents/lecturer/:lecturerCode  -> Danh sách tài liệu do 1 GVHD chia sẻ
 router.get('/lecturer/:lecturerCode', documentController.getLecturerDocuments);
 
+// GET /api/documents/admin/all -> Toàn bộ tài liệu cho Admin quản lý
+router.get('/admin/all', documentController.getAllDocuments);
+
 // GET  /api/documents/student  -> Danh sách tài liệu công khai cho Sinh viên xem
 router.get('/student', documentController.getStudentDocuments);
 

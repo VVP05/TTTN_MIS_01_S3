@@ -1,10 +1,16 @@
 const Document = require('../models/Document');
+const Notification = require('../models/Notification');
 
 // 1. Lấy danh sách tài liệu do 1 Giảng viên đã chia sẻ (trang "Quản lý tài liệu" của GVHD)
 exports.getLecturerDocuments = async (req, res) => {
     try {
         const { lecturerCode } = req.params;
-        const documents = await Document.find({ uploader_code: lecturerCode }).sort({ createdAt: -1 });
+        const documents = await Document.find({
+            $or: [
+                { uploader_code: lecturerCode },
+                { target: 'Tất cả giảng viên' }
+            ]
+        }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, documents });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách tài liệu!', error: error.message });
@@ -14,7 +20,17 @@ exports.getLecturerDocuments = async (req, res) => {
 // 2. Lấy danh sách tài liệu công khai cho Sinh viên xem (trang "Tài liệu hướng dẫn")
 exports.getStudentDocuments = async (req, res) => {
     try {
-        // Trả về toàn bộ tài liệu đã được Giảng viên chia sẻ (lọc theo nhóm cụ thể sẽ bổ sung sau)
+        // Không hiển thị tài liệu chỉ dành cho giảng viên ở trang sinh viên.
+        const documents = await Document.find({ target: { $ne: 'Tất cả giảng viên' } }).sort({ createdAt: -1 });
+        res.status(200).json({ success: true, documents });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách tài liệu!', error: error.message });
+    }
+};
+
+// 2b. Lấy toàn bộ tài liệu cho màn hình quản trị
+exports.getAllDocuments = async (req, res) => {
+    try {
         const documents = await Document.find().sort({ createdAt: -1 });
         res.status(200).json({ success: true, documents });
     } catch (error) {
@@ -49,7 +65,29 @@ exports.uploadDocument = async (req, res) => {
         });
 
         await document.save();
-        res.status(201).json({ success: true, message: 'Đã chia sẻ tài liệu đến sinh viên thành công!', document });
+
+        if (target) {
+            const notificationTarget = target === 'Tất cả giảng viên' ? 'lecturers' : 'students';
+            const recipientLabel = target === 'Tất cả giảng viên' ? 'toàn bộ giảng viên' : 'sinh viên';
+            await Notification.create({
+                target: notificationTarget,
+                type: uploader_code === 'ADMIN'
+                    ? 'SYSTEM'
+                    : 'LECTURER',
+                title: `Tài liệu mới: ${title}`,
+                content: `Admin đã gửi tài liệu "${title}" đến ${recipientLabel}. Vui lòng mở mục Tài liệu & Biểu mẫu để xem và tải về.`,
+                priority: 'info',
+                status: 'published',
+                sender_name: uploader_name || 'Admin Hệ thống',
+                is_read: false,
+                attachment: {
+                    name: file.originalname,
+                    url: `/uploads/documents/${file.filename}`
+                }
+            });
+        }
+
+        res.status(201).json({ success: true, message: 'Đã chia sẻ tài liệu thành công!', document });
     } catch (error) {
         console.error('Lỗi tải lên tài liệu:', error);
         res.status(500).json({ success: false, message: 'Lỗi máy chủ khi tải lên tài liệu!', error: error.message });

@@ -308,7 +308,8 @@ exports.getLecturerDashboard = async (req, res) => {
                 $or: [
                     { recipient_code: lecturerCode },
                     { recipient_code: null, target: { $in: ['all', 'lecturers'] } }
-                ]
+                ],
+                type: { $in: ['SYSTEM', 'FACULTY', 'LECTURER'] }
             }).catch(() => 0),
 
             Topic.aggregate([

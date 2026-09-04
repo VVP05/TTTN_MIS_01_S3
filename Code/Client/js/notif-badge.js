@@ -17,24 +17,15 @@
 
     function resolveCurrentUser() {
         const fallbackUser = JSON.parse(localStorage.getItem("user") || "null");
-        const activeRole = localStorage.getItem("activeRole");
+        const pageName = window.location.pathname.split("/").pop().toLowerCase();
+        const pageRole = pageName.startsWith("lecturer-") ? "LECTURER" : "STUDENT";
+        const pageAuth = getAuthForRole(pageRole);
 
-        if (activeRole) {
-            const auth = getAuthForRole(activeRole);
-            if (auth && auth.user) return auth.user;
-        }
+        if (pageAuth && pageAuth.user) return pageAuth.user;
 
-        // Không xác định được activeRole -> thử lần lượt Student/Lecturer/Admin
-        const studentAuth = getAuthForRole("STUDENT");
-        if (studentAuth && studentAuth.user) return studentAuth.user;
+        if (fallbackUser && fallbackUser.role === pageRole) return fallbackUser;
 
-        const lecturerAuth = getAuthForRole("LECTURER");
-        if (lecturerAuth && lecturerAuth.user) return lecturerAuth.user;
-
-        const adminAuth = getAuthForRole("ADMIN");
-        if (adminAuth && adminAuth.user) return adminAuth.user;
-
-        return fallbackUser;
+        return null;
     }
 
     async function updateBellBadge() {
@@ -87,5 +78,10 @@
     document.addEventListener("DOMContentLoaded", () => {
         ensureBellIsClickable();
         updateBellBadge();
+        window.setInterval(updateBellBadge, 30000);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) updateBellBadge();
     });
 })();

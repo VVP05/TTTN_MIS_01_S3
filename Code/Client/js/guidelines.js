@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const documentGrid = document.getElementById("documentGrid");
     const noDocResult = document.getElementById("noDocResult");
+    const allDocumentsCount = document.getElementById("allDocumentsCount");
     const API_BASE = "http://localhost:5000";
 
     const getCategoryKey = (category) => {
@@ -38,6 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const renderDocuments = (docs) => {
         const cards = docs || [];
         documentGrid.innerHTML = "";
+
+        if (allDocumentsCount) allDocumentsCount.textContent = cards.length;
 
         cards.forEach((doc) => {
             const card = document.createElement("div");
@@ -116,7 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`${API_BASE}/api/documents/student`);
             const result = await response.json();
-            const docs = result && Array.isArray(result.documents) ? result.documents : [];
+            const docs = result && Array.isArray(result.documents)
+                ? result.documents.filter(doc => doc.target !== "Tất cả giảng viên")
+                : [];
             renderDocuments(docs);
         } catch (error) {
             console.error("Lỗi khi tải tài liệu từ server:", error);

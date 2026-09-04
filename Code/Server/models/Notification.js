@@ -19,6 +19,7 @@ const notificationSchema = new mongoose.Schema({
     isPinned: { type: Boolean, default: false },
     status: { type: String, enum: ['draft', 'published'], default: 'published' },
     is_read: { type: Boolean, default: false },
+    read_by: { type: [String], default: [] },
     sender_name: { type: String, default: "Hệ thống" }
 }, { timestamps: true });
 

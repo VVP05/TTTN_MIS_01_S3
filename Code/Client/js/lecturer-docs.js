@@ -95,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. TẢI DANH SÁCH TÀI LIỆU ĐÃ CHIA SẺ TỪ SERVER
     const myDocsTableBody = document.getElementById("myDocsTableBody");
+    const facultyDocsGrid = document.getElementById("facultyDocsGrid");
     const emptyDocsRow = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding: 24px 0;">Bạn chưa chia sẻ tài liệu nào.</td></tr>`;
 
     async function fetchMyDocuments() {
@@ -107,11 +108,47 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            renderDocuments(data.documents || []);
+            const documents = data.documents || [];
+            renderFacultyDocuments(documents.filter(doc => doc.target === "Tất cả giảng viên"));
+            renderDocuments(documents.filter(doc => doc.target !== "Tất cả giảng viên" && doc.uploader_code === lecturerCode));
         } catch (error) {
             console.error("Lỗi kết nối máy chủ khi tải danh sách tài liệu:", error);
             myDocsTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding: 24px 0;">Lỗi kết nối máy chủ! Vui lòng kiểm tra Server rồi tải lại trang.</td></tr>`;
         }
+    }
+
+    function renderFacultyDocuments(documents) {
+        if (!facultyDocsGrid) return;
+        if (!documents.length) {
+            facultyDocsGrid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:16px 0;">Chưa có tài liệu từ Khoa / Bộ môn.</p>`;
+            return;
+        }
+
+        facultyDocsGrid.innerHTML = documents.map((doc) => {
+            const { icon, cls } = getFileIcon(doc.original_name || "");
+            return `
+                <div class="doc-card">
+                    <div class="doc-icon ${cls === "text-red" ? "pdf" : "word"}"><i class="fa-solid ${icon}"></i></div>
+                    <div class="doc-info">
+                        <h3>${doc.title}</h3>
+                        <p>Cập nhật: ${formatDate(doc.createdAt)} • ${Math.round((doc.file_size || 0) / 1024)} KB</p>
+                    </div>
+                    <a href="#" class="btn-download btn-download-faculty" data-id="${doc._id}" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
+                </div>`;
+        }).join("");
+
+        facultyDocsGrid.querySelectorAll(".btn-download-faculty").forEach((button) => {
+            button.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const response = await fetch(`${API_BASE}/api/documents/download/${button.dataset.id}`, { method: "PATCH" });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    alert(result.message || "Không thể tải tài liệu!");
+                    return;
+                }
+                window.open(`${API_BASE}${result.file_path}`, "_blank");
+            });
+        });
     }
 
     function renderDocuments(documents) {

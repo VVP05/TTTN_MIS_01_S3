@@ -251,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!item.is_read) {
             try {
-                await fetch(`http://localhost:5000/api/notifications/read/${item._id}`, {
+                await fetch(`http://localhost:5000/api/notifications/read/${item._id}?user_code=${encodeURIComponent(currentUserCode)}`, {
                     method: 'PATCH'
                 });
                 item.is_read = true;

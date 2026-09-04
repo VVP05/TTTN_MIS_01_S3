@@ -75,10 +75,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (apiUser) {
                 displayUserFromStorage(apiUser);
-                const badgeEl = document.querySelector(".badge-count");
-                if (badgeEl && apiUser.unreadNotifications !== undefined) {
-                    badgeEl.textContent = apiUser.unreadNotifications;
-                }
             }
 
             renderKPIs(stats);

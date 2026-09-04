@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu & Biểu mẫu - QUẢN LÝ TTTN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin-documents.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><i class="fa-solid fa-graduation-cap logo-icon"></i><span class="brand-name">QUẢN LÝ TTTN</span></div>
+            <div class="sidebar-menu-wrapper">
+                <ul class="menu-list">
+                    <li class="menu-item"><a href="admin-dashboard.html"><i class="fa-solid fa-layer-group"></i><span>Tổng quan</span></a></li>
+                </ul>
+                <div class="menu-heading">QUẢN LÝ NGƯỜI DÙNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item"><a href="admin-students.html"><i class="fa-solid fa-user-graduate"></i><span>Quản lý sinh viên</span></a></li>
+                    <li class="menu-item"><a href="admin-lecturers.html"><i class="fa-solid fa-chalkboard-user"></i><span>Quản lý giảng viên</span></a></li>
+                    <li class="menu-item"><a href="admin-accounts.html"><i class="fa-solid fa-user-gear"></i><span>Tài khoản Admin</span></a></li>
+                </ul>
+                <div class="menu-heading">QUẢN LÝ NGHIỆP VỤ</div>
+                <ul class="menu-list">
+                    <li class="menu-item"><a href="admin-topics.html"><i class="fa-solid fa-book-bookmark"></i><span>Duyệt đề tài</span></a></li>
+                    <li class="menu-item"><a href="admin-teams.html"><i class="fa-solid fa-users-rectangle"></i><span>Nhóm & Phân công</span></a></li>
+                    <li class="menu-item"><a href="admin-milestones.html"><i class="fa-regular fa-calendar-check"></i><span>Milestone & Hạn nộp</span></a></li>
+                    <li class="menu-item active"><a href="admin-documents.html"><i class="fa-solid fa-file-lines"></i><span>Tài liệu & Biểu mẫu</span></a></li>
+                    <li class="menu-item"><a href="admin-notifications.html"><i class="fa-solid fa-bullhorn"></i><span>Thông báo hệ thống</span></a></li>
+                </ul>
+                <div class="menu-heading">HỆ THỐNG</div>
+                <ul class="menu-list"><li class="menu-item"><a href="admin-logs.html"><i class="fa-solid fa-newspaper"></i><span>Nhật ký hoạt động</span></a></li></ul>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <header class="topbar">
+                <button class="btn-toggle-sidebar" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars"></i></button>
+                <div class="topbar-right">
+                    <div class="user-info"><i class="fa-solid fa-circle-user avatar"></i><span id="userName" class="user-name">Quản Trị Viên</span><span class="role-badge">ADMIN</span></div>
+                    <button class="btn-logout-top" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất</button>
+                </div>
+            </header>
+
+            <main class="page-body">
+                <div class="page-title-box">
+                    <div><h2>Tài liệu & Biểu mẫu</h2><p class="subtitle">Gửi tài liệu chính thức để sinh viên xem và tải về tại trang Tài liệu hướng dẫn.</p></div>
+                </div>
+
+                <section class="card-panel upload-panel">
+                    <div class="panel-heading"><div class="summary-icon blue"><i class="fa-solid fa-cloud-arrow-up"></i></div><div><h3>Gửi tài liệu mới</h3><p class="subtitle">Tài liệu được gửi sẽ xuất hiện ngay trong trang sinh viên.</p></div></div>
+                    <form id="documentForm">
+                        <div class="form-row">
+                            <div class="form-group flex-1"><label class="form-label" for="docTitle">Tên tài liệu <span class="required">*</span></label><input class="form-control" id="docTitle" required placeholder="Ví dụ: Mẫu báo cáo thực tập 2026"></div>
+                            <div class="form-group flex-1"><label class="form-label" for="docCategory">Phân loại</label><select class="form-control" id="docCategory"><option>Biểu mẫu SV</option><option>Quy định / Hướng dẫn chung</option><option>Mẫu báo cáo</option><option>Mẫu Slide thuyết trình</option></select></div>
+                        </div>
+                        <div class="form-row upload-fields">
+                            <div class="form-group flex-1"><label class="form-label" for="docTarget">Đối tượng nhận</label><select class="form-control" id="docTarget"><option value="Tất cả sinh viên">Tất cả sinh viên</option><option value="Tất cả giảng viên">Tất cả giảng viên</option></select></div>
+                            <div class="form-group flex-1"><label class="form-label" for="docFile">Chọn file (.pdf, .docx, .pptx, .zip) <span class="required">*</span></label><input class="form-control" type="file" id="docFile" required></div>
+                        </div>
+                        <div class="form-actions"><span id="formMessage" class="form-message"></span><button class="btn btn-primary" type="submit" id="uploadBtn"><i class="fa-solid fa-paper-plane"></i> Gửi tài liệu</button></div>
+                    </form>
+                </section>
+
+                <section class="card-panel margin-top-20">
+                    <div class="filter-bar"><div><h3>Danh sách tài liệu đã gửi</h3><p class="subtitle">Các tài liệu đang được cung cấp trên trang sinh viên.</p></div><div class="search-input-group"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="Tìm tài liệu..."></div></div>
+                    <div class="table-container"><table class="custom-table"><thead><tr><th>Tài liệu</th><th>Phân loại</th><th>Đối tượng nhận</th><th>Ngày gửi</th><th>Lượt tải</th><th>Thao tác</th></tr></thead><tbody id="documentTableBody"><tr><td colspan="6" class="text-center">Đang tải dữ liệu...</td></tr></tbody></table></div>
+                </section>
+            </main>
+        </div>
+    </div>
+    <script src="../js/admin-documents.js"></script>
+</body>
+</html>

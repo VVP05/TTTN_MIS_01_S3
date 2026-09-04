@@ -13,12 +13,20 @@ exports.getNotifications = async (req, res) => {
             ]
         }).sort({ createdAt: -1 });
 
-        const unreadCount = notifications.filter(n => !n.is_read).length;
+        const result = notifications.map(notification => {
+            const item = notification.toObject();
+            item.is_read = item.read_by.includes(studentCode);
+            if (item.target === 'students' && ['Quản Trị Viên', 'Admin Hệ thống'].includes(item.sender_name)) {
+                item.type = 'SYSTEM';
+            }
+            return item;
+        });
+        const unreadCount = result.filter(n => !n.is_read).length;
 
         res.status(200).json({
             success: true,
             unread_count: unreadCount,
-            notifications
+            notifications: result
         });
     } catch (error) {
         res.status(500).json({ message: "Lỗi máy chủ!", error: error.message });
@@ -32,19 +40,28 @@ exports.getLecturerNotifications = async (req, res) => {
 
         const notifications = await Notification.find({
             status: 'published',
-            type: { $in: ['SYSTEM', 'FACULTY'] },
+            type: { $in: ['SYSTEM', 'FACULTY', 'LECTURER'] },
             $or: [
                 { recipient_code: lecturerCode },
                 { recipient_code: null, target: { $in: ['all', 'lecturers'] } }
             ]
         }).sort({ createdAt: -1 });
 
-        const unreadCount = notifications.filter(n => !n.is_read).length;
+        const result = notifications.map(notification => {
+            const item = notification.toObject();
+            item.is_read = item.read_by.includes(lecturerCode);
+            if (item.target === 'lecturers' && ['Quản Trị Viên', 'Admin Hệ thống'].includes(item.sender_name)) {
+                item.type = 'SYSTEM';
+                item.sender_name = 'Hệ thống';
+            }
+            return item;
+        });
+        const unreadCount = result.filter(n => !n.is_read).length;
 
         res.status(200).json({
             success: true,
             unread_count: unreadCount,
-            notifications
+            notifications: result
         });
     } catch (error) {
         res.status(500).json({ message: "Lỗi máy chủ!", error: error.message });
@@ -138,7 +155,9 @@ exports.deleteNotification = async (req, res) => {
 exports.markAsRead = async (req, res) => {
     try {
         const { id } = req.params;
-        await Notification.findByIdAndUpdate(id, { is_read: true });
+        const userCode = req.query.user_code;
+        const update = userCode ? { $addToSet: { read_by: userCode } } : { is_read: true };
+        await Notification.findByIdAndUpdate(id, update);
 
         res.status(200).json({ success: true, message: "Đã đánh dấu đã đọc" });
     } catch (error) {
@@ -162,10 +181,9 @@ exports.markAllAsRead = async (req, res) => {
                 $or: [
                     { recipient_code: studentCode },
                     { recipient_code: null, target: { $in: targetFilters } }
-                ],
-                is_read: false
+                ]
             },
-            { $set: { is_read: true } }
+            { $addToSet: { read_by: studentCode } }
         );
 
         res.status(200).json({ success: true, message: "Đã đánh dấu tất cả là đã đọc" });

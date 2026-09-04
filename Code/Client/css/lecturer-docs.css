@@ -1,3 +1,47 @@
+/* HEADER TRANG */
+.page-header-container {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.page-header-text h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 26px;
+    line-height: 1.2;
+}
+
+.page-header-text p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.page-header-container .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.18);
+    transition: background 0.2s, transform 0.2s;
+}
+
+.page-header-container .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
 /* SECTION CHUNG */
 .docs-section {
     background: #ffffff;
@@ -27,9 +71,29 @@
 
 /* LƯỚI TÀI LIỆU (GRID CARDS) */
 .docs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
     gap: 16px;
+    padding: 2px 2px 12px;
+    scroll-behavior: smooth;
+    scrollbar-color: #93c5fd #eff6ff;
+    scrollbar-width: thin;
+}
+
+.docs-grid::-webkit-scrollbar {
+    height: 7px;
+}
+
+.docs-grid::-webkit-scrollbar-track {
+    background: #eff6ff;
+    border-radius: 10px;
+}
+
+.docs-grid::-webkit-scrollbar-thumb {
+    background: #93c5fd;
+    border-radius: 10px;
 }
 
 .doc-card {
@@ -37,6 +101,8 @@
     align-items: center;
     gap: 14px;
     padding: 16px;
+    min-width: 300px;
+    flex: 0 0 300px;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     background: #f8fafc;
@@ -79,6 +145,10 @@
     font-size: 11.5px;
     color: #64748b;
     margin: 0;
+}
+
+.docs-grid > p {
+    grid-column: 1 / -1;
 }
 
 .btn-download {
@@ -132,6 +202,39 @@
 
 .text-red:hover {
     color: #ef4444;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+@media (max-width: 1000px) {
+    .doc-card {
+        min-width: 280px;
+        flex-basis: 280px;
+    }
+}
+
+@media (max-width: 680px) {
+    .page-header-container {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .page-header-container .btn-primary {
+        justify-content: center;
+    }
+
+    .docs-section {
+        padding: 16px;
+    }
+
+    .docs-section .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
 }
 
 /* MODAL CHUNG */
