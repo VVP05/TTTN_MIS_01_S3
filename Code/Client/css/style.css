@@ -301,7 +301,7 @@ body {
 
     height: 42px;
 
-    padding: 10px 14px 10px 38px;
+    padding: 10px 44px 10px 38px;
 
     background: #ffffff;
 
@@ -535,4 +535,50 @@ body {
     opacity: 0.8;
 
     pointer-events: none;
+}
+
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+
+.password-icon {
+    display: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+.password-toggle:not(.is-visible) .eye-off,
+.password-toggle.is-visible .eye-open {
+    display: block;
+}
+
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+    color: #23486f;
+}
+
+
+.password-toggle:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+    border-radius: 4px;
 }

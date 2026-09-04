@@ -57,8 +57,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("loginForm");
     const userCodeInput = document.getElementById("userCode");
     const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("togglePassword");
     const errorMessage = document.getElementById("errorMessage");
     const submitBtn = document.getElementById("submitBtn");
+
+    togglePassword.addEventListener("click", () => {
+        const isPasswordHidden = passwordInput.type === "password";
+        passwordInput.type = isPasswordHidden ? "text" : "password";
+        togglePassword.classList.toggle("is-visible", isPasswordHidden);
+        togglePassword.setAttribute(
+            "aria-label",
+            isPasswordHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+        );
+        togglePassword.setAttribute(
+            "title",
+            isPasswordHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+        );
+    });
 
     // Hàm hiển thị lỗi
     const showError = (message) => {
