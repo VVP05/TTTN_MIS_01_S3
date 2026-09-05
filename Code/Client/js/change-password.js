@@ -200,6 +200,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (newPass.length < 8) {
             newPasswordError.textContent = "Mật khẩu mới phải có ít nhất 8 ký tự.";
             isValid = false;
+        } else if (!/[A-Z]/.test(newPass)) {
+            newPasswordError.textContent = "Mật khẩu mới phải có ít nhất 1 chữ viết hoa.";
+            isValid = false;
+        } else if (!/[a-z]/.test(newPass)) {
+            newPasswordError.textContent = "Mật khẩu mới phải có ít nhất 1 chữ viết thường.";
+            isValid = false;
+        } else if (!/[0-9]/.test(newPass)) {
+            newPasswordError.textContent = "Mật khẩu mới phải có ít nhất 1 chữ số.";
+            isValid = false;
+        } else if (!/[^A-Za-z0-9]/.test(newPass)) {
+            newPasswordError.textContent = "Mật khẩu mới phải có ít nhất 1 ký tự đặc biệt.";
+            isValid = false;
         } else if (currentPass === newPass) {
             newPasswordError.textContent = "Mật khẩu mới không được trùng với mật khẩu cũ.";
             isValid = false;

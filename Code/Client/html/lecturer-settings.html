@@ -152,17 +152,37 @@
                         <form id="changePasswordForm" class="settings-form">
                             <div class="form-group">
                                 <label>Mật khẩu hiện tại <span class="required">*</span></label>
-                                <input type="password" class="form-control" id="oldPassword" required placeholder="Nhập mật khẩu đang dùng...">
+                                <div class="password-input-wrapper">
+                                    <input type="password" class="form-control" id="oldPassword" required placeholder="Nhập mật khẩu đang dùng...">
+                                    <button type="button" class="password-toggle" onclick="toggleLecturerPassword('oldPassword', this)" aria-label="Hiện mật khẩu"><i class="fa-regular fa-eye"></i></button>
+                                </div>
                             </div>
 
                             <div class="form-group">
                                 <label>Mật khẩu mới <span class="required">*</span></label>
-                                <input type="password" class="form-control" id="newPassword" required placeholder="Ít nhất 8 ký tự...">
+                                <div class="password-input-wrapper">
+                                    <input type="password" class="form-control" id="newPassword" required placeholder="Nhập mật khẩu mới...">
+                                    <button type="button" class="password-toggle" onclick="toggleLecturerPassword('newPassword', this)" aria-label="Hiện mật khẩu"><i class="fa-regular fa-eye"></i></button>
+                                </div>
+                                <div class="password-strength" aria-live="polite">
+                                    <div class="strength-track"><div id="passwordStrengthBar" class="strength-bar"></div></div>
+                                    <span id="passwordStrengthText">Chưa nhập</span>
+                                </div>
+                                <ul class="password-requirements">
+                                    <li id="requirementLength">Ít nhất 8 ký tự</li>
+                                    <li id="requirementUppercase">Có chữ viết hoa</li>
+                                    <li id="requirementLowercase">Có chữ viết thường</li>
+                                    <li id="requirementNumber">Có chữ số</li>
+                                    <li id="requirementSpecial">Có ký tự đặc biệt</li>
+                                </ul>
                             </div>
 
                             <div class="form-group">
                                 <label>Xác nhận mật khẩu mới <span class="required">*</span></label>
-                                <input type="password" class="form-control" id="confirmPassword" required placeholder="Nhập lại mật khẩu mới...">
+                                <div class="password-input-wrapper">
+                                    <input type="password" class="form-control" id="confirmPassword" required placeholder="Nhập lại mật khẩu mới...">
+                                    <button type="button" class="password-toggle" onclick="toggleLecturerPassword('confirmPassword', this)" aria-label="Hiện mật khẩu"><i class="fa-regular fa-eye"></i></button>
+                                </div>
                             </div>
 
                             <div class="form-actions" style="margin-top: 32px;">

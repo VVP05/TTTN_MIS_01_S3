@@ -57,6 +57,13 @@ exports.changePassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 8 ký tự!' });
         }
 
+        if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mật khẩu mới phải có chữ hoa, chữ thường, chữ số và ký tự đặc biệt!'
+            });
+        }
+
         const user = await User.findOne({ user_code });
         if (!user) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản!' });

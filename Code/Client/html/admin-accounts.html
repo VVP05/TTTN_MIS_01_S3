@@ -224,8 +224,23 @@
                         <input type="email" id="emailInput" placeholder="admin@vnu.edu.vn" required>
                     </div>
                     <div class="form-group">
-                        <label>Mật khẩu *</label>
-                        <input type="password" id="passwordInput" placeholder="••••••••" required>
+                        <label>Mật khẩu mới *</label>
+                        <input type="password" id="passwordInput" placeholder="Nhập mật khẩu mới..." required>
+                        <div class="admin-password-strength" aria-live="polite">
+                            <div class="admin-strength-track"><div id="adminStrengthBar"></div></div>
+                            <span id="adminStrengthText">Chưa nhập</span>
+                        </div>
+                        <ul class="admin-password-requirements">
+                            <li id="adminReqLength">Tối thiểu 8 ký tự</li>
+                            <li id="adminReqUpper">Có chữ hoa</li>
+                            <li id="adminReqLower">Có chữ thường</li>
+                            <li id="adminReqNumber">Có chữ số</li>
+                            <li id="adminReqSpecial">Có ký tự đặc biệt</li>
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <label>Nhập lại mật khẩu mới *</label>
+                        <input type="password" id="passwordConfirmInput" placeholder="Nhập lại mật khẩu mới..." required>
                     </div>
                     <div class="form-group">
                         <label>Vai trò / Phân quyền *</label>
