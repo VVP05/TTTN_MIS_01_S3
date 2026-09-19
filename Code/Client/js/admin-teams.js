@@ -168,12 +168,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         saveAssignBtn.onclick = async () => {
             const selectedLecturer = lecturerHDSelect.value;
             if (!selectedLecturer) {
-                alert("Vui lòng chọn Giảng viên hướng dẫn!");
+                showAppNotification("Vui lòng chọn Giảng viên hướng dẫn!");
                 return;
             }
 
             if (!selectedTeamId) {
-                alert("Không tìm thấy nhóm cần phân công!");
+                showAppNotification("Không tìm thấy nhóm cần phân công!");
                 return;
             }
 
@@ -191,13 +191,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     throw new Error(data.message || "Không thể phân công giảng viên");
                 }
 
-                alert(data.message || "Phân công thành công!");
+                showAppNotification(data.message || "Phân công thành công!");
                 assignModal.style.display = "none";
                 await fetchTeams();
                 handleFilter();
             } catch (error) {
                 console.error("Lỗi phân công giảng viên:", error);
-                alert(error.message || "Lỗi phân công giảng viên!");
+                showAppNotification(error.message || "Lỗi phân công giảng viên!");
             }
         };
     }

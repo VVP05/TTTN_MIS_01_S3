@@ -1,3 +1,56 @@
+.availability-section { overflow: hidden; padding: 0; background: #fbfdff; }
+.availability-hero { display: flex; align-items: center; gap: 18px; padding: 22px 30px; min-height: 132px; background: linear-gradient(110deg, #edf5ff, #f7fbff 70%, #eaf3ff); border-bottom: 1px solid #e3edf9; }
+.availability-hero-art { position: relative; color: #2978eb; font-size: 66px; line-height: 1; transform: rotate(-5deg); }
+.availability-hero-art span { position: absolute; right: -7px; bottom: -3px; display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; background: #fff; color: #2978eb; font-size: 23px; transform: rotate(5deg); }
+.availability-hero-copy { flex: 1; }
+.availability-hero-copy h2 { color: #173b72; font-size: 28px; margin: 0; }
+.availability-hero-copy p { color: #7690b4; font-size: 14px; margin-top: 7px; }
+.availability-hero-note { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 17px; background: #edf5ff; color: #3779d4; font-size: 12px; line-height: 1.45; }
+.availability-hero-note i { font-size: 24px; }
+.availability-list-heading { display: flex; align-items: center; gap: 12px; padding: 22px 30px 14px; }
+.availability-list-heading h3 { color: #173b72; font-size: 18px; }
+.availability-list-heading h3 i { margin-right: 8px; color: #377ff0; }
+.availability-count { padding: 6px 11px; border-radius: 999px; background: #edf5ff; color: #3679df; font-size: 12px; font-weight: 700; }
+.availability-list { display: flex; flex-direction: column; gap: 18px; padding: 0 30px 28px; color: #64748b; font-size: 12px; }
+.availability-empty-hint { color: #64748b; font-size: 12px; }
+.availability-modal-box { width: 760px; max-width: 94vw; padding: 0; overflow: hidden; border-radius: 18px; }
+.availability-modal-heading { display: flex; align-items: center; gap: 14px; padding: 20px 24px 16px; border-bottom: 1px solid #e8eef7; }
+.availability-heading-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: #3678ed; color: #fff; font-size: 21px; box-shadow: 0 7px 16px rgba(54, 120, 237, .22); }
+.availability-modal-heading h3 { color: #17365f; font-size: 20px; margin: 0; }
+.availability-modal-heading p { color: #7b8da7; font-size: 12px; margin-top: 4px; }
+.availability-close { margin-left: auto; font-size: 22px; padding: 4px; }
+.availability-modal-body { display: grid; grid-template-columns: 220px 1fr; gap: 18px; padding: 20px 28px 8px; }
+.availability-illustration { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; color: #5577a5; text-align: center; background: radial-gradient(circle at 50% 40%, #eef5ff 0 35%, transparent 36%); }
+.illustration-calendar { position: relative; color: #4a8af1; font-size: 112px; line-height: 1; transform: rotate(-7deg); }
+.illustration-clock { position: absolute; right: -9px; bottom: -5px; display: grid; place-items: center; width: 58px; height: 58px; border: 8px solid #fff; border-radius: 50%; background: #fff; color: #5a8ee7; font-size: 39px; transform: rotate(7deg); }
+.availability-illustration p { color: #4f79b3; font-size: 15px; font-style: italic; font-weight: 600; line-height: 1.45; margin-top: 22px; }
+.illustration-line { width: 84px; height: 2px; margin-top: 9px; background: #6195e7; transform: rotate(-12deg); }
+.availability-modal-form { min-width: 0; padding: 2px 0; }
+.availability-field { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: start; }
+.availability-field-icon { width: 24px; height: 36px; display: grid; place-items: center; font-size: 17px; }
+.availability-field-icon.blue { color: #347ce9; }
+.availability-field-icon.purple { color: #8b55d8; }
+.availability-field-icon.green { color: #3db69a; }
+.availability-modal-form .form-group { margin-bottom: 10px; }
+.availability-modal-form .form-group label { color: #334b6d; font-size: 12px; margin-bottom: 5px; }
+.availability-modal-form input, .availability-modal-form select { width: 100%; height: 35px; padding: 8px 11px; border: 1px solid #cfe0f8; border-radius: 7px; background: #f8fbff; color: #3b4f6a; font-size: 12.5px; outline: none; }
+.availability-modal-form input:focus, .availability-modal-form select:focus { border-color: #6799ed; box-shadow: 0 0 0 3px rgba(103, 153, 237, .12); }
+.availability-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 13px 24px; border-top: 1px solid #e8eef7; background: #fbfdff; }
+.availability-modal-footer .btn-cancel, .availability-modal-footer .btn-submit { min-width: 145px; height: 38px; border-radius: 9px; }
+.availability-row { display: grid; grid-template-columns: 1.25fr 1fr 1fr 1.15fr 1.2fr; gap: 14px; align-items: center; padding: 20px 24px; border-left: 5px solid #4d8df4; background: #fff; border: 1px solid #e3edf9; border-left-width: 5px; border-radius: 12px; box-shadow: 0 5px 15px rgba(38, 93, 166, .06); }
+.availability-detail { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.availability-detail > div { min-width: 0; }
+.availability-detail small { display: block; color: #7990b1; font-size: 11px; margin-bottom: 5px; }
+.availability-detail strong { display: block; color: #193b70; font-size: 15px; white-space: nowrap; }
+.availability-row-icon { width: 42px; height: 42px; flex-shrink: 0; display: grid; place-items: center; border-radius: 13px; font-size: 20px; }
+.availability-row-icon.blue { color: #2478ef; background: #eaf3ff; }
+.availability-row-icon.purple { color: #8d50d8; background: #f1eaff; }
+.availability-row-icon.green { color: #25a98d; background: #e4faf4; }
+.capacity-detail em { display: block; margin-top: 7px; padding: 5px 9px; width: fit-content; border-radius: 999px; color: #13a07d; background: #e4faf4; font-size: 10px; font-style: normal; font-weight: 700; }
+.capacity-detail em i { font-size: 7px; margin-right: 4px; }
+@media (max-width: 1100px) { .availability-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 650px) { .availability-hero { align-items: flex-start; padding: 20px; } .availability-hero-art { font-size: 48px; } .availability-hero-copy h2 { font-size: 21px; } .availability-hero-note { display: none; } .availability-list-heading, .availability-list { padding-left: 18px; padding-right: 18px; } .availability-row { grid-template-columns: 1fr 1fr; padding: 16px; } .availability-detail strong { font-size: 13px; } }
+@media (max-width: 600px) { .availability-modal-form { min-width: 0; } }
 /* =========================================================
    1. THANH SỐ LIỆU TÓM TẮT (STATS BAR)
 ========================================================= */
@@ -494,6 +547,59 @@
     color: #94a3b8;
     cursor: pointer;
 }
+
+.schedule-action-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+}
+
+.schedule-action-box {
+    width: min(440px, 100%);
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+}
+
+.schedule-action-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    color: #2563eb;
+    background: #dbeafe;
+    font-size: 18px;
+}
+
+.schedule-action-content h3 { margin: 0 0 8px; color: #0f172a; font-size: 18px; }
+.schedule-action-content p { margin: 0; color: #475569; font-size: 13px; line-height: 1.5; }
+.schedule-action-content textarea {
+    display: none;
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #334155;
+    font: inherit;
+    resize: vertical;
+}
+
+.schedule-action-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.schedule-action-buttons button { padding: 9px 14px; border: 0; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.schedule-action-cancel { color: #475569; background: #f1f5f9; }
+.schedule-action-confirm { color: #ffffff; background: #2563eb; }
+.schedule-action-confirm:hover { background: #1d4ed8; }
 
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }

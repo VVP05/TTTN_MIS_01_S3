@@ -103,12 +103,23 @@ function renderSubmissions(submissions) {
 }
 
 async function loadProgressDetail() {
-    const auth = JSON.parse(localStorage.getItem('lecturerAuth') || 'null');
+    let auth = null;
+    try {
+        auth = JSON.parse(sessionStorage.getItem('activeAuth') || 'null');
+        if (auth?.user?.role !== 'LECTURER') {
+            auth = JSON.parse(localStorage.getItem('lecturerAuth') || 'null');
+        }
+    } catch (error) {
+        console.error('Không thể đọc thông tin phiên giảng viên:', error);
+    }
+
     const user = auth?.user;
     const topicId = new URLSearchParams(window.location.search).get('topicId');
     const body = document.getElementById('submissionTableBody');
 
     if (!user || user.role !== 'LECTURER' || !topicId) {
+        document.getElementById('topicTitle').textContent = 'Không thể tải thông tin đề tài';
+        document.getElementById('topicMeta').textContent = 'Vui lòng đăng nhập lại hoặc mở lại đề tài từ danh sách của giảng viên.';
         body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444; padding:24px 0;">Không xác định được đề tài hoặc phiên giảng viên.</td></tr>';
         return;
     }
@@ -130,6 +141,8 @@ async function loadProgressDetail() {
         renderSubmissions(submissions);
     } catch (error) {
         console.error('Lỗi tải chi tiết tiến độ:', error);
+        document.getElementById('topicTitle').textContent = 'Không thể tải dữ liệu đề tài';
+        document.getElementById('topicMeta').textContent = 'Vui lòng kiểm tra kết nối máy chủ và thử lại.';
         body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444; padding:24px 0;">Không thể tải dữ liệu tiến độ từ máy chủ.</td></tr>';
     }
 }

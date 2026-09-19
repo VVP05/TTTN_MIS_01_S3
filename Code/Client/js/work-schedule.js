@@ -6,27 +6,24 @@ let currentScheduleTopicInfo = null;
 const INTERNSHIP_START_DATE = "2026-06-15"; 
 
 function getAuthForRole(role) {
-    const roleKey = {
-        STUDENT: "studentAuth",
-        LECTURER: "lecturerAuth",
-        ADMIN: "adminAuth"
-    }[role] || "auth";
-
-    const raw = localStorage.getItem(roleKey);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        return null;
+    const activeSession = sessionStorage.getItem("activeAuth");
+    if (activeSession) {
+        try {
+            const sessionAuth = JSON.parse(activeSession);
+            if (sessionAuth?.user?.role === role && sessionAuth.token) return sessionAuth;
+        } catch (error) {
+            sessionStorage.removeItem("activeAuth");
+        }
     }
+
+    return null;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. KIỂM TRA ĐĂNG NHẬP
-    const auth = getAuthForRole("STUDENT") || { token: localStorage.getItem("token"), user: JSON.parse(localStorage.getItem("user") || "null") };
+    const auth = getAuthForRole("STUDENT") || { token: null, user: null };
     const user = auth?.user;
-    const token = auth?.token || localStorage.getItem("token");
+    const token = auth?.token;
 
     if (!user || user.role !== "STUDENT") {
         window.location.href = "index.html";
@@ -51,6 +48,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnClose = document.getElementById("btnCloseModal");
     const btnCancel = document.getElementById("btnCancelModal");
     const bookingForm = document.getElementById("bookingForm");
+    const availabilitySelect = document.getElementById("bookingAvailability");
+    const availabilityHint = document.getElementById("availabilityHint");
+
+    async function loadAvailabilitySlots() {
+        if (!availabilitySelect || !currentScheduleTopicInfo?.lecturer_code) return;
+        try {
+            const response = await fetch(`http://localhost:5000/api/schedule/availability/${encodeURIComponent(currentScheduleTopicInfo.lecturer_code)}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const result = await response.json();
+            const slots = (result.data || []).filter(slot => (slot.booked_count || 0) < (slot.max_bookings || 3));
+            availabilitySelect.innerHTML = '<option value="">-- Chọn khung giờ rảnh --</option>' + slots.map(slot => {
+                const dateObj = new Date(slot.available_date);
+                const date = dateObj.toLocaleDateString("vi-VN");
+                const mode = slot.type === "ONLINE" ? "Online" : "Offline";
+                return `<option value="${slot._id}" data-date="${slot.available_date}" data-start="${slot.time_start}" data-end="${slot.time_end}" data-type="${slot.type}" data-location="${slot.location || ""}">${date} | ${slot.time_start} - ${slot.time_end} | ${mode} | Còn ${Math.max(0, (slot.max_bookings || 3) - (slot.booked_count || 0))} chỗ</option>`;
+            }).join("");
+            if (availabilityHint) availabilityHint.textContent = slots.length ? "Chọn một khung giờ để đặt lịch." : "Giảng viên chưa công khai khung giờ rảnh.";
+        } catch (error) {
+            if (availabilityHint) availabilityHint.textContent = "Không thể tải khung giờ rảnh.";
+        }
+    }
+
+    if (availabilitySelect) {
+        availabilitySelect.addEventListener("change", () => {
+            const option = availabilitySelect.options[availabilitySelect.selectedIndex];
+            if (!option?.value) return;
+            const date = new Date(option.dataset.date);
+            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+            document.getElementById("bookingDate").value = localDate;
+            document.getElementById("bookingTimeStart").value = option.dataset.start;
+            document.getElementById("bookingTimeEnd").value = option.dataset.end;
+            document.getElementById("bookingType").value = option.dataset.type;
+            document.getElementById("bookingLocation").value = option.dataset.location;
+        });
+    }
 
     // Mặc định chọn ngày mai cho ô Input Date
     const dateInput = document.getElementById("bookingDate");
@@ -62,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const openModal = () => {
         if (modal) modal.style.display = "flex";
+        loadAvailabilitySlots();
     };
     const closeModal = () => {
         if (modal) modal.style.display = "none";
@@ -77,7 +111,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.preventDefault();
 
             if (!currentScheduleTopicInfo) {
-                alert("Bạn chưa đăng ký đề tài hoặc đề tài chưa được duyệt nên chưa thể đặt lịch hẹn!");
+                showAppNotification("Bạn chưa đăng ký đề tài hoặc đề tài chưa được duyệt nên chưa thể đặt lịch hẹn!");
                 return;
             }
 
@@ -89,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const location = document.getElementById("bookingLocation") ? document.getElementById("bookingLocation").value.trim() : "";
 
             if (!title || !meetingDate) {
-                alert("Vui lòng điền đầy đủ tiêu đề và ngày họp!");
+                showAppNotification("Vui lòng điền đầy đủ tiêu đề và ngày họp!");
                 return;
             }
 
@@ -102,6 +136,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
                     body: JSON.stringify({
                         topic_id: currentScheduleTopicInfo.id,
+                        availability_id: availabilitySelect ? availabilitySelect.value : "",
                         student_code: user.user_code,
                         lecturer_code: currentScheduleTopicInfo.lecturer_code,
                         title,
@@ -116,23 +151,25 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert(result.message || "Đã gửi yêu cầu đặt lịch cho Giảng viên hướng dẫn!");
+                    showAppNotification(result.message || "Đã gửi yêu cầu đặt lịch cho Giảng viên hướng dẫn!");
                     closeModal();
                     bookingForm.reset();
                     // Tải lại dữ liệu trang
                     await loadScheduleData(user.user_code);
                 } else {
-                    alert(result.message || "Không thể đặt lịch hẹn!");
+                    showAppNotification(result.message || "Không thể đặt lịch hẹn!");
                 }
             } catch (err) {
                 console.error("Lỗi gửi lịch hẹn:", err);
-                alert("Lỗi kết nối máy chủ khi gửi yêu cầu đặt lịch!");
+                showAppNotification("Lỗi kết nối máy chủ khi gửi yêu cầu đặt lịch!");
             }
         });
     }
 
     // 4. XỬ LÝ TODO CHECKLIST (THÊM VIỆC MỚI)
     const newTodoInput = document.getElementById("newTodoInput");
+    const todoDueDate = document.getElementById("todoDueDate");
+    const todoAssignee = document.getElementById("todoAssignee");
     const btnAddTodo = document.getElementById("btnAddTodo");
 
     const addTodo = async () => {
@@ -142,7 +179,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Bổ sung kiểm tra an toàn: Không cho tạo task khi đề tài chưa được duyệt
         if (!currentScheduleTopicInfo) {
-            alert("Vui lòng đợi đề tài được phê duyệt để sử dụng danh sách công việc!");
+            showAppNotification("Vui lòng đợi đề tài được phê duyệt để sử dụng danh sách công việc!");
             return;
         }
 
@@ -155,6 +192,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 },
                 body: JSON.stringify({
                     student_code: user.user_code,
+                    topic_id: currentScheduleTopicInfo.id,
+                    assigned_to: todoAssignee ? todoAssignee.value : "",
+                    due_date: todoDueDate ? todoDueDate.value : "",
                     title: text
                 })
             });
@@ -163,14 +203,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (response.ok) {
                 newTodoInput.value = "";
+                if (todoDueDate) todoDueDate.value = "";
                 // Tải lại dữ liệu để hiển thị task mới tạo từ DB
                 await loadScheduleData(user.user_code);
             } else {
-                alert(result.message || "Không thể thêm công việc!");
+                showAppNotification(result.message || "Không thể thêm công việc!");
             }
         } catch (err) {
             console.error("Lỗi thêm task:", err);
-            alert("Lỗi kết nối máy chủ khi thêm công việc!");
+            showAppNotification("Lỗi kết nối máy chủ khi thêm công việc!");
         }
     };
 
@@ -242,7 +283,7 @@ function calculateCurrentWeek(startDateStr, totalWeeks = 15) {
 // =========================================================
 async function loadScheduleData(studentCode) {
     try {
-        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
+        const token = getAuthForRole("STUDENT")?.token;
         const res = await fetch(`http://localhost:5000/api/schedule/my-schedule/${studentCode}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -284,6 +325,7 @@ async function loadScheduleData(studentCode) {
 
             // 3. Đề tài đã được duyệt (APPROVED) -> Mở khóa hiển thị toàn bộ
             currentScheduleTopicInfo = data.topic;
+            renderTodoAssigneeOptions(data.topic, studentCode);
             unlockScheduleControls();
 
             // Render các con số thống kê ở Top-bar
@@ -294,6 +336,7 @@ async function loadScheduleData(studentCode) {
 
             // Render danh sách To-do list
             renderTodoList(data.todos || []);
+            renderTodoProgress(data.todos || []);
         }
     } catch (err) {
         console.error("Lỗi khi kết nối API schedule:", err);
@@ -307,6 +350,7 @@ function unlockScheduleControls() {
     const btnOpenBooking = document.getElementById("btnOpenBookingModal");
     const newTodoInput = document.getElementById("newTodoInput");
     const btnAddTodo = document.getElementById("btnAddTodo");
+    const todoAssignee = document.getElementById("todoAssignee");
 
     if (btnOpenBooking) {
         btnOpenBooking.disabled = false;
@@ -323,6 +367,20 @@ function unlockScheduleControls() {
         btnAddTodo.style.opacity = "1";
         btnAddTodo.style.cursor = "pointer";
     }
+    if (todoAssignee) todoAssignee.disabled = false;
+}
+
+function renderTodoAssigneeOptions(topic, currentStudentCode) {
+    const todoAssignee = document.getElementById("todoAssignee");
+    if (!todoAssignee || !topic) return;
+
+    const memberCodes = [topic.leader_code, topic.member2_code, topic.member3_code]
+        .filter(Boolean)
+        .filter((code, index, codes) => codes.indexOf(code) === index);
+
+    todoAssignee.innerHTML = '<option value="">Cả nhóm</option>' + memberCodes
+        .map(code => `<option value="${code}" ${code === currentStudentCode ? "selected" : ""}>${code === currentStudentCode ? "Tôi" : code}</option>`)
+        .join("");
 }
 
 // =========================================================
@@ -337,6 +395,7 @@ function renderScheduleLockedState(reason) {
     const todoCounter = document.getElementById("todoCounter");
     const newTodoInput = document.getElementById("newTodoInput");
     const btnAddTodo = document.getElementById("btnAddTodo");
+    const todoAssignee = document.getElementById("todoAssignee");
 
     // Khóa toàn bộ các nút thao tác giao diện
     if (btnOpenBooking) {
@@ -354,6 +413,7 @@ function renderScheduleLockedState(reason) {
         btnAddTodo.style.opacity = "0.6";
         btnAddTodo.style.cursor = "not-allowed";
     }
+    if (todoAssignee) todoAssignee.disabled = true;
 
     if (todoCounter) todoCounter.textContent = "0/0";
 
@@ -505,7 +565,7 @@ function renderTodoList(todos) {
     if (!todoList) return;
 
     if (todoCounter) {
-        const completedCount = todos.filter(t => t.is_completed).length;
+        const completedCount = todos.filter(t => t.is_completed === true).length;
         todoCounter.textContent = `${completedCount}/${todos.length}`;
     }
 
@@ -514,12 +574,35 @@ function renderTodoList(todos) {
         return;
     }
 
-    todoList.innerHTML = todos.map(item => `
-        <label class="todo-item ${item.is_completed ? 'done' : ''}" data-id="${item._id}">
-            <input type="checkbox" ${item.is_completed ? 'checked' : ''} onchange="toggleTodoStatus('${item._id}')" />
-            <span>${item.title}</span>
-        </label>
-    `).join("");
+    todoList.innerHTML = todos.map((item, index) => {
+        const isCompleted = item.is_completed === true;
+        const dueDate = item.due_date ? new Date(item.due_date) : null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDay = dueDate ? new Date(dueDate) : null;
+        if (dueDay) dueDay.setHours(0, 0, 0, 0);
+        const daysUntilDue = dueDay ? Math.ceil((dueDay - today) / 86400000) : null;
+        const statusLabel = isCompleted ? '☑ Hoàn thành' : 'Chưa hoàn thành';
+        const dueLabel = dueDay
+            ? `Hạn ${dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+            : '';
+        const dueClass = !dueDay ? '' : daysUntilDue < 0 ? 'overdue' : daysUntilDue <= 2 ? 'soon' : 'pending';
+
+        return `
+        <div class="todo-item todo-tone-${index % 4} ${isCompleted ? 'done' : ''}" data-id="${item._id}">
+            <div class="todo-check-wrap">
+                <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleTodoStatus('${item._id}')" aria-label="Đánh dấu công việc hoàn thành" />
+            </div>
+            <div class="todo-content">
+                <strong class="todo-title">${item.title}</strong>
+                <small class="todo-meta">${item.assigned_to ? `Phụ trách: ${item.assigned_to}` : "Phụ trách: Cả nhóm"}${item.created_by ? ` · Tạo bởi ${item.created_by}` : ""}</small>
+            </div>
+            <span class="todo-status ${isCompleted ? 'completed' : 'pending'}">${statusLabel}</span>
+            ${dueLabel ? `<span class="todo-deadline ${dueClass}">${dueLabel}</span>` : ''}
+            <span class="todo-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+        </div>
+    `;
+    }).join("");
 }
 
 // =========================================================
@@ -527,7 +610,7 @@ function renderTodoList(todos) {
 // =========================================================
 async function toggleTodoStatus(todoId) {
     try {
-        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
+        const token = getAuthForRole("STUDENT")?.token;
         const res = await fetch(`http://localhost:5000/api/schedule/todos/toggle/${todoId}`, {
             method: "PATCH",
             headers: {
@@ -536,16 +619,24 @@ async function toggleTodoStatus(todoId) {
         });
 
         if (res.ok) {
-            const auth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+            const auth = getAuthForRole("STUDENT");
             const user = auth?.user || null;
             if (user && user.user_code) {
                 // Tải lại tiến độ công việc
                 await loadScheduleData(user.user_code);
             }
         } else {
-            alert("Không thể cập nhật trạng thái công việc!");
+            showAppNotification("Không thể cập nhật trạng thái công việc!");
         }
     } catch (err) {
         console.error("Lỗi toggle todo:", err);
     }
+}
+
+function renderTodoProgress(todos) {
+    const progressEl = document.getElementById("statTodoProgress");
+    if (!progressEl) return;
+
+    const completedCount = todos.filter(todo => todo.is_completed === true).length;
+    progressEl.innerHTML = `${completedCount} <small>/ ${todos.length}</small>`;
 }

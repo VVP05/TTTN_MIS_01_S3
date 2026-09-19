@@ -8,6 +8,7 @@
     
     <!-- THƯ VIỆN FONT AWESOME ICONS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/app-notifications.css">
 </head>
 <body>
 
@@ -86,6 +87,21 @@
 
             <!-- NỘI DUNG FORM ĐĂNG KÝ -->
             <main class="content-body">
+
+                <section class="welcome-banner">
+                    <div class="welcome-copy">
+                        <span class="welcome-wave">👋</span>
+                        <div>
+                            <h2>Xin chào, <span id="welcomeUserName">bạn</span>!</h2>
+                            <p>Chúc bạn có một tuần học tập và làm việc hiệu quả!</p>
+                        </div>
+                    </div>
+                    <div class="welcome-art" aria-hidden="true">
+                        <i class=""></i>
+                        <i class=""></i>
+                    </div>
+                    <p class="welcome-quote"> <i class=""></i></p>
+                </section>
                 
                 <!-- HEADER TRANG & TRẠNG THÁI -->
                 <div class="page-title-card">
@@ -117,40 +133,46 @@
                                     <label style="cursor: pointer;"><input type="radio" name="userRole" value="LEADER" checked /> <strong>Trưởng nhóm</strong> (Người đại diện)</label>
                                     <label style="cursor: pointer;"><input type="radio" name="userRole" value="MEMBER" /> <strong>Thành viên</strong></label>
                                 </div>
+                                <div id="memberRoleNote" class="message-box message-info" style="display: none; margin-top: 12px; color: #9a3412; background-color: #fff7ed; border: 1px solid #fdba74;">
+                                    <i class="fa-solid fa-circle-info" style="color: #ea580c;"></i>
+                                    “Với vai trò Thành viên, bạn chỉ cần nhập mã Trưởng nhóm để tham gia nhóm. Thông tin Giảng viên hướng dẫn và đề tài sẽ do Trưởng nhóm đăng ký.”
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="leaderField">
+                                <label id="leaderLabel" for="leaderName">Trưởng nhóm <span class="required" style="color: red;">*</span></label>
+                                <div class="input-icon-wrapper">
+                                    <span class="field-icon"><i class="fa-solid fa-user-shield"></i></span>
+                                    <input type="text" id="leaderName" placeholder="Nhập MSSV Trưởng nhóm..." required />
+                                </div>
                             </div>
 
                             <div class="grid-2">
-                                <!-- Ô 1: TRƯỞNG NHÓM -->
-                                <div class="form-group">
-                                    <label id="leaderLabel" for="leaderName">Trưởng nhóm <span class="required" style="color: red;">*</span></label>
-                                    <div class="input-icon-wrapper">
-                                        <span class="field-icon"><i class="fa-solid fa-user-shield"></i></span>
-                                        <input type="text" id="leaderName" placeholder="Nhập MSSV Trưởng nhóm..." required />
-                                    </div>
-                                </div>
-
-                                <!-- Ô 2: THÀNH VIÊN 2 -->
-                                <div class="form-group">
+                                <div class="form-group" id="member2Field">
                                     <label id="partnerCodeLabel" for="partnerCodeInput">Thành viên 2 (Không bắt buộc)</label>
                                     <div class="input-icon-wrapper">
                                         <span class="field-icon"><i class="fa-solid fa-user-plus"></i></span>
                                         <input type="text" id="partnerCodeInput" placeholder="Nhập MSSV Thành viên 2..." />
                                     </div>
                                 </div>
+
+                                <div class="form-group" id="member3Field">
+                                    <label id="member3CodeLabel" for="member3CodeInput">Thành viên 3 (Không bắt buộc)</label>
+                                    <div class="input-icon-wrapper">
+                                        <span class="field-icon"><i class="fa-solid fa-user-plus"></i></span>
+                                        <input type="text" id="member3CodeInput" placeholder="Nhập MSSV Thành viên 3..." />
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Ô 3: THÀNH VIÊN 3 -->
-                            <div class="form-group margin-top-15">
-                                <label id="member3CodeLabel" for="member3CodeInput">Thành viên 3 (Không bắt buộc)</label>
-                                <div class="input-icon-wrapper">
-                                    <span class="field-icon"><i class="fa-solid fa-user-plus"></i></span>
-                                    <input type="text" id="member3CodeInput" placeholder="Nhập MSSV Thành viên 3..." />
-                                </div>
+                            <div id="joinRequestsSection" class="form-group margin-top-15" style="display: none;">
+                                <label class="join-requests-heading"><i class="fa-solid fa-user-clock"></i> Yêu cầu tham gia nhóm</label>
+                                <div id="joinRequestsList" class="join-requests-list"></div>
                             </div>
                         </div>
 
                         <!-- SECTION 2: THÔNG TIN ĐỀ TÀI & GIẢNG VIÊN -->
-                        <div class="form-card">
+                        <div class="form-card" id="topicDetailsSection">
                             <h3 class="section-heading">
                                 <span class="heading-icon"><i class="fa-solid fa-file-signature"></i></span> 2. Thông tin Đề tài & Giảng viên
                             </h3>
@@ -252,5 +274,6 @@
 
     <script src="../js/notif-badge.js"></script>
     <script src="../js/student.js"></script>
+    <script src="../js/app-notifications.js"></script>
 </body>
 </html>

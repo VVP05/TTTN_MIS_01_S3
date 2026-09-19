@@ -10,6 +10,7 @@ function persistAuthForRole(role, token, user) {
     const key = getRoleStorageKey(role);
     const auth = { token, user };
 
+    sessionStorage.setItem("activeAuth", JSON.stringify(auth));
     localStorage.setItem(key, JSON.stringify(auth));
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));

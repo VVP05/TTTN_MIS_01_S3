@@ -12,6 +12,7 @@ router.get("/my-schedule/:studentCode", verifyToken, scheduleController.getSched
 
 // Đăng ký lịch hẹn GVHD
 router.post("/meetings/create", verifyToken, scheduleController.createMeeting);
+router.get("/availability/:lecturerCode", verifyToken, scheduleController.getAvailabilitySlots);
 
 // Quản lý To-do List
 router.post("/todos/add", verifyToken, scheduleController.addTodo);
@@ -27,6 +28,8 @@ router.get("/meetings", verifyToken, scheduleController.getLecturerMeetings);
 
 // Giảng viên chủ động tạo lịch họp mới
 router.post("/lecturer/meetings/create", verifyToken, scheduleController.createMeetingByLecturer);
+router.post("/lecturer/availability", verifyToken, scheduleController.createAvailabilitySlot);
+router.patch("/lecturer/availability/:id/close", verifyToken, scheduleController.deleteAvailabilitySlot);
 router.post("/meetings", verifyToken, scheduleController.createMeetingByLecturer);
 
 // Cập nhật trạng thái lịch (Duyệt / Từ chối / Hoàn thành)

@@ -8,15 +8,17 @@ function getAuthForRole(role) {
         ADMIN: "adminAuth"
     }[role] || "auth";
 
-    const raw = localStorage.getItem(roleKey);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        console.error(`Lỗi parse JSON cho role ${role}:`, error);
-        return null;
+    const activeSession = sessionStorage.getItem("activeAuth");
+    if (activeSession) {
+        try {
+            const sessionAuth = JSON.parse(activeSession);
+            if (sessionAuth?.user?.role === role && sessionAuth.token) return sessionAuth;
+        } catch (error) {
+            sessionStorage.removeItem("activeAuth");
+        }
     }
+
+    return null;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -24,10 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 1. KIỂM TRA PHIÊN ĐĂNG NHẬP & QUYỀN ADMIN
     // =========================================================================
-    const auth = getAuthForRole("ADMIN") || {
-        token: localStorage.getItem("token"),
-        user: JSON.parse(localStorage.getItem("user") || "null")
-    };
+    const auth = getAuthForRole("ADMIN") || { token: null, user: null };
 
     const user = auth?.user;
     const token = auth?.token;
@@ -74,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!res.ok) {
                 console.error(`Lỗi gọi API: Mã lỗi ${res.status} - ${res.statusText}`);
                 if (res.status === 401 || res.status === 403) {
-                    alert("Phiên đăng nhập hết hạn hoặc bạn không có quyền truy cập!");
+                    showAppNotification("Phiên đăng nhập hết hạn hoặc bạn không có quyền truy cập!");
                     // Có thể thực hiện tự động đăng xuất ở đây
                 }
                 return;
@@ -103,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 renderPendingTable(pendingTopics || []);
             } else {
                 console.error("API trả về thành công nhưng success = false:", responseData.message);
-                alert("Không thể tải dữ liệu: " + responseData.message);
+                showAppNotification("Không thể tải dữ liệu: " + responseData.message);
             }
         } catch (error) {
             console.error("Không thể kết nối đến máy chủ Backend:", error);

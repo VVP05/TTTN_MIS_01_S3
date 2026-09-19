@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("studentEmailInput").value.trim();
 
         if (!id || !name || !studentClass || !email) {
-            alert("Vui lòng điền đầy đủ thông tin sinh viên.");
+            showAppNotification("Vui lòng điền đầy đủ thông tin sinh viên.");
             return;
         }
 
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
             await fetchStudents();
         } catch (error) {
             console.error('Lỗi lưu sinh viên:', error);
-            alert(error.message || 'Không thể lưu sinh viên.');
+            showAppNotification(error.message || 'Không thể lưu sinh viên.');
         }
     };
 

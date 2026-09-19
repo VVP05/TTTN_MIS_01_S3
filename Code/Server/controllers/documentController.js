@@ -1,5 +1,6 @@
 const Document = require('../models/Document');
 const Notification = require('../models/Notification');
+const Topic = require('../models/Topic');
 
 // 1. Lấy danh sách tài liệu do 1 Giảng viên đã chia sẻ (trang "Quản lý tài liệu" của GVHD)
 exports.getLecturerDocuments = async (req, res) => {
@@ -20,8 +21,14 @@ exports.getLecturerDocuments = async (req, res) => {
 // 2. Lấy danh sách tài liệu công khai cho Sinh viên xem (trang "Tài liệu hướng dẫn")
 exports.getStudentDocuments = async (req, res) => {
     try {
-        // Không hiển thị tài liệu chỉ dành cho giảng viên ở trang sinh viên.
-        const documents = await Document.find({ target: { $ne: 'Tất cả giảng viên' } }).sort({ createdAt: -1 });
+        const studentCode = String(req.query.user_code || '').trim().toUpperCase();
+        const documents = await Document.find({
+            target: { $ne: 'Tất cả giảng viên' },
+            $or: [
+                { target: { $in: ['students', 'Tất cả sinh viên'] } },
+                ...(studentCode ? [{ recipient_codes: studentCode }] : [])
+            ]
+        }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, documents });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách tài liệu!', error: error.message });
@@ -52,10 +59,19 @@ exports.uploadDocument = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Thiếu tiêu đề tài liệu hoặc thông tin người chia sẻ!' });
         }
 
+        let recipientCodes = [];
+        if (uploader_code !== 'ADMIN' && target === 'Tất cả nhóm hướng dẫn') {
+            const topics = await Topic.find({ lecturer_code: uploader_code, status: 'APPROVED' })
+                .select('leader_code member2_code member3_code').lean();
+            recipientCodes = [...new Set(topics.flatMap(topic => [topic.leader_code, topic.member2_code, topic.member3_code])
+                .filter(Boolean).map(code => String(code).trim().toUpperCase()))];
+        }
+
         const document = new Document({
             title,
             category: category || 'OTHER',
             target: target || 'students',
+            recipient_codes: recipientCodes,
             uploader_code,
             uploader_name: uploader_name || '',
             file_name: file.filename,
@@ -66,25 +82,20 @@ exports.uploadDocument = async (req, res) => {
 
         await document.save();
 
-        if (target) {
-            const notificationTarget = target === 'Tất cả giảng viên' ? 'lecturers' : 'students';
-            const recipientLabel = target === 'Tất cả giảng viên' ? 'toàn bộ giảng viên' : 'sinh viên';
-            await Notification.create({
-                target: notificationTarget,
-                type: uploader_code === 'ADMIN'
-                    ? 'SYSTEM'
-                    : 'LECTURER',
-                title: `Tài liệu mới: ${title}`,
-                content: `Admin đã gửi tài liệu "${title}" đến ${recipientLabel}. Vui lòng mở mục Tài liệu & Biểu mẫu để xem và tải về.`,
-                priority: 'info',
-                status: 'published',
-                sender_name: uploader_name || 'Admin Hệ thống',
-                is_read: false,
-                attachment: {
-                    name: file.originalname,
-                    url: `/uploads/documents/${file.filename}`
+            if (target) {
+                const notificationBase = {
+                    type: uploader_code === 'ADMIN' ? 'SYSTEM' : 'LECTURER',
+                    title: `Tài liệu mới: ${title}`,
+                    content: `Tài liệu "${title}" đã được chia sẻ cho nhóm hướng dẫn của bạn. Vui lòng mở mục Tài liệu & Biểu mẫu để xem và tải về.`,
+                    priority: 'info', status: 'published', sender_name: uploader_name || 'Admin Hệ thống', is_read: false,
+                    attachment: { name: file.originalname, url: `/uploads/documents/${file.filename}` }
+                };
+                if (uploader_code !== 'ADMIN' && target === 'Tất cả nhóm hướng dẫn') {
+                    await Notification.insertMany(recipientCodes.map(recipient_code => ({ ...notificationBase, recipient_code })));
+                } else {
+                    const notificationTarget = target === 'Tất cả giảng viên' ? 'lecturers' : 'students';
+                    await Notification.create({ ...notificationBase, target: notificationTarget });
                 }
-            });
         }
 
         res.status(201).json({ success: true, message: 'Đã chia sẻ tài liệu thành công!', document });

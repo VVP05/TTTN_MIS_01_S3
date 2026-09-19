@@ -1,9 +1,9 @@
 const API_BASE = "http://localhost:5000";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const auth = JSON.parse(localStorage.getItem("adminAuth") || "null");
-    const user = auth?.user || JSON.parse(localStorage.getItem("user") || "null");
-    const token = auth?.token || localStorage.getItem("token");
+    const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+    const user = auth?.user || null;
+    const token = auth?.token || null;
     if (!user || user.role !== "ADMIN" || !token) {
         window.location.href = "index.html";
         return;
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function downloadDocument(id) {
         const response = await fetch(`${API_BASE}/api/documents/download/${id}`, { method: "PATCH" });
         const result = await response.json();
-        if (!response.ok || !result.success) return alert(result.message || "Không thể tải tài liệu!");
+        if (!response.ok || !result.success) return showAppNotification(result.message || "Không thể tải tài liệu!");
         window.open(`${API_BASE}${result.file_path}`, "_blank");
         loadDocuments();
     }
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirm("Bạn có chắc muốn xóa tài liệu này khỏi trang sinh viên không?")) return;
         const response = await fetch(`${API_BASE}/api/documents/${id}`, { method: "DELETE" });
         const result = await response.json();
-        if (!response.ok || !result.success) return alert(result.message || "Xóa tài liệu thất bại!");
+        if (!response.ok || !result.success) return showAppNotification(result.message || "Xóa tài liệu thất bại!");
         loadDocuments();
     }
 

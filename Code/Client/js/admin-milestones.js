@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // LƯU MILESTONE
     saveMilestoneBtn.onclick = () => {
         if (!milestoneNameInput.value || !startDateInput.value || !endDateInput.value) {
-            alert("Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
+            showAppNotification("Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
             return;
         }
 

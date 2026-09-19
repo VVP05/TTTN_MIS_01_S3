@@ -6,6 +6,7 @@
     <title>Hệ Thống Quản Lý TTTN | Cổng Giảng Viên</title>
     <link rel="stylesheet" href="../css/lecturer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/app-notifications.css">
 </head>
 <body>
 
@@ -89,8 +90,18 @@
             <!-- NỘI DUNG CHÍNH -->
             <main class="content-body">
                 <div class="welcome-banner">
-                    <h1>Xin chào, <span id="welcomeLecturerName">--</span>!</h1>
-                    <p>Đây là tổng quan hoạt động hướng dẫn thực tập tốt nghiệp của bạn.</p>
+                    <div class="welcome-copy">
+                        <span class="welcome-wave">👋</span>
+                        <div>
+                            <h1>Xin chào, <span id="welcomeLecturerName">--</span>!</h1>
+                            <p>Đây là tổng quan hoạt động hướng dẫn thực tập tốt nghiệp của bạn.</p>
+                        </div>
+                    </div>
+                    <div class="welcome-art" aria-hidden="true">
+                        <i class=""></i>
+                        <i class=""></i>
+                    </div>
+                    <p class="welcome-quote"> <i class=""></i></p>
                 </div>
 
                 <!-- THẺ THỐNG KÊ (KPI CARDS) -->
@@ -204,5 +215,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/notif-badge.js"></script>
     <script src="../js/lecturer.js"></script>
+    <script src="../js/app-notifications.js"></script>
 </body>
 </html>

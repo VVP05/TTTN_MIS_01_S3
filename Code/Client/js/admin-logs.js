@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const baseUrl = "http://localhost:5000/api";
 
-    const authRaw = localStorage.getItem("adminAuth") || localStorage.getItem("token");
+    const authRaw = sessionStorage.getItem("activeAuth");
     let token = null;
     let user = null;
 
@@ -12,14 +12,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             user = authObj?.user || null;
         } catch (error) {
             token = authRaw;
-        }
-    }
-
-    if (!user) {
-        try {
-            user = JSON.parse(localStorage.getItem("user") || "null");
-        } catch (error) {
-            user = null;
         }
     }
 
@@ -178,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 5. XUẤT CSV (MÔ PHỎNG)
     exportLogBtn.onclick = () => {
-        alert("Đã hoàn tất xuất file Nhật ký hoạt động (system-audit-logs.csv)!");
+        showAppNotification("Đã hoàn tất xuất file Nhật ký hoạt động (system-audit-logs.csv)!");
     };
 
     // LOGOUT

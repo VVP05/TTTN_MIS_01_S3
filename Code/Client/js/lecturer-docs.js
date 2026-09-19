@@ -2,7 +2,7 @@ const API_BASE = "http://localhost:5000";
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
     const user = auth?.user || null;
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";
@@ -17,19 +17,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2. MODAL TẢI TÀI LIỆU MỚI
     const uploadModal = document.getElementById("uploadModal");
     const openUploadModalBtn = document.getElementById("openUploadModalBtn");
+    const uploadDocForm = document.getElementById("uploadDocForm");
+    const fileInput = document.getElementById("docFile");
+
+    const openUploadModal = () => {
+        if (uploadModal) uploadModal.style.display = "flex";
+    };
+
+    const closeUploadModal = () => {
+        if (uploadModal) uploadModal.style.display = "none";
+    };
 
     if (openUploadModalBtn) {
-        openUploadModalBtn.addEventListener("click", () => {
-            uploadModal.style.display = "flex";
-        });
+        openUploadModalBtn.addEventListener("click", openUploadModal);
     }
 
     document.querySelectorAll(".btn-close-modal").forEach(btn => {
-        btn.addEventListener("click", () => uploadModal.style.display = "none");
-    });
-
-    window.addEventListener("click", (e) => {
-        if (e.target.classList.contains("modal-overlay")) uploadModal.style.display = "none";
+        btn.addEventListener("click", closeUploadModal);
     });
 
     // 3. ICON THEO ĐUÔI FILE
@@ -143,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const response = await fetch(`${API_BASE}/api/documents/download/${button.dataset.id}`, { method: "PATCH" });
                 const result = await response.json();
                 if (!response.ok || !result.success) {
-                    alert(result.message || "Không thể tải tài liệu!");
+                    showAppNotification(result.message || "Không thể tải tài liệu!");
                     return;
                 }
                 window.open(`${API_BASE}${result.file_path}`, "_blank");
@@ -190,12 +194,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 5. THÊM TÀI LIỆU MỚI (TẢI LÊN THẬT QUA API)
-    const uploadDocForm = document.getElementById("uploadDocForm");
     const uploadSubmitBtn = uploadDocForm ? uploadDocForm.querySelector('button[type="submit"]') : null;
+    const uploadStatus = document.getElementById("uploadStatus");
+
+    if (uploadModal) {
+        uploadModal.querySelector(".modal-box")?.addEventListener("click", (event) => event.stopPropagation());
+    }
+
+    function setUploadStatus(message, type = "") {
+        if (!uploadStatus) return;
+        uploadStatus.textContent = message;
+        uploadStatus.className = `upload-status ${type ? `upload-status-${type}` : ""}`;
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener("click", (event) => event.stopPropagation());
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files[0]) {
+                openUploadModal();
+                setUploadStatus(`Đã chọn: ${fileInput.files[0].name}`, "info");
+                window.setTimeout(() => {
+                    window.focus();
+                    document.body.focus({ preventScroll: true });
+                }, 0);
+            }
+        });
+    }
+
+    window.addEventListener("focus", () => {
+        if (fileInput?.files[0]) openUploadModal();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && fileInput?.files[0]) openUploadModal();
+    });
 
     if (uploadDocForm) {
         uploadDocForm.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            if (uploadSubmitBtn?.disabled) return;
 
             const title = document.getElementById("docTitle").value.trim();
             const category = document.getElementById("docCategory").value;
@@ -203,19 +241,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const fileInput = document.getElementById("docFile");
             const file = fileInput.files[0];
 
+            setUploadStatus("Đang kiểm tra thông tin và tải file lên...", "loading");
+
             if (!title) {
-                alert("Vui lòng nhập tên tài liệu hiển thị!");
+                showAppNotification("Vui lòng nhập tên tài liệu hiển thị!");
+                setUploadStatus("Vui lòng nhập tên tài liệu hiển thị.", "error");
                 return;
             }
 
             if (!file) {
-                alert("Vui lòng chọn file tài liệu trước khi chia sẻ!");
+                showAppNotification("Vui lòng chọn file tài liệu trước khi chia sẻ!");
+                setUploadStatus("Vui lòng chọn file tài liệu trước khi chia sẻ.", "error");
                 return;
             }
 
             const MAX_SIZE = 25 * 1024 * 1024; // 25MB, đồng bộ với giới hạn phía Server
             if (file.size > MAX_SIZE) {
-                alert("File vượt quá kích thước tối đa 25MB!");
+                showAppNotification("File vượt quá kích thước tối đa 25MB!");
+                setUploadStatus("File vượt quá kích thước tối đa 25MB.", "error");
                 return;
             }
 
@@ -230,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const originalBtnHtml = uploadSubmitBtn ? uploadSubmitBtn.innerHTML : "";
             if (uploadSubmitBtn) {
                 uploadSubmitBtn.disabled = true;
-                uploadSubmitBtn.textContent = "Đang tải lên...";
+                uploadSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên...';
             }
 
             try {
@@ -241,17 +284,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
-                    alert(data.message || "Chia sẻ tài liệu thất bại, vui lòng thử lại!");
+                    showAppNotification(data.message || "Chia sẻ tài liệu thất bại, vui lòng thử lại!", "error");
+                    setUploadStatus(data.message || "Chia sẻ tài liệu thất bại, vui lòng thử lại.", "error");
                     return;
                 }
 
-                alert("Đã chia sẻ tài liệu đến sinh viên thành công!");
-                uploadModal.style.display = "none";
+                await fetchMyDocuments();
+                showAppNotification(data.message || "Đã chia sẻ tài liệu đến sinh viên thành công!", "success");
+                setUploadStatus("Đã tải lên và chia sẻ tài liệu thành công. Bạn có thể đóng biểu mẫu.", "success");
                 uploadDocForm.reset();
-                fetchMyDocuments(); // Tải lại danh sách để hiện tài liệu vừa thêm
             } catch (error) {
                 console.error("Lỗi kết nối:", error);
-                alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
+                showAppNotification("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!", "error");
+                setUploadStatus("Không thể kết nối đến máy chủ. Vui lòng thử lại.", "error");
             } finally {
                 if (uploadSubmitBtn) {
                     uploadSubmitBtn.disabled = false;
@@ -276,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await response.json();
 
                     if (!response.ok || !data.success) {
-                        alert(data.message || "Xóa tài liệu thất bại!");
+                        showAppNotification(data.message || "Xóa tài liệu thất bại!");
                         return;
                     }
 
@@ -286,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 } catch (error) {
                     console.error("Lỗi kết nối:", error);
-                    alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
+                    showAppNotification("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
                 }
             };
         });
@@ -302,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await response.json();
 
                     if (!response.ok || !data.success) {
-                        alert(data.message || "Không thể tải tài liệu!");
+                        showAppNotification(data.message || "Không thể tải tài liệu!");
                         return;
                     }
 
@@ -310,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fetchMyDocuments(); // Cập nhật lại số lượt tải trên bảng
                 } catch (error) {
                     console.error("Lỗi kết nối:", error);
-                    alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
+                    showAppNotification("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
                 }
             };
         });

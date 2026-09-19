@@ -5,14 +5,17 @@ function getAuthForRole(role) {
         ADMIN: "adminAuth"
     }[role] || "auth";
 
-    const raw = localStorage.getItem(roleKey);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        return null;
+    const activeSession = sessionStorage.getItem("activeAuth");
+    if (activeSession) {
+        try {
+            const sessionAuth = JSON.parse(activeSession);
+            if (sessionAuth?.user?.role === role && sessionAuth.token) return sessionAuth;
+        } catch (error) {
+            sessionStorage.removeItem("activeAuth");
+        }
     }
+
+    return null;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -20,9 +23,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     initUIEvents();
 
-    const auth = getAuthForRole("LECTURER") || { token: localStorage.getItem("token"), user: JSON.parse(localStorage.getItem("user") || "null") };
-    const token = auth?.token || sessionStorage.getItem("token");
-    const userRaw = auth?.user ? JSON.stringify(auth.user) : (localStorage.getItem("user") || sessionStorage.getItem("user"));
+    const auth = getAuthForRole("LECTURER") || { token: null, user: null };
+    const token = auth?.token;
+    const userRaw = auth?.user ? JSON.stringify(auth.user) : null;
 
     if (!token || !userRaw || userRaw === "null") {
         console.warn("Không tìm thấy Token hoặc User! Chuyển hướng về trang login...");
@@ -51,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         if (response.status === 401 || response.status === 403) {
-            alert("Phiên đăng nhập đã hết hạn hoặc không có quyền truy cập!");
+            showAppNotification("Phiên đăng nhập đã hết hạn hoặc không có quyền truy cập!");
             handleLogout();
             return;
         }

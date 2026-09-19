@@ -256,3 +256,17 @@
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
 .form-control { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; box-sizing: border-box; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+
+.upload-status {
+    min-height: 20px;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.upload-status-success { color: #15803d; }
+.upload-status-error { color: #dc2626; }
+.upload-status-loading { color: #2563eb; }
+.upload-status-info { color: #475569; }

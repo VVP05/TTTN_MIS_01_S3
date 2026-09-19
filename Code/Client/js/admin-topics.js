@@ -7,24 +7,24 @@ function getAuthForRole(role) {
         ADMIN: "adminAuth"
     }[role] || "auth";
 
-    const raw = localStorage.getItem(roleKey);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        return null;
+    const activeSession = sessionStorage.getItem("activeAuth");
+    if (activeSession) {
+        try {
+            const sessionAuth = JSON.parse(activeSession);
+            if (sessionAuth?.user?.role === role && sessionAuth.token) return sessionAuth;
+        } catch (error) {
+            sessionStorage.removeItem("activeAuth");
+        }
     }
+
+    return null;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     let topicList = [];
     let currentTopicId = null;
 
-    const auth = getAuthForRole("ADMIN") || {
-        token: localStorage.getItem("token"),
-        user: JSON.parse(localStorage.getItem("user") || "null")
-    };
+    const auth = getAuthForRole("ADMIN") || { token: null, user: null };
 
     const token = auth?.token;
     const user = auth?.user;
@@ -258,16 +258,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const result = await response.json();
             if (response.ok && result.success) {
-                alert(result.message || "Cập nhật trạng thái đề tài thành công!");
+                showAppNotification(result.message || "Cập nhật trạng thái đề tài thành công!");
                 await loadPoolTopics();
                 topicDetailModal.style.display = "none";
                 rejectReasonModal.style.display = "none";
             } else {
-                alert("Lỗi cập nhật trạng thái: " + (result.message || "Không thể cập nhật trạng thái đề tài."));
+                showAppNotification("Lỗi cập nhật trạng thái: " + (result.message || "Không thể cập nhật trạng thái đề tài."));
             }
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái đề tài:", error);
-            alert("Lỗi kết nối máy chủ khi cập nhật trạng thái đề tài!");
+            showAppNotification("Lỗi kết nối máy chủ khi cập nhật trạng thái đề tài!");
         }
     }
 
@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmRejectBtn.onclick = async () => {
         const reason = rejectReasonInput.value.trim();
         if (!reason) {
-            alert("Vui lòng điền lý do từ chối!");
+            showAppNotification("Vui lòng điền lý do từ chối!");
             return;
         }
         await updateTopicStatus(currentTopicId, "REJECTED", reason);

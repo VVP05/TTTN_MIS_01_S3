@@ -8,6 +8,7 @@
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../css/work-schedule.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/app-notifications.css">
 </head>
 <body>
 
@@ -84,7 +85,7 @@
 
             <!-- NỘI DUNG CHÍNH -->
             <main class="content-body">
-                
+
                 <!-- HEADER TRANG -->
                 <div class="page-header-row">
                     <div>
@@ -115,8 +116,11 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        
-                        
+                        <div class="stat-icon green"><i class="fa-solid fa-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Công việc hoàn thành</span>
+                            <h3 id="statTodoProgress" class="stat-value">0 <small>/ 0</small></h3>
+                        </div>
                     </div>
                 </div>
 
@@ -127,7 +131,7 @@
                     <div class="left-column">
                         
                         <!-- 1. DANH SÁCH LỊCH HẸN VỚI GVHD -->
-                        <div class="card-box">
+                        <div class="card-box todo-card">
                             <div class="card-header">
                                 <h3><i class="fa-solid fa-users text-blue"></i> Lịch họp / Báo cáo với Giảng viên</h3>
                                 <span class="badge-filter">Học kỳ II - 2025/2026</span>
@@ -193,6 +197,10 @@
                             </div>
                             <div class="todo-add">
                                 <input type="text" id="newTodoInput" placeholder="Thêm việc mới...">
+                                <input type="date" id="todoDueDate" aria-label="Ngày hạn công việc" title="Chọn ngày hạn">
+                                <select id="todoAssignee" aria-label="Người phụ trách">
+                                    <option value="">Cả nhóm</option>
+                                </select>
                                 <button id="btnAddTodo"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
@@ -230,18 +238,25 @@
                     <label>Tiêu đề buổi làm việc <span class="text-red">*</span></label>
                     <input type="text" id="bookingTitle" required placeholder="VD: Báo cáo tiến độ Module Đăng ký đề tài">
                 </div>
+                <div class="form-group">
+                    <label>Chọn khung giờ GVHD đang rảnh <span class="text-red">*</span></label>
+                    <select id="bookingAvailability" required>
+                        <option value="">-- Chọn khung giờ rảnh --</option>
+                    </select>
+                    <small id="availabilityHint" class="form-hint">Giảng viên chưa công khai khung giờ rảnh.</small>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Ngày đề xuất <span class="text-red">*</span></label>
-                        <input type="date" required id="bookingDate">
+                        <input type="date" required id="bookingDate" readonly>
                     </div>
                     <div class="form-group">
                         <label>Giờ bắt đầu <span class="text-red">*</span></label>
-                        <input type="time" id="bookingTimeStart" value="09:00" required>
+                        <input type="time" id="bookingTimeStart" value="09:00" required readonly>
                     </div>
                     <div class="form-group">
                         <label>Giờ kết thúc <span class="text-red">*</span></label>
-                        <input type="time" id="bookingTimeEnd" value="10:00" required>
+                        <input type="time" id="bookingTimeEnd" value="10:00" required readonly>
                     </div>
                 </div>
                 <div class="form-group">
@@ -278,5 +293,6 @@
 
     <script src="../js/notif-badge.js"></script>
     <script src="../js/work-schedule.js"></script>
+    <script src="../js/app-notifications.js"></script>
 </body>
 </html>

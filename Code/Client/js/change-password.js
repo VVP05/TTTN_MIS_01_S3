@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const auth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+    const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
     const user = auth?.user || null;
     if (!user || user.role !== "STUDENT") {
         window.location.href = "index.html";
@@ -16,7 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const profileResult = await profileResponse.json();
         if (profileResponse.ok && profileResult.user_code) {
             profileUser = { ...user, ...profileResult };
-            localStorage.setItem("studentAuth", JSON.stringify({ token: auth.token, user: profileUser }));
+            const updatedAuth = { token: auth.token, user: profileUser };
+            sessionStorage.setItem("activeAuth", JSON.stringify(updatedAuth));
+            localStorage.setItem("studentAuth", JSON.stringify(updatedAuth));
             document.getElementById("userName").textContent = profileUser.full_name || user.full_name || "Sinh viên";
         }
     } catch (error) {
@@ -63,10 +65,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (!response.ok || !result.success) throw new Error(result.message || "Cập nhật thất bại");
 
                 const updatedUser = { ...user, ...result.data };
-                localStorage.setItem("studentAuth", JSON.stringify({ token: auth.token, user: updatedUser }));
-                alert(result.message);
+                const updatedAuth = { token: auth.token, user: updatedUser };
+                sessionStorage.setItem("activeAuth", JSON.stringify(updatedAuth));
+                localStorage.setItem("studentAuth", JSON.stringify(updatedAuth));
+                showAppNotification(result.message);
             } catch (error) {
-                alert(error.message || "Không thể cập nhật thông tin.");
+                showAppNotification(error.message || "Không thể cập nhật thông tin.");
             } finally {
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;

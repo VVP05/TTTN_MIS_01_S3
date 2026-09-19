@@ -1,18 +1,15 @@
 function getAuthForRole(role) {
-    const roleKey = {
-        STUDENT: "studentAuth",
-        LECTURER: "lecturerAuth",
-        ADMIN: "adminAuth"
-    }[role] || "auth";
-
-    const raw = localStorage.getItem(roleKey);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        return null;
+    const activeSession = sessionStorage.getItem("activeAuth");
+    if (activeSession) {
+        try {
+            const sessionAuth = JSON.parse(activeSession);
+            if (sessionAuth?.user?.role === role && sessionAuth.token) return sessionAuth;
+        } catch (error) {
+            sessionStorage.removeItem("activeAuth");
+        }
     }
+
+    return null;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,11 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const studentAuth = getAuthForRole("STUDENT");
     const lecturerAuth = getAuthForRole("LECTURER");
     const adminAuth = getAuthForRole("ADMIN");
-    const fallbackUser = JSON.parse(localStorage.getItem("user") || "null");
-
     const auth = isLecturerPage
-        ? (lecturerAuth || adminAuth || studentAuth || { user: fallbackUser })
-        : (studentAuth || adminAuth || lecturerAuth || { user: fallbackUser });
+        ? lecturerAuth
+        : studentAuth;
 
     const user = auth?.user;
 
@@ -190,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnMarkAllRead.addEventListener("click", async () => {
             const hasUnread = allNotifications.some(n => !n.is_read);
             if (!hasUnread) {
-                alert("Tất cả thông báo đều đã được đọc!");
+                showAppNotification("Tất cả thông báo đều đã được đọc!");
                 return;
             }
 
@@ -204,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     allNotifications.forEach(n => n.is_read = true);
                     renderNotifications();
                     updateBadgeCounts();
-                    alert("Đã đánh dấu tất cả thông báo là đã đọc!");
+                    showAppNotification("Đã đánh dấu tất cả thông báo là đã đọc!");
                 }
             } catch (error) {
                 console.error("Lỗi đánh dấu tất cả đã đọc:", error);

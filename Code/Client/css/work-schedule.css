@@ -6,7 +6,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
+body { background: linear-gradient(135deg, #f8fbff 0%, #f3f8ff 48%, #fffdfa 100%); color: #1e293b; min-height: 100vh; }
 .app-layout { display: flex; min-height: 100vh; }
 
 /* SIDEBAR & TOPBAR (Đồng nhất hệ thống) */
@@ -92,6 +92,7 @@ body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
 }
 .stat-icon.blue { background-color: #eff6ff; color: #2563eb; }
 .stat-icon.purple { background-color: #faf5ff; color: #9333ea; }
+.stat-icon.green { background-color: #ecfdf3; color: #20a35a; }
 .stat-icon.orange { background-color: #fffaf0; color: #ea580c; }
 .stat-label { font-size: 12.5px; color: #64748b; font-weight: 500; }
 .stat-value { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px; }
@@ -168,19 +169,54 @@ body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
 
 /* TODO CHECKLIST */
 .task-count { font-size: 12px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 10px; }
-.todo-list { display: flex; flex-direction: column; gap: 10px; }
+.todo-list { display: flex; flex-direction: column; gap: 8px; }
+.todo-card {
+    border: 1px solid #bfdbfe; background: linear-gradient(145deg, #f0f8ff 0%, #ffffff 58%);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
+}
+.todo-card .card-header { border-bottom-color: #dbeafe; }
+.todo-card .card-header h3 { color: #0f3f8f; }
+.todo-card .card-header h3 i { color: #2563eb; }
 .todo-item {
     display: flex; align-items: center; gap: 10px; font-size: 13px;
-    color: #334155; cursor: pointer; padding: 8px 10px; border-radius: 6px; transition: 0.2s;
+    color: #334155; padding: 11px 10px; border: 1px solid transparent;
+    border-radius: 10px; background: #fff; transition: 0.2s;
 }
-.todo-item:hover { background: #f8fafc; }
-.todo-item.done span { text-decoration: line-through; color: #94a3b8; }
+.todo-item:hover { transform: translateX(2px); box-shadow: 0 5px 12px rgba(30, 64, 175, 0.08); }
+.todo-item.todo-tone-0 { background: #edf6ff; border-color: #d8eaff; }
+.todo-item.todo-tone-1 { background: #f4edff; border-color: #e6d9ff; }
+.todo-item.todo-tone-2 { background: #edfbf1; border-color: #d2f2da; }
+.todo-item.todo-tone-3 { background: #fff8e8; border-color: #f8e4b3; }
+.todo-item.done { opacity: 0.72; filter: saturate(0.7); }
+.todo-check-wrap { display: flex; align-items: center; }
+.todo-check-wrap input { width: 16px; height: 16px; cursor: pointer; }
+.todo-tone-0 .todo-check-wrap input { accent-color: #1677ff; }
+.todo-tone-1 .todo-check-wrap input { accent-color: #9a5de8; }
+.todo-tone-2 .todo-check-wrap input { accent-color: #27ae60; }
+.todo-tone-3 .todo-check-wrap input { accent-color: #f39c12; }
+.todo-content { min-width: 0; flex: 1; }
+.todo-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: #1e293b; }
+.todo-item.done .todo-title { text-decoration: line-through; color: #94a3b8; }
+.todo-status { flex-shrink: 0; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+.todo-status.pending { background: #fff0f2; color: #ed6175; }
+.todo-status.soon { background: #fff7d6; color: #b7791f; }
+.todo-status.overdue { background: #ffe4e6; color: #dc2626; }
+.todo-status.completed { background: #dcfce7; color: #16834b; }
+.todo-deadline { flex-shrink: 0; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+.todo-deadline.pending { background: #eef5ff; color: #3977c8; }
+.todo-deadline.soon { background: #fff7d6; color: #b7791f; }
+.todo-deadline.overdue { background: #ffe4e6; color: #dc2626; }
 .todo-add {
     display: flex; gap: 8px; margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 14px;
 }
 .todo-add input {
     flex: 1; padding: 8px 12px; border: 1px solid #e2e8f0;
     border-radius: 8px; font-size: 12.5px; outline: none;
+}
+.todo-add input[type="date"] { flex: 0 0 128px; color: #64748b; }
+.todo-add select {
+    max-width: 105px; padding: 8px 6px; border: 1px solid #e2e8f0;
+    border-radius: 8px; font-size: 11px; color: #475569; background: #fff;
 }
 .todo-add button {
     background: #2563eb; color: #fff; border: none; width: 36px; height: 36px;
@@ -353,3 +389,18 @@ body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
 .btn-confirm:hover {
     background-color: #be123c;
 }
+.todo-arrow { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; color: #1677ff; font-size: 12px; }
+.todo-tone-1 .todo-arrow { color: #9a5de8; }
+.todo-tone-2 .todo-arrow { color: #27ae60; }
+.todo-tone-3 .todo-arrow { color: #f39c12; }
+.todo-meta { display: block; margin-top: 3px; color: #94a3b8; font-size: 10.5px; }
+
+@media (max-width: 560px) {
+    .todo-add { flex-wrap: wrap; }
+    .todo-add input { min-width: 0; width: 100%; }
+    .todo-add input[type="date"] { flex: 1; width: auto; }
+    .todo-add select { flex: 1; max-width: none; }
+}
+.timeline-item:nth-child(1) .t-dot { background: #22b86a; }
+.timeline-item:nth-child(3) .t-dot { background: #f59e0b; }
+.timeline-item:nth-child(4) .t-dot { background: #2686e8; }

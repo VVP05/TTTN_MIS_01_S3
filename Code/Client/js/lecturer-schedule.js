@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================
     // 1. KIỂM TRA QUYỀN TRUY CẬP & CẤU HÌNH API
     // =========================================================
-    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
     const token = auth?.token || "";
     const user = auth?.user || null;
 
@@ -29,6 +29,57 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     let allMeetings = []; // Lưu trữ danh sách họp từ Backend để filter tại client
+
+    const availabilityForm = document.getElementById("availabilityForm");
+    const availabilityList = document.getElementById("availabilityList");
+    const availabilityCount = document.getElementById("availabilityCount");
+    const availabilityModal = document.getElementById("availabilityModal");
+    const openAvailabilityModalBtn = document.getElementById("openAvailabilityModalBtn");
+    if (openAvailabilityModalBtn) openAvailabilityModalBtn.addEventListener("click", () => {
+        const dateInput = document.getElementById("availabilityDate");
+        if (dateInput) {
+            const tomorrow = new Date();
+            tomorrow.setHours(12, 0, 0, 0);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowValue = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+            dateInput.min = tomorrowValue;
+            if (!dateInput.value || dateInput.value < tomorrowValue) dateInput.value = tomorrowValue;
+        }
+        if (availabilityModal) availabilityModal.style.display = "flex";
+    });
+    document.querySelectorAll("#availabilityModal .btn-close-modal").forEach(button => button.addEventListener("click", () => {
+        if (availabilityModal) availabilityModal.style.display = "none";
+    }));
+    async function loadAvailability() {
+        if (!availabilityList) return;
+        const res = await fetch(`${API_BASE_URL}/availability/${encodeURIComponent(user.user_code)}`, { headers: getAuthHeaders() });
+        const result = await res.json();
+        const slots = result.data || [];
+        if (availabilityCount) availabilityCount.textContent = `${slots.length} khung giờ`;
+        availabilityList.innerHTML = slots.length ? slots.map(slot => {
+            const date = new Date(slot.available_date);
+            const dateText = date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+            const modeText = slot.type === "ONLINE" ? "Online (Meet)" : "Offline (Trường)";
+            const booked = slot.booked_count || 0;
+            const capacity = slot.max_bookings || 3;
+            return `
+            <div class="availability-row">
+                <div class="availability-detail date-detail"><span class="availability-row-icon blue"><i class="fa-regular fa-calendar-days"></i></span><div><small>Ngày</small><strong>${dateText}</strong></div></div>
+                <div class="availability-detail"><span class="availability-row-icon purple"><i class="fa-regular fa-clock"></i></span><div><small>Giờ bắt đầu</small><strong>${slot.time_start}</strong></div></div>
+                <div class="availability-detail"><span class="availability-row-icon purple"><i class="fa-regular fa-clock"></i></span><div><small>Giờ kết thúc</small><strong>${slot.time_end}</strong></div></div>
+                <div class="availability-detail"><span class="availability-row-icon blue"><i class="fa-solid fa-video"></i></span><div><small>Hình thức</small><strong>${modeText}</strong></div></div>
+                <div class="availability-detail capacity-detail"><span class="availability-row-icon green"><i class="fa-solid fa-users"></i></span><div><small>Số nhóm tối đa</small><strong>${capacity}</strong><em><i class="fa-solid fa-circle"></i> Đã đặt ${booked}/${capacity}</em></div></div>
+            </div>`;
+        }).join("") : '<p class="availability-empty-hint">Chưa có khung giờ nào đang mở.</p>';
+    }
+    if (availabilityForm) availabilityForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const response = await fetch(`${API_BASE_URL}/lecturer/availability`, { method: "POST", headers: getAuthHeaders(), body: JSON.stringify({ lecturer_code: user.user_code, available_date: document.getElementById("availabilityDate").value, time_start: document.getElementById("availabilityStart").value, time_end: document.getElementById("availabilityEnd").value, max_bookings: document.getElementById("availabilityCapacity").value, type: document.getElementById("availabilityType").value, location: document.getElementById("availabilityLocation").value.trim() }) });
+        const result = await response.json();
+        showAppNotification(result.message || "Đã cập nhật khung giờ!");
+        if (response.ok) { availabilityForm.reset(); if (availabilityModal) availabilityModal.style.display = "none"; loadAvailability(); }
+    });
+    loadAvailability();
 
     // =========================================================
     // 2. LẤY DỮ LIỆU TỪ BACKEND & RENDER LỊCH HỌP
@@ -181,6 +232,49 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function askScheduleAction({ title, message, confirmText = "Xác nhận", withReason = false, defaultReason = "" }) {
+        let modal = document.getElementById("scheduleActionModal");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "scheduleActionModal";
+            modal.className = "schedule-action-modal";
+            modal.innerHTML = `
+                <div class="schedule-action-box" role="dialog" aria-modal="true" aria-labelledby="scheduleActionTitle">
+                    <div class="schedule-action-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div class="schedule-action-content">
+                        <h3 id="scheduleActionTitle"></h3>
+                        <p id="scheduleActionMessage"></p>
+                        <textarea id="scheduleActionReason" rows="4" placeholder="Nhập lý do hoặc gợi ý khung giờ khác"></textarea>
+                    </div>
+                    <div class="schedule-action-buttons">
+                        <button type="button" class="schedule-action-cancel">Hủy</button>
+                        <button type="button" class="schedule-action-confirm"></button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        const reasonInput = modal.querySelector("#scheduleActionReason");
+        modal.querySelector("#scheduleActionTitle").textContent = title;
+        modal.querySelector("#scheduleActionMessage").textContent = message;
+        modal.querySelector(".schedule-action-confirm").textContent = confirmText;
+        reasonInput.value = defaultReason;
+        reasonInput.style.display = withReason ? "block" : "none";
+        modal.style.display = "flex";
+
+        return new Promise(resolve => {
+            const close = value => {
+                modal.style.display = "none";
+                resolve(value);
+            };
+            modal.querySelector(".schedule-action-cancel").onclick = () => close(null);
+            modal.querySelector(".schedule-action-confirm").onclick = () => close(withReason ? reasonInput.value.trim() : true);
+            modal.onclick = event => {
+                if (event.target === modal) close(null);
+            };
+        });
+    }
+
     // =========================================================
     // 3. CÁC HÀM XỬ LÝ SỰ KIỆN: DUYỆT / TỪ CHỐI / HOÀN THÀNH / XÓA
     // =========================================================
@@ -192,7 +286,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = btn.getAttribute("data-id");
                 const groupName = btn.getAttribute("data-group");
 
-                if (confirm(`Xác nhận đồng ý buổi hẹn với ${groupName}?`)) {
+                const approved = await askScheduleAction({
+                    title: "Xác nhận đồng ý lịch",
+                    message: `Bạn có chắc muốn đồng ý buổi hẹn với ${groupName}?`,
+                    confirmText: "Đồng ý lịch"
+                });
+                if (approved) {
                     await updateMeetingStatusApi(id, "APPROVED");
                 }
             });
@@ -204,7 +303,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = btn.getAttribute("data-id");
                 const groupName = btn.getAttribute("data-group");
 
-                const reason = prompt(`Nhập lý do từ chối hoặc gợi ý khung giờ khác cho ${groupName}:`, "Thầy bận họp khoa khung giờ này, các em chọn lại ca khác nhé.");
+                const reason = await askScheduleAction({
+                    title: "Từ chối / Báo bận",
+                    message: `Nhập lý do từ chối hoặc gợi ý khung giờ khác cho ${groupName}.`,
+                    confirmText: "Gửi phản hồi",
+                    withReason: true,
+                    defaultReason: "Thầy bận họp khoa khung giờ này, các em chọn lại ca khác nhé."
+                });
                 if (reason !== null) {
                     await updateMeetingStatusApi(id, "CANCELLED", reason);
                 }
@@ -225,7 +330,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = btn.getAttribute("data-id");
                 const groupName = btn.getAttribute("data-group");
 
-                if (confirm(`Bạn chắc chắn muốn xóa vĩnh viễn lịch hẹn với ${groupName}?`)) {
+                const shouldDelete = await askScheduleAction({
+                    title: "Xóa lịch hẹn",
+                    message: `Bạn chắc chắn muốn xóa vĩnh viễn lịch hẹn với ${groupName}?`,
+                    confirmText: "Xóa lịch"
+                });
+                if (shouldDelete) {
                     try {
                         const res = await fetch(`${API_BASE_URL}/lecturer/meetings/${id}`, {
                             method: "DELETE",
@@ -233,13 +343,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         });
                         const data = await res.json();
                         if (data.success) {
-                            alert(data.message);
+                            showAppNotification(data.message);
                             loadMeetings(); // Load lại từ DB sau khi xóa
                         } else {
-                            alert("Lỗi khi xóa: " + data.message);
+                            showAppNotification("Lỗi khi xóa: " + data.message);
                         }
                     } catch (err) {
-                        alert("Lỗi hệ thống khi xóa lịch!");
+                        showAppNotification("Lỗi hệ thống khi xóa lịch!");
                     }
                 }
             });
@@ -268,14 +378,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await res.json();
             if (data.success) {
-                alert(data.message);
+                showAppNotification(data.message);
                 loadMeetings(); // Load lại dữ liệu từ DB
             } else {
-                alert("Lỗi: " + data.message);
+                showAppNotification("Lỗi: " + data.message);
             }
         } catch (error) {
             console.error("Lỗi cập nhật trạng thái:", error);
-            alert("Lỗi kết nối máy chủ!");
+            showAppNotification("Lỗi kết nối máy chủ!");
         }
     }
 
@@ -307,62 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // =========================================================
-    // 5. TẠO LỊCH HẸN MỚI CHỦ ĐỘNG TỪ GIẢNG VIÊN (POST API)
-    // =========================================================
-    const createMeetingModal = document.getElementById("createMeetingModal");
-    const openMeetingModalBtn = document.getElementById("openMeetingModalBtn");
-    const createMeetingForm = document.getElementById("createMeetingForm");
-
-    if (openMeetingModalBtn) {
-        openMeetingModalBtn.addEventListener("click", () => {
-            const dateInput = document.getElementById("meetingDate");
-            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-            if (createMeetingModal) createMeetingModal.style.display = "flex";
-        });
-    }
-
-    if (createMeetingForm) {
-        createMeetingForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const payload = {
-                topic_id: document.getElementById("meetingTopicId").value.trim(),
-                student_code: document.getElementById("meetingStudentCode").value.trim(),
-                lecturer_code: user.user_code,
-                title: document.getElementById("meetingTitle").value.trim(),
-                meeting_date: document.getElementById("meetingDate").value,
-                time_start: document.getElementById("meetingTimeStart").value,
-                time_end: document.getElementById("meetingTimeEnd").value,
-                type: document.getElementById("meetingType").value,
-                location: document.getElementById("meetingLocation").value.trim(),
-                notes: document.getElementById("meetingNotes").value.trim()
-            };
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/lecturer/meetings/create`, {
-                    method: "POST",
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    alert("Tạo lịch hẹn mới thành công!");
-                    createMeetingModal.style.display = "none";
-                    createMeetingForm.reset();
-                    loadMeetings(); // Làm mới danh sách từ Backend
-                } else {
-                    alert("Tạo thất bại: " + (data.message || "Lỗi không xác định"));
-                }
-            } catch (error) {
-                console.error("Lỗi khi tạo lịch:", error);
-                alert("Lỗi kết nối máy chủ!");
-            }
-        });
-    }
-
-    // =========================================================
-    // 6. XỬ LÝ MA TRẬN TIẾN ĐỘ 5 MỐC BÁO CÁO (TẢI TỪ DATABASE)
+    // 5. XỬ LÝ MA TRẬN TIẾN ĐỘ 5 MỐC BÁO CÁO (TẢI TỪ DATABASE)
     // =========================================================
     async function loadProgressMatrix() {
         const tbody = document.getElementById("progressMatrixBody");
@@ -463,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Đóng modal khi bấm X hoặc hủy
     document.querySelectorAll(".btn-close-modal").forEach(btn => {
         btn.addEventListener("click", () => {
-            if (createMeetingModal) createMeetingModal.style.display = "none";
+            if (availabilityModal) availabilityModal.style.display = "none";
         });
     });
 

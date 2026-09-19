@@ -1,6 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const auth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+    let auth = null;
+    try {
+        auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+    } catch (error) {
+        auth = null;
+    }
     const user = auth?.user || null;
     if (!user || user.role !== "STUDENT") {
         window.location.href = "index.html";
@@ -117,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const loadDocuments = async () => {
         try {
-            const response = await fetch(`${API_BASE}/api/documents/student`);
+            const response = await fetch(`${API_BASE}/api/documents/student?user_code=${encodeURIComponent(user.user_code)}`);
             const result = await response.json();
             const docs = result && Array.isArray(result.documents)
                 ? result.documents.filter(doc => doc.target !== "Tất cả giảng viên")

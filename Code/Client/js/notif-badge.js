@@ -5,25 +5,25 @@
 
 (function () {
     function getAuthForRole(role) {
-        const roleKey = { STUDENT: "studentAuth", LECTURER: "lecturerAuth", ADMIN: "adminAuth" }[role] || "auth";
-        const raw = localStorage.getItem(roleKey);
-        if (!raw) return null;
-        try {
-            return JSON.parse(raw);
-        } catch (error) {
-            return null;
+        const activeSession = sessionStorage.getItem("activeAuth");
+        if (activeSession) {
+            try {
+                const parsedSession = JSON.parse(activeSession);
+                if (parsedSession?.user?.role === role && parsedSession.token) return parsedSession;
+            } catch (error) {
+                sessionStorage.removeItem("activeAuth");
+            }
         }
+
+        return null;
     }
 
     function resolveCurrentUser() {
-        const fallbackUser = JSON.parse(localStorage.getItem("user") || "null");
         const pageName = window.location.pathname.split("/").pop().toLowerCase();
         const pageRole = pageName.startsWith("lecturer-") ? "LECTURER" : "STUDENT";
         const pageAuth = getAuthForRole(pageRole);
 
         if (pageAuth && pageAuth.user) return pageAuth.user;
-
-        if (fallbackUser && fallbackUser.role === pageRole) return fallbackUser;
 
         return null;
     }

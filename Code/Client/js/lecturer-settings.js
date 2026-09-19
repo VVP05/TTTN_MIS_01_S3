@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP
-    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
     const user = auth?.user || null;
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const phone = document.getElementById("lecturerPhone").value;
             const maxGroups = document.getElementById("maxGroups").value;
 
-            alert(`Đã cập nhật hồ sơ thành công!\n• Email: ${email}\n• SĐT: ${phone}\n• Chỉ tiêu hướng dẫn tối đa: ${maxGroups} nhóm.`);
+            showAppNotification(`Đã cập nhật hồ sơ thành công!\n• Email: ${email}\n• SĐT: ${phone}\n• Chỉ tiêu hướng dẫn tối đa: ${maxGroups} nhóm.`);
         });
     }
 
@@ -33,16 +33,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const confirmPass = document.getElementById("confirmPassword").value;
 
             if (newPass.length < 8) {
-                alert("Mật khẩu mới phải có ít nhất 8 ký tự!");
+                showAppNotification("Mật khẩu mới phải có ít nhất 8 ký tự!");
                 return;
             }
 
             if (newPass !== confirmPass) {
-                alert("Xác nhận mật khẩu mới không khớp!");
+                showAppNotification("Xác nhận mật khẩu mới không khớp!");
                 return;
             }
 
-            alert("Đổi mật khẩu thành công! Vui lòng sử dụng mật khẩu mới cho lần đăng nhập tiếp theo.");
+            showAppNotification("Đổi mật khẩu thành công! Vui lòng sử dụng mật khẩu mới cho lần đăng nhập tiếp theo.");
             changePasswordForm.reset();
         });
     }

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/lecturer.css">
     <link rel="stylesheet" href="../css/lecturer-schedule.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/app-notifications.css">
 </head>
 <body>
 
@@ -78,15 +79,15 @@
 
             <!-- CONTENT BODY -->
             <main class="content-body">
-                
+
                 <!-- PAGE HEADER -->
                 <div class="page-header-container">
                     <div class="page-header-text">
                         <h1>Tiến Độ & Lịch Gặp Mặt</h1>
                         <p>Lên lịch hướng dẫn, duyệt yêu cầu đặt lịch của sinh viên và kiểm soát tiến độ nộp báo cáo 5 Mốc.</p>
                     </div>
-                    <button id="openMeetingModalBtn" class="btn-primary">
-                        <i class="fa-solid fa-calendar-plus"></i> + Lên lịch gặp mới
+                    <button id="openAvailabilityModalBtn" class="btn-primary">
+                        <i class="fa-solid fa-clock"></i> + Mở giờ rảnh
                     </button>
                 </div>
 
@@ -164,76 +165,56 @@
                     </div>
                 </div>
 
+                <div class="section-container margin-top-24 availability-section">
+                    <div class="availability-hero">
+                        <div class="availability-hero-art"><i class="fa-regular fa-calendar-check"></i><span><i class="fa-regular fa-clock"></i></span></div>
+                        <div class="availability-hero-copy">
+                            <h2>Công khai khung giờ rảnh</h2>
+                            <p>Quản lý các khung giờ mà sinh viên có thể đăng ký.</p>
+                        </div>
+                        <div class="availability-hero-note"><i class="fa-solid fa-users"></i><span>Sinh viên chỉ có thể đặt vào<br>các khung giờ này</span></div>
+                    </div>
+                    <div class="availability-list-heading"><h3><i class="fa-regular fa-calendar-days"></i> Danh sách khung giờ đã công khai</h3><span id="availabilityCount" class="availability-count">0 khung giờ</span></div>
+                    <div id="availabilityList" class="availability-list"><p class="availability-empty-hint">Các khung giờ bạn mở sẽ hiển thị tại đây để sinh viên lựa chọn.</p></div>
+                </div>
+
             </main>
         </div>
     </div>
 
-    <!-- MODAL TẠO LỊCH GẶP MỚI -->
-    <div id="createMeetingModal" class="modal-overlay" style="display: none;">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-calendar-plus"></i> Lên Lịch Gặp Hướng Dẫn Mới</h3>
-                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+    <!-- MODAL CÔNG KHAI KHUNG GIỜ RẢNH -->
+    <div id="availabilityModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box availability-modal-box">
+            <div class="availability-modal-heading">
+                <div class="availability-heading-icon"><i class="fa-solid fa-clock"></i></div>
+                <div>
+                    <h3>Công khai khung giờ rảnh</h3>
+                    <p></p>
+                </div>
+                <button class="btn-close-modal availability-close" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="createMeetingForm">
-                <div class="form-group">
-                    <label>ID Đề tài (Topic ID) <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="meetingTopicId" placeholder="Nhập Mongo ObjectId của Đề tài" required />
+            <div class="availability-modal-body">
+                <div class="availability-illustration" aria-hidden="true">
+                    <div class="illustration-calendar"><i class="fa-regular fa-calendar-check"></i><span class="illustration-clock"><i class="fa-regular fa-clock"></i></span></div>
                 </div>
-
-                <div class="form-group">
-                    <label>Mã Sinh viên / Trưởng nhóm <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="meetingStudentCode" placeholder="Ví dụ: SV001" required />
-                </div>
-
-                <div class="form-group">
-                    <label>Tiêu đề / Nội dung buổi gặp <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="meetingTitle" placeholder="Ví dụ: Báo cáo tiến độ Mốc 3" required />
-                </div>
-
-                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label>Ngày gặp <span class="required">*</span></label>
-                        <input type="date" class="form-control" id="meetingDate" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Giờ bắt đầu <span class="required">*</span></label>
-                        <input type="time" class="form-control" id="meetingTimeStart" value="09:00" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Giờ kết thúc <span class="required">*</span></label>
-                        <input type="time" class="form-control" id="meetingTimeEnd" value="10:30" required />
-                    </div>
-                </div>
-
-                <div class="form-row" style="display: grid; grid-template-columns: 160px 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label>Hình thức <span class="required">*</span></label>
-                        <select class="form-control" id="meetingType">
-                            <option value="ONLINE">Online (Meet)</option>
-                            <option value="OFFLINE">Offline (Trường)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Địa điểm / Link Meet <span class="required">*</span></label>
-                        <input type="text" class="form-control" id="meetingLocation" placeholder="Link Google Meet hoặc số phòng..." required />
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Ghi chú / Yêu cầu chuẩn bị:</label>
-                    <textarea class="form-control" id="meetingNotes" rows="2" placeholder="Yêu cầu nhóm chuẩn bị trước file báo cáo Mốc..."></textarea>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel btn-close-modal">Hủy</button>
-                    <button type="submit" class="btn-submit">Tạo Lịch Hẹn</button>
-                </div>
-            </form>
+                <form id="availabilityForm" class="availability-modal-form">
+                    <div class="availability-field"><span class="availability-field-icon blue"><i class="fa-regular fa-calendar-days"></i></span><div class="form-group"><label>Ngày rảnh <span class="required">*</span></label><input type="date" id="availabilityDate" required></div></div>
+                    <div class="availability-field"><span class="availability-field-icon purple"><i class="fa-regular fa-clock"></i></span><div class="form-group"><label>Giờ bắt đầu <span class="required">*</span></label><input type="time" id="availabilityStart" value="09:00" required></div></div>
+                    <div class="availability-field"><span class="availability-field-icon purple"><i class="fa-regular fa-clock"></i></span><div class="form-group"><label>Giờ kết thúc <span class="required">*</span></label><input type="time" id="availabilityEnd" value="10:00" required></div></div>
+                    <div class="availability-field"><span class="availability-field-icon green"><i class="fa-solid fa-users"></i></span><div class="form-group"><label>Số nhóm tối đa</label><input type="number" id="availabilityCapacity" value="3" min="1" max="20"></div></div>
+                    <div class="availability-field"><span class="availability-field-icon blue"><i class="fa-solid fa-video"></i></span><div class="form-group"><label>Hình thức</label><select id="availabilityType"><option value="ONLINE">Online (Meet)</option><option value="OFFLINE">Offline (Trường)</option></select></div></div>
+                    <div class="availability-field"><span class="availability-field-icon purple"><i class="fa-solid fa-link"></i></span><div class="form-group"><label>Link Meet / Phòng</label><input type="text" id="availabilityLocation" placeholder="Nhập link hoặc số phòng"></div></div>
+                </form>
+            </div>
+            <div class="availability-modal-footer">
+                <button type="button" class="btn-cancel btn-close-modal"><i class="fa-solid fa-xmark"></i> Hủy</button>
+                <button type="submit" form="availabilityForm" class="btn-submit"><i class="fa-solid fa-plus"></i> Mở giờ rảnh</button>
+            </div>
         </div>
     </div>
 
     <script src="../js/notif-badge.js"></script>
     <script src="../js/lecturer-schedule.js"></script>
+    <script src="../js/app-notifications.js"></script>
 </body>
 </html>

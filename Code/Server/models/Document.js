@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const documentSchema = new mongoose.Schema({
     title: { type: String, required: true },
     category: { type: String, default: 'Biểu mẫu SV' },   // Nhãn phân loại hiển thị (VD: "Biểu mẫu SV", "Tài liệu kỹ thuật"...)
-    target: { type: String, default: 'Tất cả nhóm hướng dẫn' }, // Đối tượng được chia sẻ (VD: "Tất cả nhóm hướng dẫn", "Nhóm N01"...)
+    target: { type: String, default: 'Tất cả nhóm hướng dẫn' }, // Đối tượng được chia sẻ
+    recipient_codes: { type: [String], default: [] },
     uploader_code: { type: String, required: true }, // Mã Giảng viên đã chia sẻ
     uploader_name: { type: String, default: '' },
     file_name: { type: String, required: true },      // Tên file lưu trên server

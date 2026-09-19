@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else {
             if (accountList.some(a => a.username === username)) {
-                alert("Tên đăng nhập này đã tồn tại!");
+                showAppNotification("Tên đăng nhập này đã tồn tại!");
                 return;
             }
             accountList.unshift({
@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const username = e.currentTarget.getAttribute("data-username");
 
                 if (username === "superadmin") {
-                    alert("Không thể xóa tài khoản Super Admin hệ thống!");
+                    showAppNotification("Không thể xóa tài khoản Super Admin hệ thống!");
                     return;
                 }
 

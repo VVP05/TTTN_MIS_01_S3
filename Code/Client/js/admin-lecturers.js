@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const email = document.getElementById("lecturerEmailInput").value.trim();
 
             if (!id || !name || !degree || !dept || !email) {
-                alert("Vui lòng điền đầy đủ thông tin giảng viên.");
+                showAppNotification("Vui lòng điền đầy đủ thông tin giảng viên.");
                 return;
             }
 
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await fetchLecturers();
             } catch (error) {
                 console.error('Lỗi lưu giảng viên:', error);
-                alert(error.message || 'Không thể lưu giảng viên.');
+                showAppNotification(error.message || 'Không thể lưu giảng viên.');
             }
         };
     }

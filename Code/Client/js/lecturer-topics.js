@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA ĐĂNG NHẬP (Bắt buộc Token và Role là LECTURER)
     let lecturerAuth = null;
     try {
-        lecturerAuth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+        lecturerAuth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
     } catch (error) {
         lecturerAuth = null;
     }
@@ -25,14 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const userStr = lecturerAuth?.user ? JSON.stringify(lecturerAuth.user) : null;
 
     if (!token || !userStr) {
-        alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục!");
+        showAppNotification("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục!");
         window.location.href = "index.html";
         return;
     }
 
     const user = JSON.parse(userStr);
     if (user.role !== "LECTURER") {
-        alert("Bạn không có quyền truy cập trang dành cho Giảng viên!");
+        showAppNotification("Bạn không có quyền truy cập trang dành cho Giảng viên!");
         window.location.href = "index.html";
         return;
     }
@@ -119,7 +119,7 @@ async function loadLecturerTopics(lecturerCode, token) {
         }
     } catch (error) {
         console.error("Lỗi kết nối API:", error);
-        alert("Không thể kết nối đến máy chủ Backend!");
+        showAppNotification("Không thể kết nối đến máy chủ Backend!");
     }
 }
 
@@ -301,7 +301,7 @@ function renderMyTopicsTable(list) {
             <td>${topic.description || topic.requirements || "Không có yêu cầu"}</td>
             <td>${statusBadge}</td>
             <td>
-                <button class="btn-text-edit" onclick="alert('Chức năng chỉnh sửa đề tài kho đang được hoàn thiện!')">Sửa</button>
+                <button class="btn-text-edit" onclick="showAppNotification('Chức năng chỉnh sửa đề tài kho đang được hoàn thiện!')">Sửa</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -357,7 +357,7 @@ function setupModals(lecturerCode, token) {
             const descriptionInput = document.getElementById("createDescription")?.value.trim();
 
             if (!titleInput) {
-                alert("Vui lòng nhập tên đề tài!");
+                showAppNotification("Vui lòng nhập tên đề tài!");
                 return;
             }
 
@@ -379,7 +379,7 @@ function setupModals(lecturerCode, token) {
 
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    alert("Đã lưu đề tài mới vào Kho gợi ý cho sinh viên thành công!");
+                    showAppNotification("Đã lưu đề tài mới vào Kho gợi ý cho sinh viên thành công!");
                     if (createModal) createModal.style.display = "none";
                     createForm.reset();
                     
@@ -389,11 +389,11 @@ function setupModals(lecturerCode, token) {
                     const poolTabBtn = document.querySelector('.tab-btn[data-tab="mytopics"]');
                     if (poolTabBtn) poolTabBtn.click();
                 } else {
-                    alert("Lỗi: " + (result.message || "Không thể tạo đề tài"));
+                    showAppNotification("Lỗi: " + (result.message || "Không thể tạo đề tài"));
                 }
             } catch (error) {
                 console.error("Lỗi khi tạo đề tài:", error);
-                alert("Lỗi kết nối máy chủ khi tạo đề tài!");
+                showAppNotification("Lỗi kết nối máy chủ khi tạo đề tài!");
             }
         });
     }
@@ -419,7 +419,7 @@ function setupModals(lecturerCode, token) {
         confirmRejectBtn.addEventListener("click", async () => {
             const reason = rejectReasonInput ? rejectReasonInput.value.trim() : "";
             if (!reason) {
-                alert("Vui lòng điền lý do từ chối đề tài!");
+                showAppNotification("Vui lòng điền lý do từ chối đề tài!");
                 return;
             }
 
@@ -437,7 +437,7 @@ function setupModals(lecturerCode, token) {
             const note = noteInput ? noteInput.value.trim() : "";
             
             if (!note) {
-                alert("Vui lòng nhập chi tiết phản hồi/yêu cầu chỉnh sửa cho sinh viên!");
+                showAppNotification("Vui lòng nhập chi tiết phản hồi/yêu cầu chỉnh sửa cho sinh viên!");
                 return;
             }
 
@@ -514,14 +514,14 @@ async function executeStatusUpdate(topicId, status, feedback, lecturerCode, toke
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert(result.message || "Cập nhật trạng thái đề tài thành công!");
+            showAppNotification(result.message || "Cập nhật trạng thái đề tài thành công!");
             // Tải lại dữ liệu mới nhất từ Server (sẽ tự động cập nhật lại Kho đề tài sang Đã đăng ký)
             loadLecturerTopics(lecturerCode, token);
         } else {
-            alert("Lỗi thao tác: " + (result.message || "Không thể cập nhật trạng thái đề tài!"));
+            showAppNotification("Lỗi thao tác: " + (result.message || "Không thể cập nhật trạng thái đề tài!"));
         }
     } catch (error) {
         console.error("Lỗi khi cập nhật trạng thái:", error);
-        alert("Lỗi kết nối máy chủ khi cập nhật trạng thái!");
+        showAppNotification("Lỗi kết nối máy chủ khi cập nhật trạng thái!");
     }
 }

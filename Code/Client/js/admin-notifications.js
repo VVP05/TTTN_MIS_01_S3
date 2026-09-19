@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // XỬ LÝ LƯU THÔNG BÁO (NHÁP HOẶC PHÁT HÀNH)
     async function saveNotification(status) {
         if (!notifTitleInput.value || !notifContentInput.value) {
-            alert("Vui lòng nhập đầy đủ Tiêu đề và Nội dung thông báo!");
+            showAppNotification("Vui lòng nhập đầy đủ Tiêu đề và Nội dung thông báo!");
             return;
         }
 
@@ -227,10 +227,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 loadNotifications();
                 return;
             }
-            alert(result.message || 'Lỗi khi lưu thông báo');
+            showAppNotification(result.message || 'Lỗi khi lưu thông báo');
         } catch (error) {
             console.error('Lỗi khi gửi thông báo:', error);
-            alert('Lỗi khi gửi thông báo. Vui lòng thử lại.');
+            showAppNotification('Lỗi khi gửi thông báo. Vui lòng thử lại.');
         }
     }
 
@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 deleteTargetId = null;
             } catch (error) {
                 console.error('Lỗi xóa thông báo:', error);
-                alert(error.message || 'Không thể xóa thông báo hiện tại.');
+                showAppNotification(error.message || 'Không thể xóa thông báo hiện tại.');
             }
         }
     };

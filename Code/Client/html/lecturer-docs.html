@@ -7,8 +7,9 @@
     
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../css/lecturer.css">
-    <link rel="stylesheet" href="../css/lecturer-docs.css">
+    <link rel="stylesheet" href="../css/lecturer-docs.css?v=20260908c">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/app-notifications.css">
 </head>
 <body>
 
@@ -193,6 +194,7 @@
                     <label>Chọn file tải lên (.pdf, .docx, .zip) <span class="required">*</span></label>
                     <input type="file" class="form-control" id="docFile" required>
                 </div>
+                <div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel btn-close-modal">Hủy</button>
                     <button type="submit" class="btn-submit">Tải lên & Chia sẻ</button>
@@ -201,7 +203,8 @@
         </div>
     </div>
 
+    <script src="../js/app-notifications.js?v=20260908e"></script>
     <script src="../js/notif-badge.js"></script>
-    <script src="../js/lecturer-docs.js"></script>
+    <script src="../js/lecturer-docs.js?v=20260908d"></script>
 </body>
 </html>

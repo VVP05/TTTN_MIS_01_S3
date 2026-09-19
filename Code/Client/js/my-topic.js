@@ -3,28 +3,25 @@ let currentTopicData = null;
 const TOTAL_MILESTONES = 5;
 
 function getAuthForRole(role) {
-    const roleKey = {
-        STUDENT: "studentAuth",
-        LECTURER: "lecturerAuth",
-        ADMIN: "adminAuth"
-    }[role] || "auth";
-
-    const raw = localStorage.getItem(roleKey);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        return null;
+    const activeSession = sessionStorage.getItem("activeAuth");
+    if (activeSession) {
+        try {
+            const sessionAuth = JSON.parse(activeSession);
+            if (sessionAuth?.user?.role === role && sessionAuth.token) return sessionAuth;
+        } catch (error) {
+            sessionStorage.removeItem("activeAuth");
+        }
     }
+
+    return null;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
     
     // 1. KIỂM TRA PHIÊN ĐĂNG NHẬP
-    const auth = getAuthForRole("STUDENT") || { token: localStorage.getItem("token"), user: JSON.parse(localStorage.getItem("user") || "null") };
+    const auth = getAuthForRole("STUDENT") || { token: null, user: null };
     const user = auth?.user;
-    const token = auth?.token || localStorage.getItem("token");
+    const token = auth?.token;
 
     if (!user || user.role !== "STUDENT") {
         window.location.href = "index.html";
@@ -49,12 +46,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnCancelTopic) {
         btnCancelTopic.addEventListener("click", async () => {
             if (!currentTopicData || !currentTopicData._id) {
-                alert("Bạn chưa có đề tài nào để hủy!");
+                showAppNotification("Bạn chưa có đề tài nào để hủy!");
                 return;
             }
 
             if (currentTopicData.status === "APPROVED") {
-                alert("Đề tài đã được phê duyệt! Bạn không thể tự hủy, vui lòng liên hệ Giảng viên.");
+                showAppNotification("Đề tài đã được phê duyệt! Bạn không thể tự hủy, vui lòng liên hệ Giảng viên.");
                 return;
             }
 
@@ -71,14 +68,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const result = await res.json();
 
                     if (res.ok) {
-                        alert(result.message || "Đã hủy đề tài thành công!");
+                        showAppNotification(result.message || "Đã hủy đề tài thành công!");
                         window.location.href = "student-dashboard.html";
                     } else {
-                        alert(result.message || "Không thể hủy đề tài!");
+                        showAppNotification(result.message || "Không thể hủy đề tài!");
                     }
                 } catch (err) {
                     console.error("Lỗi khi hủy đề tài:", err);
-                    alert("Lỗi kết nối máy chủ khi hủy đề tài!");
+                    showAppNotification("Lỗi kết nối máy chủ khi hủy đề tài!");
                 }
             }
         });
@@ -134,7 +131,7 @@ async function getUserDisplayName(userCode) {
     }
     
     try {
-        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
+        const token = getAuthForRole("STUDENT")?.token;
         const res = await fetch(`http://localhost:5000/api/auth/users/${userCode}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -159,7 +156,7 @@ async function getUserDisplayName(userCode) {
 // =========================================================
 async function loadMyTopic(userCode) {
     try {
-        const token = JSON.parse(localStorage.getItem("studentAuth") || "null")?.token;
+        const token = getAuthForRole("STUDENT")?.token;
         const response = await fetch(`http://localhost:5000/api/topics/my-topic/${userCode}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -440,17 +437,17 @@ function initUploadEvents(mIndex) {
             e.preventDefault();
             
             if (!fileInput.files || fileInput.files.length === 0) {
-                alert("Vui lòng chọn file báo cáo trước khi nộp!");
+                showAppNotification("Vui lòng chọn file báo cáo trước khi nộp!");
                 return;
             }
 
             if (!currentTopicData || !currentTopicData._id) {
-                alert("Chưa lấy được thông tin đề tài. Vui lòng tải lại trang!");
+                showAppNotification("Chưa lấy được thông tin đề tài. Vui lòng tải lại trang!");
                 return;
             }
 
             const file = fileInput.files[0];
-            const studentAuth = JSON.parse(localStorage.getItem("studentAuth") || "null");
+            const studentAuth = getAuthForRole("STUDENT");
             const token = studentAuth?.token;
             const user = studentAuth?.user || {};
 
@@ -483,7 +480,7 @@ function initUploadEvents(mIndex) {
                     } catch (e) {
                         errMsg = `Lỗi hệ thống (${res.status}). Vui lòng kiểm tra lại Route ở Backend.`;
                     }
-                    alert(`Nộp bài thất bại: ${errMsg}`);
+                    showAppNotification(`Nộp bài thất bại: ${errMsg}`);
                     
                     btnSubmit.disabled = false;
                     btnSubmit.style.opacity = "1";
@@ -492,14 +489,14 @@ function initUploadEvents(mIndex) {
                 }
 
                 const result = await res.json();
-                alert(result.message || `Nộp thành công Mốc ${mIndex}: "${file.name}".`);
+                showAppNotification(result.message || `Nộp thành công Mốc ${mIndex}: "${file.name}".`);
 
                 // Đồng bộ lại dữ liệu thực tế từ MongoDB
                 await loadMyTopic(user.user_code);
 
             } catch (err) {
                 console.error("Lỗi kết nối khi nộp mốc:", err);
-                alert("Không thể kết nối đến máy chủ! Vui lòng kiểm tra lại Backend server.");
+                showAppNotification("Không thể kết nối đến máy chủ! Vui lòng kiểm tra lại Backend server.");
                 
                 btnSubmit.disabled = false;
                 btnSubmit.style.opacity = "1";
@@ -512,7 +509,7 @@ function initUploadEvents(mIndex) {
         if (!files || files.length === 0) return;
         const file = files[0];
         if (file.size > 25 * 1024 * 1024) {
-            alert("File vượt quá kích thước tối đa 25MB!");
+            showAppNotification("File vượt quá kích thước tối đa 25MB!");
             fileInput.value = "";
             return;
         }

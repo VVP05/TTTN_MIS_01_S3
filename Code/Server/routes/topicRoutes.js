@@ -43,6 +43,8 @@ const upload = multer({
 const { 
     // Các hàm cho Sinh viên
     registerTopic, 
+    getGroupJoinRequests,
+    updateGroupJoinRequest,
     getMyTopic, 
     updateTopic,
     cancelTopic,
@@ -86,7 +88,9 @@ router.put('/admin/pool/:pool_topic_id/status', authMiddleware, requireAdminRole
 router.post('/register-pool', registerPoolTopic);
 
 // Đăng ký đề tài mới (SV tự đề xuất) hoặc Cập nhật/Gửi lại đề tài
-router.post('/register', registerTopic);
+router.post('/register', authMiddleware, registerTopic);
+router.get('/join-requests/:leader_code', authMiddleware, getGroupJoinRequests);
+router.patch('/join-requests/:leader_code/:request_id', authMiddleware, updateGroupJoinRequest);
 
 // Lấy đề tài của sinh viên
 router.get('/my-topic/:user_code', getMyTopic);

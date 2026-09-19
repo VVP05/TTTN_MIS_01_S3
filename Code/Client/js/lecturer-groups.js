@@ -9,7 +9,7 @@ let notifyMode = null; // 'GROUP' or 'BROADCAST'
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP (LECTURER)
-    const auth = JSON.parse(localStorage.getItem("lecturerAuth") || "null");
+    const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
     const user = auth?.user || null;
     if (!user || user.role !== "LECTURER") {
         window.location.href = "index.html";
@@ -102,12 +102,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const content = messageBody.value.trim();
 
         if (!title || !content) {
-            alert('Vui lòng điền đầy đủ tiêu đề và nội dung thông báo.');
+            showAppNotification('Vui lòng điền đầy đủ tiêu đề và nội dung thông báo.');
             return;
         }
 
         if (!notifyMode) {
-            alert('Vui lòng chọn nhóm hoặc gửi thông báo chung trước khi gửi.');
+            showAppNotification('Vui lòng chọn nhóm hoặc gửi thông báo chung trước khi gửi.');
             return;
         }
 
@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             const recipients = [...new Set(notifyRecipients.filter(code => code && code.toString().trim() !== ''))];
             if (recipients.length === 0) {
-                alert('Không tìm thấy sinh viên để gửi thông báo.');
+                showAppNotification('Không tìm thấy sinh viên để gửi thông báo.');
                 return;
             }
 
@@ -149,9 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (failed.length > 0) {
                 console.error('Một số thông báo gửi không thành công:', failed);
-                alert(`Gửi thông báo không thành công với ${failed.length} mục.`);
+                showAppNotification(`Gửi thông báo không thành công với ${failed.length} mục.`);
             } else {
-                alert('Thông báo đã được gửi thành công đến sinh viên.');
+                showAppNotification('Thông báo đã được gửi thành công đến sinh viên.');
                 if (messageModal) messageModal.style.display = 'none';
                 sendMessageForm.reset();
                 notifyMode = null;
@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (error) {
             console.error('Lỗi gửi thông báo:', error);
-            alert('Gửi thông báo thất bại. Vui lòng thử lại sau.');
+            showAppNotification('Gửi thông báo thất bại. Vui lòng thử lại sau.');
         }
     }
 
@@ -498,8 +498,8 @@ window.openRemindModal = function(group) {
  */
 function exportGroupsToExcel() {
     if (allGroupsData.length === 0) {
-        alert("Không có dữ liệu nhóm sinh viên để xuất!");
+        showAppNotification("Không có dữ liệu nhóm sinh viên để xuất!");
         return;
     }
-    alert(`Đang tiến hành tạo file Excel cho ${allGroupsData.length} nhóm hướng dẫn...`);
+    showAppNotification(`Đang tiến hành tạo file Excel cho ${allGroupsData.length} nhóm hướng dẫn...`);
 }
