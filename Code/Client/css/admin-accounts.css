@@ -247,6 +247,67 @@ body {
 .form-group input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
 .full-width { width: 100%; }
 
+.admin-password-strength {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 7px;
+}
+
+.admin-strength-track {
+    height: 5px;
+    flex: 1;
+    overflow: hidden;
+    background: #e2e8f0;
+    border-radius: 999px;
+}
+
+#adminStrengthBar {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    transition: width .2s ease, background-color .2s ease;
+}
+
+.admin-password-strength span {
+    width: 70px;
+    color: #64748b;
+    font-size: 11px;
+    text-align: right;
+}
+
+.admin-password-requirements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    margin: 8px 0 0;
+    padding: 0;
+    color: #64748b;
+    font-size: 11px;
+    list-style: none;
+}
+
+.admin-password-requirements li::before {
+    content: "○";
+    display: inline-block;
+    width: 15px;
+    color: #94a3b8;
+}
+
+.admin-password-requirements li.valid {
+    color: #16a34a;
+}
+
+.admin-password-requirements li.valid::before {
+    content: "✓";
+    color: #16a34a;
+    font-weight: 700;
+}
+
+@media (max-width: 560px) {
+    .admin-password-requirements { grid-template-columns: 1fr; }
+}
+
 .modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .modal-foot.center { justify-content: center; }
 .modal-icon-red { font-size: 32px; color: #ef4444; margin-bottom: 8px; }

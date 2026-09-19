@@ -9,6 +9,46 @@ document.addEventListener("DOMContentLoaded", () => {
     const roleFilter = document.getElementById("roleFilter");
     const statusFilter = document.getElementById("statusFilter");
     const resetFilterBtn = document.getElementById("resetFilterBtn");
+    const passwordInput = document.getElementById("passwordInput");
+    const passwordConfirmInput = document.getElementById("passwordConfirmInput");
+    const adminPasswordRequirements = {
+        length: document.getElementById("adminReqLength"),
+        uppercase: document.getElementById("adminReqUpper"),
+        lowercase: document.getElementById("adminReqLower"),
+        number: document.getElementById("adminReqNumber"),
+        special: document.getElementById("adminReqSpecial")
+    };
+
+    const getPasswordRules = (password) => ({
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[^A-Za-z0-9]/.test(password)
+    });
+
+    const updatePasswordStrength = () => {
+        const rules = getPasswordRules(passwordInput.value);
+        const score = Object.values(rules).filter(Boolean).length;
+        Object.entries(rules).forEach(([rule, valid]) => {
+            adminPasswordRequirements[rule].classList.toggle("valid", valid);
+        });
+        const levels = [
+            { max: 0, label: "Chưa nhập", color: "#e2e8f0" },
+            { max: 2, label: "Yếu", color: "#ef4444" },
+            { max: 3, label: "Trung bình", color: "#f59e0b" },
+            { max: 4, label: "Mạnh", color: "#2563eb" },
+            { max: 5, label: "Rất mạnh", color: "#16a34a" }
+        ];
+        const level = levels.find(item => score <= item.max);
+        document.getElementById("adminStrengthBar").style.width = `${score * 20}%`;
+        document.getElementById("adminStrengthBar").style.backgroundColor = level.color;
+        document.getElementById("adminStrengthText").textContent = level.label;
+        document.getElementById("adminStrengthText").style.color = level.color;
+        return rules;
+    };
+
+    passwordInput.addEventListener("input", updatePasswordStrength);
 
     const accountModal = document.getElementById("accountModal");
     const accountForm = document.getElementById("accountForm");
@@ -125,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         accountForm.reset();
         document.getElementById("usernameInput").disabled = false;
         document.getElementById("passwordInput").required = true;
+        passwordConfirmInput.required = true;
         accountModal.style.display = "flex";
     };
 
@@ -136,6 +177,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("emailInput").value.trim();
         const role = document.getElementById("roleInput").value;
         const status = document.getElementById("statusInput").value;
+        const password = passwordInput.value;
+        const passwordConfirm = passwordConfirmInput.value;
+        const passwordRules = updatePasswordStrength();
+
+        if (!currentEditingUsername && !Object.values(passwordRules).every(Boolean)) {
+            alert("Mật khẩu phải có ít nhất 8 ký tự, chữ hoa, chữ thường, chữ số và ký tự đặc biệt!");
+            return;
+        }
+
+        if (currentEditingUsername && password && !Object.values(passwordRules).every(Boolean)) {
+            alert("Mật khẩu mới phải có ít nhất 8 ký tự, chữ hoa, chữ thường, chữ số và ký tự đặc biệt!");
+            return;
+        }
+
+        if ((password || passwordConfirm) && password !== passwordConfirm) {
+            alert("Nhập lại mật khẩu mới không khớp!");
+            return;
+        }
 
         if (currentEditingUsername) {
             const index = accountList.findIndex(a => a.username === currentEditingUsername);
@@ -158,6 +217,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         accountModal.style.display = "none";
+        passwordInput.value = "";
+        passwordConfirmInput.value = "";
+        updatePasswordStrength();
         renderAccounts(accountList);
     };
 
@@ -177,6 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.getElementById("roleInput").value = item.role;
                     document.getElementById("statusInput").value = item.status;
                     document.getElementById("passwordInput").required = false; // Không bắt buộc nhập lại mật khẩu khi sửa
+                    passwordConfirmInput.value = "";
+                    passwordConfirmInput.required = false;
 
                     accountModal.style.display = "flex";
                 }
