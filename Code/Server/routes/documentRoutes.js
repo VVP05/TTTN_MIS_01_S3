@@ -4,6 +4,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const documentController = require('../controllers/documentController');
+const authMiddleware = require('../middlewares/authMiddleware');
+
+const requireRole = (...roles) => (req, res, next) => {
+    const role = String(req.user?.role || '').toUpperCase();
+    if (roles.includes(role)) return next();
+    return res.status(403).json({ success: false, message: 'Bạn không có quyền truy cập tài liệu này.' });
+};
 
 // Tạo thư mục uploads/documents nếu chưa có
 const uploadDir = path.join(__dirname, '../uploads/documents');
@@ -28,21 +35,21 @@ const upload = multer({
 });
 
 // GET  /api/documents/lecturer/:lecturerCode  -> Danh sách tài liệu do 1 GVHD chia sẻ
-router.get('/lecturer/:lecturerCode', documentController.getLecturerDocuments);
+router.get('/lecturer/:lecturerCode', authMiddleware, requireRole('LECTURER'), documentController.getLecturerDocuments);
 
 // GET /api/documents/admin/all -> Toàn bộ tài liệu cho Admin quản lý
-router.get('/admin/all', documentController.getAllDocuments);
+router.get('/admin/all', authMiddleware, requireRole('ADMIN'), documentController.getAllDocuments);
 
 // GET  /api/documents/student  -> Danh sách tài liệu công khai cho Sinh viên xem
-router.get('/student', documentController.getStudentDocuments);
+router.get('/student', authMiddleware, requireRole('STUDENT'), documentController.getStudentDocuments);
 
 // POST /api/documents/upload  -> Tải lên & chia sẻ tài liệu mới
-router.post('/upload', upload.single('file'), documentController.uploadDocument);
+router.post('/upload', authMiddleware, requireRole('ADMIN', 'LECTURER'), upload.single('file'), documentController.uploadDocument);
 
 // DELETE /api/documents/:id  -> Xóa tài liệu
-router.delete('/:id', documentController.deleteDocument);
+router.delete('/:id', authMiddleware, requireRole('ADMIN', 'LECTURER'), documentController.deleteDocument);
 
 // PATCH /api/documents/download/:id  -> Tăng lượt tải xuống
-router.patch('/download/:id', documentController.incrementDownload);
+router.patch('/download/:id', authMiddleware, requireRole('ADMIN', 'LECTURER', 'STUDENT'), documentController.incrementDownload);
 
 module.exports = router;

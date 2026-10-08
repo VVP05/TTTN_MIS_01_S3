@@ -12,11 +12,12 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const activityLogRoutes = require('./routes/activityLogRoutes');
 const documentRoutes = require('./routes/documentRoutes');
+const milestoneRoutes = require('./routes/milestoneRoutes');
 const activityLogger = require('./middlewares/activityLogger');
 const groupController = require('./controllers/groupController');
+const Milestone = require('./models/Milestone');
 
 dotenv.config();
-connectDB();
 
 const app = express();
 
@@ -37,8 +38,15 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/v1/lecturer/dashboard', dashboardRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/milestones', milestoneRoutes);
 
 app.get('/api/groups/lecturer/:lecturerCode', groupController.getGroupsByLecturer);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+connectDB()
+	.then(() => Milestone.syncIndexes())
+	.then(() => app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`)))
+	.catch(error => {
+		console.error(`❌ Không thể khởi động máy chủ: ${error.message}`);
+		process.exit(1);
+	});

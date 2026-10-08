@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const noDocResult = document.getElementById("noDocResult");
     const allDocumentsCount = document.getElementById("allDocumentsCount");
     const API_BASE = "http://localhost:5000";
+    const authHeaders = { Authorization: `Bearer ${auth.token}` };
 
     const getCategoryKey = (category) => {
         const text = (category || "").toLowerCase();
@@ -122,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const loadDocuments = async () => {
         try {
-            const response = await fetch(`${API_BASE}/api/documents/student?user_code=${encodeURIComponent(user.user_code)}`);
+            const response = await fetch(`${API_BASE}/api/documents/student`, { headers: authHeaders });
             const result = await response.json();
             const docs = result && Array.isArray(result.documents)
                 ? result.documents.filter(doc => doc.target !== "Tất cả giảng viên")

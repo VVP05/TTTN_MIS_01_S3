@@ -1,35 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // 1. DỮ LIỆU MILESTONES MẪU
-    let milestoneList = [
-        {
-            id: 1,
-            name: "Đăng ký nhóm & Đề tài TTTN",
-            desc: "Sinh viên hoàn tất đăng ký nhóm và nộp đề cương sơ bộ.",
-            startDate: "2026-02-01T08:00",
-            endDate: "2026-02-15T23:59",
-            allowLate: false,
-            status: "closed"
-        },
-        {
-            id: 2,
-            name: "Báo cáo Tiến độ / Giữa kỳ",
-            desc: "Nộp báo cáo tiến độ tuần 6 & xác nhận từ Giảng viên hướng dẫn.",
-            startDate: "2026-03-01T08:00",
-            endDate: "2026-03-25T23:59",
-            allowLate: true,
-            status: "active"
-        },
-        {
-            id: 3,
-            name: "Nộp Báo cáo Tổng kết & Mã nguồn",
-            desc: "Nộp file cuốn Báo cáo Thực tập chính thức (PDF) và đường dẫn Source code.",
-            startDate: "2026-05-01T08:00",
-            endDate: "2026-05-15T23:59",
-            allowLate: false,
-            status: "upcoming"
-        }
-    ];
+    let milestoneList = [];
 
     let deleteTargetId = null;
 
@@ -52,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const milestoneDescInput = document.getElementById("milestoneDesc");
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
-    const allowLateInput = document.getElementById("allowLate");
 
     const deleteModal = document.getElementById("deleteModal");
     const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
@@ -63,20 +33,63 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelLogout = document.getElementById("cancelLogoutBtn");
     const confirmLogout = document.getElementById("confirmLogoutBtn");
 
-    // 2. TÍNH TOÁN VÀ CẬP NHẬT THỐNG KÊ
+    async function requestMilestones(path, method = "GET", body) {
+        const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+        if (!auth?.token) throw new Error("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+
+        const options = {
+            method,
+            headers: { "Authorization": `Bearer ${auth.token}` }
+        };
+        if (body) {
+            options.headers["Content-Type"] = "application/json";
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(`http://localhost:5000/api/milestones${path}`, options);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Không thể lưu milestone.");
+        return result;
+    }
+
+    function notify(message) {
+        if (typeof showAppNotification === "function") showAppNotification(message);
+        else window.alert(message);
+    }
+
+    function toDateTimeLocal(value) {
+        const date = new Date(value);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        return date.toISOString().slice(0, 16);
+    }
+
+    function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[character]);
+    }
+
+    async function loadMilestones() {
+        try {
+            const result = await requestMilestones("/lecturer");
+            milestoneList = result.data || [];
+            updateSummaryCards();
+            handleFilter();
+        } catch (error) {
+            notify(error.message);
+        }
+    }
+
     function updateSummaryCards() {
         const totalCount = document.getElementById("totalCount");
         const activeCount = document.getElementById("activeCount");
         const upcomingCount = document.getElementById("upcomingCount");
-        const closedCount = document.getElementById("closedCount");
 
         if (totalCount) totalCount.textContent = milestoneList.length;
         if (activeCount) activeCount.textContent = milestoneList.filter(m => m.status === 'active').length;
         if (upcomingCount) upcomingCount.textContent = milestoneList.filter(m => m.status === 'upcoming').length;
-        if (closedCount) closedCount.textContent = milestoneList.filter(m => m.status === 'closed').length;
     }
 
-    // FORMAT DATE DISPLAY
     function formatDate(dateStr) {
         if (!dateStr) return "-";
         const date = new Date(dateStr);
@@ -88,13 +101,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${hours}:${minutes} - ${day}/${month}/${year}`;
     }
 
-    // 3. RENDER BẢNG DỮ LIỆU
     function renderMilestones(data) {
         if (!tableBody) return;
         tableBody.innerHTML = "";
 
         if (data.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px; color: #94a3b8;">Không tìm thấy milestone nào</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 20px; color: #94a3b8;">Không tìm thấy milestone nào</td></tr>`;
             return;
         }
 
@@ -106,23 +118,18 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (item.status === "upcoming") statusBadge = `<span class="status-badge status-upcoming">Sắp mở</span>`;
             else statusBadge = `<span class="status-badge status-closed">Đã đóng</span>`;
 
-            const lateBadge = item.allowLate 
-                ? `<span class="badge-late-yes"><i class="fa-solid fa-check"></i> Có</span>` 
-                : `<span class="badge-late-no"><i class="fa-solid fa-xmark"></i> Không</span>`;
-
             tr.innerHTML = `
                 <td class="text-center"><strong>${index + 1}</strong></td>
                 <td>
-                    <div class="ms-name">${item.name}</div>
-                    <div class="ms-desc">${item.desc || 'Không có ghi chú'}</div>
+                    <div class="ms-name">${escapeHtml(item.name)}</div>
+                    <div class="ms-desc">${escapeHtml(item.desc || 'Không có ghi chú')}</div>
                 </td>
                 <td>${formatDate(item.startDate)}</td>
                 <td><strong>${formatDate(item.endDate)}</strong></td>
-                <td class="text-center">${lateBadge}</td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center">
-                    <button class="table-action-btn edit-btn" data-id="${item.id}" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button class="table-action-btn delete delete-btn" data-id="${item.id}" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+                    <button class="table-action-btn edit-btn" data-id="${item._id}" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="table-action-btn delete delete-btn" data-id="${item._id}" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
                 </td>
             `;
             tableBody.appendChild(tr);
@@ -131,13 +138,12 @@ document.addEventListener("DOMContentLoaded", () => {
         attachTableEvents();
     }
 
-    // 4. LỌC & TÌM KIẾM
     function handleFilter() {
-        const query = searchInput.value.toLowerCase().trim();
-        const selectedStatus = statusFilter.value;
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+        const selectedStatus = statusFilter ? statusFilter.value : "";
 
         const filtered = milestoneList.filter(m => {
-            const matchQuery = m.name.toLowerCase().includes(query) || m.desc.toLowerCase().includes(query);
+            const matchQuery = (m.name || "").toLowerCase().includes(query) || (m.desc || "").toLowerCase().includes(query);
             const matchStatus = selectedStatus === "" || m.status === selectedStatus;
             return matchQuery && matchStatus;
         });
@@ -154,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
         handleFilter();
     });
 
-    // 5. MỞ MODAL TẠO / SỬA
     if (openAddModalBtn) openAddModalBtn.onclick = () => {
         if (!milestoneModal || !modalTitle || !milestoneForm || !milestoneIdInput) return;
         modalTitle.textContent = "Tạo Milestone Mới";
@@ -164,23 +169,22 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     function openEditModal(id) {
-        const item = milestoneList.find(m => m.id === id);
+        const item = milestoneList.find(m => m._id === id);
         if (!item) return;
 
+        if (!milestoneModal || !modalTitle || !milestoneNameInput || !milestoneDescInput || !startDateInput || !endDateInput) return;
+
         modalTitle.textContent = "Chỉnh Sửa Milestone";
-        milestoneIdInput.value = item.id;
+        milestoneIdInput.value = item._id;
         milestoneNameInput.value = item.name;
         milestoneDescInput.value = item.desc;
-        startDateInput.value = item.startDate;
-        endDateInput.value = item.endDate;
-        allowLateInput.checked = item.allowLate;
-
+        startDateInput.value = toDateTimeLocal(item.startDate);
+        endDateInput.value = toDateTimeLocal(item.endDate);
         milestoneModal.style.display = "flex";
     }
 
-    // LƯU MILESTONE
-    if (saveMilestoneBtn) saveMilestoneBtn.onclick = () => {
-        if (!milestoneNameInput || !startDateInput || !endDateInput || !milestoneModal || !allowLateInput) return;
+    if (saveMilestoneBtn) saveMilestoneBtn.onclick = async () => {
+        if (!milestoneNameInput || !startDateInput || !endDateInput || !milestoneModal) return;
         if (!milestoneNameInput.value || !startDateInput.value || !endDateInput.value) {
             if (typeof showAppNotification === "function") {
                 showAppNotification("Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
@@ -189,82 +193,61 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const id = milestoneIdInput.value;
-        const now = new Date();
-        const start = new Date(startDateInput.value);
-        const end = new Date(endDateInput.value);
+        const payload = {
+            name: milestoneNameInput.value,
+            desc: milestoneDescInput ? milestoneDescInput.value : "",
+            startDate: startDateInput.value,
+            endDate: endDateInput.value
+        };
 
-        // Auto xác định trạng thái dựa trên thời gian
-        let computedStatus = "upcoming";
-        if (now >= start && now <= end) computedStatus = "active";
-        else if (now > end) computedStatus = "closed";
-
-        if (id) {
-            // Cập nhật
-            const index = milestoneList.findIndex(m => m.id === parseInt(id));
-            if (index !== -1) {
-                milestoneList[index] = {
-                    id: parseInt(id),
-                    name: milestoneNameInput.value,
-                    desc: milestoneDescInput.value,
-                    startDate: startDateInput.value,
-                    endDate: endDateInput.value,
-                    allowLate: allowLateInput.checked,
-                    status: computedStatus
-                };
-            }
-        } else {
-            // Thêm mới
-            const newId = milestoneList.length > 0 ? Math.max(...milestoneList.map(m => m.id)) + 1 : 1;
-            milestoneList.push({
-                id: newId,
-                name: milestoneNameInput.value,
-                desc: milestoneDescInput.value,
-                startDate: startDateInput.value,
-                endDate: endDateInput.value,
-                allowLate: allowLateInput.checked,
-                status: computedStatus
-            });
+        saveMilestoneBtn.disabled = true;
+        try {
+            await requestMilestones(id ? `/${encodeURIComponent(id)}` : "", id ? "PATCH" : "POST", payload);
+            await loadMilestones();
+            milestoneModal.style.display = "none";
+        } catch (error) {
+            notify(error.message);
+        } finally {
+            saveMilestoneBtn.disabled = false;
         }
-
-        updateSummaryCards();
-        handleFilter();
-        milestoneModal.style.display = "none";
     };
 
-    // EVENT LỰA CHỌN TẠI BẢNG
     function attachTableEvents() {
         document.querySelectorAll(".edit-btn").forEach(btn => {
             btn.onclick = (e) => {
-                const id = parseInt(e.currentTarget.getAttribute("data-id"));
+                const id = e.currentTarget.getAttribute("data-id");
                 openEditModal(id);
             };
         });
 
         document.querySelectorAll(".delete-btn").forEach(btn => {
             btn.onclick = (e) => {
-                deleteTargetId = parseInt(e.currentTarget.getAttribute("data-id"));
+                deleteTargetId = e.currentTarget.getAttribute("data-id");
                 if (deleteModal) deleteModal.style.display = "flex";
             };
         });
     }
 
-    // XÓA MILESTONE
-    if (confirmDeleteBtn) confirmDeleteBtn.onclick = () => {
+    if (confirmDeleteBtn) confirmDeleteBtn.onclick = async () => {
         if (deleteTargetId !== null) {
-            milestoneList = milestoneList.filter(m => m.id !== deleteTargetId);
-            updateSummaryCards();
-            handleFilter();
-            if (deleteModal) deleteModal.style.display = "none";
-            deleteTargetId = null;
+            confirmDeleteBtn.disabled = true;
+            try {
+                await requestMilestones(`/${encodeURIComponent(deleteTargetId)}`, "DELETE");
+                if (deleteModal) deleteModal.style.display = "none";
+                deleteTargetId = null;
+                await loadMilestones();
+            } catch (error) {
+                notify(error.message);
+            } finally {
+                confirmDeleteBtn.disabled = false;
+            }
         }
     };
 
-    // CLOSE MODALS
     if (closeMilestoneModal && milestoneModal) closeMilestoneModal.onclick = () => milestoneModal.style.display = "none";
     if (cancelMilestoneBtn && milestoneModal) cancelMilestoneBtn.onclick = () => milestoneModal.style.display = "none";
     if (cancelDeleteBtn && deleteModal) cancelDeleteBtn.onclick = () => deleteModal.style.display = "none";
 
-    // LOGOUT
     if (openLogoutBtn && logoutModal) openLogoutBtn.onclick = () => logoutModal.style.display = "flex";
     if (cancelLogout && logoutModal) cancelLogout.onclick = () => logoutModal.style.display = "none";
     if (confirmLogout) confirmLogout.onclick = () => {
@@ -273,9 +256,5 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "index.html";
     };
 
-    // KHỞI TẠO BAN ĐẦU
-    if (tableBody && searchInput && statusFilter) {
-        updateSummaryCards();
-        handleFilter();
-    }
+    loadMilestones();
 });

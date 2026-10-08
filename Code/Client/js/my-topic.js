@@ -1,6 +1,7 @@
 // Biến toàn cục lưu thông tin đề tài sau khi load
 let currentTopicData = null;
-const TOTAL_MILESTONES = 5;
+let lecturerMilestones = [];
+let milestoneLoadError = false;
 
 function getAuthForRole(role) {
     const activeSession = sessionStorage.getItem("activeAuth");
@@ -172,6 +173,8 @@ async function loadMyTopic(userCode) {
         
         if (data && data._id) {
             currentTopicData = data;
+            await loadStudentMilestones();
+            syncMilestoneCards();
 
             if (document.getElementById("topicTitle")) 
                 document.getElementById("topicTitle").textContent = data.title || "Chưa đặt tên đề tài";
@@ -220,7 +223,7 @@ async function loadMyTopic(userCode) {
                     
                     if (btnCancel) btnCancel.style.display = "none";
 
-                    // Render quy trình 5 mốc theo dữ liệu thực từ Backend
+                    // Render quy trình milestone theo dữ liệu thực từ Backend
                     renderMilestonesWorkflow(data);
 
                 } else if (data.status === "PENDING") {
@@ -247,27 +250,110 @@ async function loadMyTopic(userCode) {
     }
 }
 
+async function loadStudentMilestones() {
+    try {
+        const token = getAuthForRole("STUDENT")?.token;
+        const response = await fetch("http://localhost:5000/api/milestones/student", {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Không thể tải hạn nộp bài.");
+        lecturerMilestones = result.data || [];
+        milestoneLoadError = false;
+    } catch (error) {
+        console.error("Lỗi tải milestone của giảng viên:", error);
+        lecturerMilestones = [];
+        milestoneLoadError = true;
+    }
+}
+
+function syncMilestoneCards() {
+    const emptyState = document.getElementById("milestoneEmptyState");
+    const list = document.getElementById("milestoneList");
+    const milestones = lecturerMilestones
+        .filter(item => Number.isInteger(Number(item.step)) && Number(item.step) > 0)
+        .sort((a, b) => Number(a.step) - Number(b.step));
+
+    if (list) {
+        list.replaceChildren();
+        milestones.forEach(milestone => {
+            const step = Number(milestone.step);
+            const card = document.createElement("div");
+            card.className = "milestone-card locked";
+            card.id = `milestoneCard${step}`;
+            card.innerHTML = `
+                <div class="milestone-header">
+                    <div class="m-title">
+                        <span class="m-badge gray" id="statusBadge${step}"><i class="fa-solid fa-lock"></i> Chưa mở</span>
+                        <h4></h4>
+                    </div>
+                    <span class="m-deadline"></span>
+                </div>
+                <p class="milestone-description"></p>
+                <div class="milestone-body" id="milestoneBody${step}"></div>
+            `;
+            card.querySelector(".m-title h4").textContent = `Mốc ${step}: ${milestone.name}`;
+
+            const deadline = card.querySelector(".m-deadline");
+            deadline.classList.toggle("text-red", new Date(milestone.endDate) < new Date());
+            const clockIcon = document.createElement("i");
+            clockIcon.className = "fa-regular fa-clock";
+            deadline.replaceChildren(clockIcon, document.createTextNode(` Hạn nộp: ${new Date(milestone.endDate).toLocaleString("vi-VN")}`));
+
+            const description = card.querySelector(".milestone-description");
+            description.textContent = milestone.desc || "";
+            description.style.display = milestone.desc ? "" : "none";
+            list.appendChild(card);
+        });
+    }
+
+    if (emptyState) {
+        if (milestoneLoadError) {
+            emptyState.textContent = "Không thể tải danh sách hạn nộp bài. Vui lòng thử tải lại trang.";
+        } else if (!currentTopicData || currentTopicData.status !== "APPROVED") {
+            emptyState.textContent = "Hạn nộp bài sẽ hiển thị sau khi đề tài được giảng viên phê duyệt.";
+        } else {
+            emptyState.textContent = "Giảng viên chưa tạo mốc tiến độ hoặc hạn nộp cho đề tài này.";
+        }
+        emptyState.style.display = milestones.length ? "none" : "block";
+    }
+}
+
 // =========================================================
-// QUẢN LÝ QUY TRÌNH TIẾN ĐỘ TUẦN TỰ (WORKFLOW 5 MỐC)
+// QUẢN LÝ QUY TRÌNH TIẾN ĐỘ TUẦN TỰ
 // =========================================================
 function renderMilestonesWorkflow(topicData) {
-    let activeFound = false;
+    syncMilestoneCards();
+    let firstUnsubmittedFound = false;
+    let previousStep = null;
 
-    for (let i = 1; i <= TOTAL_MILESTONES; i++) {
-        const mFile = topicData[`milestone${i}_file`] || (topicData.milestones && topicData.milestones[i - 1]);
+    lecturerMilestones.forEach(milestone => {
+        const step = Number(milestone.step);
+        if (!Number.isInteger(step) || step < 1) return;
+        const mFile = topicData[`milestone${step}_file`] || (topicData.milestones && topicData.milestones[step - 1]);
 
         if (mFile && (mFile.name || mFile.original_name || mFile.filename)) {
             const fileName = mFile.name || mFile.original_name || mFile.filename;
             const timeStr = mFile.submittedAt ? new Date(mFile.submittedAt).toLocaleString('vi-VN') : "Đã nộp";
-            setMilestoneCompleted(i, fileName, timeStr);
-        } else if (!activeFound) {
-            enableMilestoneUpload(i);
-            activeFound = true;
+            setMilestoneCompleted(step, fileName, timeStr);
+        } else if (!firstUnsubmittedFound) {
+            firstUnsubmittedFound = true;
+            const now = new Date();
+            const startDate = new Date(milestone.startDate);
+            const endDate = new Date(milestone.endDate);
+
+            if (now < startDate) {
+                lockMilestone(step, `Mốc này bắt đầu nhận bài từ ${startDate.toLocaleString('vi-VN')}.`);
+            } else if (now > endDate && !milestone.allowLate) {
+                closeMilestone(step, `Đã quá hạn nộp từ ${endDate.toLocaleString('vi-VN')}.`);
+            } else {
+                enableMilestoneUpload(step);
+            }
         } else {
-            const prevM = i - 1;
-            lockMilestone(i, `Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc ${prevM}.`);
+            lockMilestone(step, `Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc ${previousStep}.`);
         }
-    }
+        previousStep = step;
+    });
 }
 
 // HÀM MỞ KHÓA VÀ RENDER FORM UPLOAD CHO MỐC ĐẾN LƯỢT
@@ -353,13 +439,28 @@ function lockMilestone(mIndex, msg) {
     }
 }
 
-function disableAllMilestones(reasonMsg) {
-    for (let i = 1; i <= TOTAL_MILESTONES; i++) {
-        lockMilestone(i, reasonMsg);
+function closeMilestone(mIndex, msg) {
+    const card = document.getElementById(`milestoneCard${mIndex}`);
+    const badge = document.getElementById(`statusBadge${mIndex}`);
+    const body = document.getElementById(`milestoneBody${mIndex}`);
+
+    if (card) card.className = "milestone-card locked";
+    if (badge) {
+        badge.className = "m-badge gray";
+        badge.innerHTML = '<i class="fa-solid fa-lock"></i> Đã đóng';
     }
+    if (body) body.innerHTML = `<p class="locked-msg">${msg}</p>`;
+}
+
+function disableAllMilestones(reasonMsg) {
+    lecturerMilestones.forEach(milestone => lockMilestone(Number(milestone.step), reasonMsg));
 }
 
 function renderEmptyState() {
+    currentTopicData = null;
+    lecturerMilestones = [];
+    milestoneLoadError = false;
+    syncMilestoneCards();
     const banner = document.getElementById("topicStatusBanner");
     if (banner) {
         banner.className = "status-banner none";
@@ -435,6 +536,17 @@ function initUploadEvents(mIndex) {
     if (formEl) {
         formEl.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            const milestone = lecturerMilestones.find(item => Number(item.step) === mIndex);
+            const now = new Date();
+            if (!milestone || now < new Date(milestone.startDate)) {
+                showAppNotification("Chưa đến thời gian bắt đầu nộp bài cho mốc này.");
+                return;
+            }
+            if (now > new Date(milestone.endDate) && !milestone.allowLate) {
+                showAppNotification("Đã quá hạn nộp bài cho mốc này.");
+                return;
+            }
             
             if (!fileInput.files || fileInput.files.length === 0) {
                 showAppNotification("Vui lòng chọn file báo cáo trước khi nộp!");

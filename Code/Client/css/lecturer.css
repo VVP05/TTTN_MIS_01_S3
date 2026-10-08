@@ -72,6 +72,15 @@ body {
     transition: all 0.2s;
 }
 
+.menu-item a i {
+    display: inline-block;
+    width: 18px;
+    font-size: 15px;
+    text-align: center;
+    color: inherit;
+    flex-shrink: 0;
+}
+
 .menu-item a:hover {
     background-color: #f1f5f9;
     color: #1e293b;
@@ -113,12 +122,29 @@ body {
     padding: 0 24px;
 }
 
+.navbar-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+}
+
 .btn-menu-toggle {
     background: none;
     border: none;
     font-size: 18px;
     color: #64748b;
     cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.btn-menu-toggle:hover {
+    background-color: #f1f5f9;
 }
 
 .navbar-right {

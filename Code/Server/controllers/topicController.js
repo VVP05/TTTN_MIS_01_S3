@@ -1,8 +1,10 @@
 const Topic = require('../models/Topic');
 const Submission = require('../models/Submission');
+const Milestone = require('../models/Milestone');
 const LecturerTopic = require('../models/LecturerTopic');
 const User = require('../models/User');
 const GroupJoinRequest = require('../models/GroupJoinRequest');
+const fs = require('fs');
 
 // =========================================================================
 // PHẦN 1: LOGIC DÀNH CHO SINH VIÊN
@@ -376,26 +378,29 @@ exports.getMyTopic = async (req, res) => {
 
         const submissions = await Submission.find({ topic_id: topic._id }).lean();
 
-        for (let i = 1; i <= 5; i++) {
-            const sub = submissions.find(s => 
-                s.milestone == i || 
-                s.milestone_step == i || 
-                s.milestone === `Mốc ${i}`
-            );
+        const submittedSteps = submissions
+            .map(submission => Number(String(submission.milestone || submission.milestone_step || '').replace(/\D/g, '')))
+            .filter(step => Number.isInteger(step) && step > 0);
+        const directFileSteps = Object.keys(topic)
+            .map(key => Number(key.match(/^milestone(\d+)_file$/)?.[1]))
+            .filter(step => Number.isInteger(step) && step > 0);
 
+        for (const step of new Set([...submittedSteps, ...directFileSteps])) {
+            const sub = submissions.find(item =>
+                Number(String(item.milestone || item.milestone_step || '').replace(/\D/g, '')) === step
+            );
             if (sub) {
-                topic[`milestone${i}_file`] = {
-                    name: sub.file_name || sub.original_name || `Bài nộp mốc ${i}`,
+                topic[`milestone${step}_file`] = {
+                    name: sub.file_name || sub.original_name || `Bài nộp mốc ${step}`,
                     path: sub.file_path,
                     filename: sub.file_name || sub.original_name || 'file.pdf',
                     submittedAt: sub.submitted_at || sub.createdAt || new Date()
                 };
-            } 
-            else if (topic[`milestone${i}_file`] && !topic[`milestone${i}_file`].name) {
-                topic[`milestone${i}_file`] = {
-                    name: `Bài nộp mốc ${i}`,
-                    path: topic[`milestone${i}_file`].path || '',
-                    submittedAt: topic[`milestone${i}_file`].submittedAt || topic.updatedAt || new Date()
+            } else if (topic[`milestone${step}_file`] && !topic[`milestone${step}_file`].name) {
+                topic[`milestone${step}_file`] = {
+                    name: `Bài nộp mốc ${step}`,
+                    path: topic[`milestone${step}_file`].path || '',
+                    submittedAt: topic[`milestone${step}_file`].submittedAt || topic.updatedAt || new Date()
                 };
             }
         }
@@ -494,16 +499,60 @@ exports.cancelTopic = async (req, res) => {
 // 5. Nộp báo cáo Mốc tiến độ
 exports.uploadMilestone = async (req, res) => {
     try {
-        const { topic_id } = req.params;
+        const topic_id = req.params.topic_id || req.body.topic_id;
         const mIndex = req.params.mIndex || req.body.milestoneIndex || req.body.milestone;
         const file = req.file;
+        const discardFile = () => {
+            if (file?.path) fs.unlink(file.path, error => {
+                if (error && error.code !== 'ENOENT') console.error('Lỗi xóa file milestone bị từ chối:', error);
+            });
+        };
 
         if (!file) {
             return res.status(400).json({ success: false, message: "Vui lòng chọn file tải lên!" });
         }
 
-        if (!mIndex) {
+        const step = Number(mIndex);
+        if (!Number.isInteger(step) || step < 1) {
+            discardFile();
             return res.status(400).json({ success: false, message: "Thiếu thông tin cột mốc cần nộp!" });
+        }
+
+        const studentCode = String(req.user?.user_code || '').trim();
+        const escapedStudentCode = studentCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const studentCodePattern = new RegExp(`^${escapedStudentCode}$`, 'i');
+        const topic = await Topic.findOne({
+            _id: topic_id,
+            status: 'APPROVED',
+            $or: [
+                { leader_code: studentCodePattern },
+                { member2_code: studentCodePattern },
+                { member3_code: studentCodePattern }
+            ]
+        }).select('lecturer_code');
+
+        if (!topic) {
+            discardFile();
+            return res.status(403).json({ success: false, message: 'Bạn không có quyền nộp bài cho đề tài này.' });
+        }
+
+        const milestone = await Milestone.findOne({ lecturerCode: topic.lecturer_code, topicId: null, step });
+        if (!milestone) {
+            discardFile();
+            return res.status(404).json({ success: false, message: 'Giảng viên chưa tạo mốc nộp bài này.' });
+        }
+
+        const now = new Date();
+        if (now < milestone.startDate) {
+            discardFile();
+            return res.status(403).json({
+                success: false,
+                message: `Chưa đến thời gian nộp bài. Mốc này mở từ ${milestone.startDate.toLocaleString('vi-VN')}.`
+            });
+        }
+        if (now > milestone.endDate && !milestone.allowLate) {
+            discardFile();
+            return res.status(403).json({ success: false, message: 'Đã quá hạn nộp bài cho mốc này.' });
         }
 
         const fileInfo = {
@@ -516,7 +565,7 @@ exports.uploadMilestone = async (req, res) => {
         };
 
         const updateData = {};
-        updateData[`milestone${mIndex}_file`] = fileInfo;
+        updateData[`milestone${step}_file`] = fileInfo;
 
         const updatedTopic = await Topic.findByIdAndUpdate(
             topic_id,
@@ -529,10 +578,10 @@ exports.uploadMilestone = async (req, res) => {
         }
 
         await Submission.findOneAndUpdate(
-            { topic_id: topic_id, milestone: mIndex },
+            { topic_id: topic_id, milestone: step },
             {
                 topic_id: topic_id,
-                milestone: mIndex,
+                milestone: step,
                 file_name: file.originalname,
                 file_path: file.path,
                 submitted_at: new Date()
@@ -542,7 +591,7 @@ exports.uploadMilestone = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: `Đã nộp thành công báo cáo Mốc ${mIndex}!`,
+            message: `Đã nộp thành công báo cáo Mốc ${step}!`,
             data: updatedTopic
         });
 
@@ -703,6 +752,8 @@ exports.getLecturerTopics = async (req, res) => {
 
         // Lấy đề tài Giảng viên đã tạo trong Kho (lecturer_topics)
         const lecturerPool = await LecturerTopic.find({ lecturer_code }).sort({ createdAt: -1 }).lean();
+        const milestoneSteps = (await Milestone.find({ lecturerCode: lecturer_code, topicId: null }).select('step').lean())
+            .map(item => item.step);
 
         const topicIds = topics.map(t => t._id);
         const submissions = await Submission.find({ 
@@ -716,7 +767,7 @@ exports.getLecturerTopics = async (req, res) => {
 
             let completedMilestones = 0;
 
-            for (let i = 1; i <= 5; i++) {
+            for (const i of milestoneSteps) {
                 const sub = topicSubmissions.find(s => 
                     s.milestone == i || 
                     s.milestone_step == i || 
@@ -730,7 +781,9 @@ exports.getLecturerTopics = async (req, res) => {
                 }
             }
 
-            const progressPercentage = completedMilestones * 20;
+            const progressPercentage = milestoneSteps.length
+                ? Math.round(completedMilestones / milestoneSteps.length * 100)
+                : 0;
             const isOnSchedule = completedMilestones > 0;
 
             return {
@@ -978,6 +1031,9 @@ exports.getLecturerProgressMatrix = async (req, res) => {
         }
 
         const topicIds = topics.map(t => t._id);
+        const milestoneSteps = (await Milestone.find({ lecturerCode, topicId: null }).select('step').lean())
+            .map(item => item.step)
+            .sort((a, b) => a - b);
 
         const submissions = await Submission.find({ 
             topic_id: { $in: topicIds } 
@@ -989,7 +1045,7 @@ exports.getLecturerProgressMatrix = async (req, res) => {
             );
 
             const milestones = {};
-            for (let i = 1; i <= 5; i++) {
+            for (const i of milestoneSteps) {
                 const sub = topicSubmissions.find(s => 
                     s.milestone == i || 
                     s.milestone_step == i || 
@@ -1022,7 +1078,9 @@ exports.getLecturerProgressMatrix = async (req, res) => {
                 topic_code: topic.topic_code || `DT-${topic._id.toString().slice(-5).toUpperCase()}`,
                 title: topic.title,
                 student_code: topic.student_code || topic.leader_code || "N/A",
-                milestones
+                milestones,
+                completed_milestones: Object.values(milestones).filter(Boolean).length,
+                total_milestones: milestoneSteps.length
             };
         });
 

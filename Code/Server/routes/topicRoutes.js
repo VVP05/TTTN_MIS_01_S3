@@ -17,6 +17,11 @@ const requireAdminRole = (req, res, next) => {
     });
 };
 
+const requireStudentRole = (req, res, next) => {
+    if (String(req.user?.role || '').toUpperCase() === 'STUDENT') return next();
+    return res.status(403).json({ success: false, message: 'Chỉ sinh viên mới được nộp báo cáo.' });
+};
+
 // Cấu hình thư mục lưu file tải lên (uploads/)
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -104,8 +109,8 @@ router.delete('/cancel/:user_code', cancelTopic);
 router.delete('/delete/:topic_id', cancelTopic);
 
 // Route nộp báo cáo mốc
-router.post('/:topic_id/upload-milestone/:mIndex', upload.single('file'), uploadMilestone);
-router.post('/:topic_id/upload-milestone', upload.single('file'), uploadMilestone);
+router.post('/:topic_id/upload-milestone/:mIndex', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
+router.post('/:topic_id/upload-milestone', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
 
 
 // ==========================================

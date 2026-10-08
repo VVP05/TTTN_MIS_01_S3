@@ -7,6 +7,7 @@ const documentSchema = new mongoose.Schema({
     recipient_codes: { type: [String], default: [] },
     uploader_code: { type: String, required: true }, // Mã Giảng viên đã chia sẻ
     uploader_name: { type: String, default: '' },
+    uploader_role: { type: String, enum: ['ADMIN', 'LECTURER'], default: undefined },
     file_name: { type: String, required: true },      // Tên file lưu trên server
     original_name: { type: String, required: true },  // Tên file gốc do người dùng đặt
     file_path: { type: String, required: true },      // Đường dẫn public để tải xuống

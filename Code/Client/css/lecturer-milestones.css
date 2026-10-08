@@ -16,14 +16,19 @@ body {
     min-height: 100vh;
 }
 
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
 /* SIDEBAR */
 .sidebar {
     width: 250px;
     background-color: #ffffff;
     border-right: 1px solid #e2e8f0;
-    position: fixed;
-    height: 100vh;
-    z-index: 100;
+    position: relative;
+    height: auto;
+    flex-shrink: 0;
 }
 
 .sidebar-brand {
@@ -159,7 +164,7 @@ body {
 /* SUMMARY GRID */
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
 

@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Địa chỉ API
     const API_BASE_URL = "http://localhost:5000/api/schedule";
     const API_TOPICS_URL = "http://localhost:5000/api/topics";
+    const API_MILESTONES_URL = "http://localhost:5000/api/milestones";
 
     // Hàm tạo Header có kèm Token xác thực (JWT)
     const getAuthHeaders = () => ({
@@ -29,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     let allMeetings = []; // Lưu trữ danh sách họp từ Backend để filter tại client
+    let progressMilestones = [];
 
     const availabilityForm = document.getElementById("availabilityForm");
     const availabilityList = document.getElementById("availabilityList");
@@ -417,13 +419,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // =========================================================
-    // 5. XỬ LÝ MA TRẬN TIẾN ĐỘ 5 MỐC BÁO CÁO (TẢI TỪ DATABASE)
+    // 5. XỬ LÝ MA TRẬN TIẾN ĐỘ THEO CÁC MỐC ĐÃ CẤU HÌNH
     // =========================================================
+    async function loadMilestoneHeaders() {
+        const headerRow = document.getElementById("progressMatrixHeader");
+        const statusHeader = document.getElementById("matrixStatusHeader");
+        if (!headerRow || !statusHeader) return;
+
+        try {
+            const response = await fetch(`${API_MILESTONES_URL}/lecturer`, { headers: getAuthHeaders() });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || "Không thể tải milestone.");
+
+            progressMilestones = (result.data || []).sort((a, b) => Number(a.step) - Number(b.step));
+            progressMilestones.forEach(milestone => {
+                const header = document.createElement("th");
+                header.className = "col-week";
+                header.style.textAlign = "center";
+                header.textContent = `Mốc ${milestone.step}`;
+                const subtitle = document.createElement("small");
+                subtitle.textContent = milestone.name;
+                header.appendChild(document.createElement("br"));
+                header.appendChild(subtitle);
+                headerRow.insertBefore(header, statusHeader);
+            });
+        } catch (error) {
+            console.error("Lỗi khi tải tên milestone:", error);
+            progressMilestones = [];
+        }
+    }
+
     async function loadProgressMatrix() {
         const tbody = document.getElementById("progressMatrixBody");
         if (!tbody) return;
 
         try {
+            await loadMilestoneHeaders();
+            const emptyRowColspan = 4 + progressMilestones.length;
             const res = await fetch(`${API_TOPICS_URL}/lecturer-matrix/${user.user_code}`, {
                 method: "GET",
                 headers: getAuthHeaders()
@@ -436,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">
+                        <td colspan="${emptyRowColspan}" style="text-align: center; color: #64748b; padding: 24px;">
                             Chưa có đề tài nào được phê duyệt hoặc đang hướng dẫn.
                         </td>
                     </tr>`;
@@ -445,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Lỗi khi tải ma trận tiến độ:", err);
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" style="text-align: center; color: #ef4444; padding: 24px;">
+                        <td colspan="${4 + progressMilestones.length}" style="text-align: center; color: #ef4444; padding: 24px;">
                         Không thể kết nối với máy chủ để lấy ma trận tiến độ!
                     </td>
                 </tr>`;
@@ -462,7 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
             let completedCount = 0;
             let activeFound = false;
 
-            const milestoneCells = [1, 2, 3, 4, 5].map(i => {
+            const milestoneCells = progressMilestones.map(milestone => {
+                const i = Number(milestone.step);
                 const mData = topic.milestones ? topic.milestones[`milestone${i}`] : null;
 
                 if (mData && mData.submitted) {
@@ -495,9 +528,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Badge trạng thái tổng quan tiến độ đề tài
             let statusBadge = '<span class="badge badge-success">Đúng tiến độ</span>';
-            if (completedCount === 0 && activeFound) {
+            if (progressMilestones.length === 0) {
+                statusBadge = '<span class="badge">Chưa cấu hình mốc</span>';
+            } else if (completedCount === 0 && activeFound) {
                 statusBadge = '<span class="badge badge-warning" style="background:#fef3c7; color:#b45309; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Cần nhắc nhở</span>';
-            } else if (completedCount === 5) {
+            } else if (completedCount === progressMilestones.length) {
                 statusBadge = '<span class="badge badge-success" style="background:#10b981; color:white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Hoàn thành</span>';
             }
 

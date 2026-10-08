@@ -170,85 +170,14 @@
     </div>
 </div>
 
-                <!-- 2. KHU VỰC NỘP BÁO CÁO TIẾN ĐỘ (5 MILESTONES) -->
+                <!-- KHU VỰC NỘP BÁO CÁO TIẾN ĐỘ -->
                 <div class="section-header-row margin-top-24">
-                    <h3 class="section-title"><i class="fa-solid fa-list-check text-blue"></i> Tiến độ nộp báo cáo (5 Mốc tiến độ)</h3>
+                    <h3 class="section-title"><i class="fa-solid fa-list-check text-blue"></i> Tiến độ nộp báo cáo</h3>
                     <span class="sub-text">Sinh viên cần tuân thủ đúng thời hạn nộp bài của từng mốc.</span>
                 </div>
-                
-                <div class="milestone-list margin-top-12">
-                    
-                    <!-- Milestone 1 -->
-                    <div class="milestone-card locked" id="milestoneCard1">
-                        <div class="milestone-header">
-                            <div class="m-title">
-                                <span class="m-badge gray" id="statusBadge1"><i class="fa-solid fa-lock"></i> Chưa mở</span>
-                                <h4>Mốc 1: Nộp đặc tả yêu cầu & Đề cương chi tiết</h4>
-                            </div>
-                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 25/08/2026</span>
-                        </div>
-                        <div class="milestone-body" id="milestoneBody1">
-                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Đang tải thông tin mốc...</p>
-                        </div>
-                    </div>
 
-                    <!-- Milestone 2 -->
-                    <div class="milestone-card locked" id="milestoneCard2">
-                        <div class="milestone-header">
-                            <div class="m-title">
-                                <span class="m-badge gray" id="statusBadge2"><i class="fa-solid fa-lock"></i> Chưa mở</span>
-                                <h4>Mốc 2: Báo cáo phân tích thiết kế hệ thống & Database</h4>
-                            </div>
-                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 05/09/2026</span>
-                        </div>
-                        <div class="milestone-body" id="milestoneBody2">
-                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 1.</p>
-                        </div>
-                    </div>
-
-                    <!-- Milestone 3 -->
-                    <div class="milestone-card locked" id="milestoneCard3">
-                        <div class="milestone-header">
-                            <div class="m-title">
-                                <span class="m-badge gray" id="statusBadge3"><i class="fa-solid fa-lock"></i> Chưa mở</span>
-                                <h4>Mốc 3: Báo cáo tiến độ giữa kỳ & Demo giao diện (Prototype)</h4>
-                            </div>
-                            <span class="m-deadline text-red"><i class="fa-regular fa-clock"></i> Hạn nộp: 20/09/2026</span>
-                        </div>
-                        <div class="milestone-body" id="milestoneBody3">
-                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 2.</p>
-                        </div>
-                    </div>
-
-                    <!-- Milestone 4 -->
-                    <div class="milestone-card locked" id="milestoneCard4">
-                        <div class="milestone-header">
-                            <div class="m-title">
-                                <span class="m-badge gray" id="statusBadge4"><i class="fa-solid fa-lock"></i> Chưa mở</span>
-                                <h4>Mốc 4: Báo cáo thử nghiệm, kiểm thử & Hoàn thiện chức năng</h4>
-                            </div>
-                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 05/10/2026</span>
-                        </div>
-                        <div class="milestone-body" id="milestoneBody4">
-                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 3.</p>
-                        </div>
-                    </div>
-
-                    <!-- Milestone 5 -->
-                    <div class="milestone-card locked" id="milestoneCard5">
-                        <div class="milestone-header">
-                            <div class="m-title">
-                                <span class="m-badge gray" id="statusBadge5"><i class="fa-solid fa-lock"></i> Chưa mở</span>
-                                <h4>Mốc 5: Nộp báo cáo tổng kết & Source code hoàn chỉnh</h4>
-                            </div>
-                            <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: 20/10/2026</span>
-                        </div>
-                        <div class="milestone-body" id="milestoneBody5">
-                            <p class="locked-msg"><i class="fa-solid fa-lock"></i> Cột mốc này sẽ tự động mở sau khi hoàn thành Mốc 4.</p>
-                        </div>
-                    </div>
-
-                </div>
+                <p id="milestoneEmptyState" class="milestone-empty-state">Đang tải mốc nộp bài...</p>
+                <div class="milestone-list margin-top-12" id="milestoneList"></div>
 
                 <footer class="page-footer">
                     © 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp

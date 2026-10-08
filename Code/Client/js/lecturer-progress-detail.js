@@ -1,11 +1,5 @@
 const API_BASE = 'http://localhost:5000';
-const milestoneNames = {
-    1: 'Đề cương & Báo cáo thiết kế kiến trúc',
-    2: 'Lập trình chức năng & API',
-    3: 'Kiểm thử & hoàn thiện hệ thống',
-    4: 'Báo cáo tiến độ tổng hợp',
-    5: 'Báo cáo tổng kết & bảo vệ'
-};
+let milestoneNames = {};
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({
@@ -61,21 +55,28 @@ async function renderHeader(topic) {
     ).join('') || '<div class="member-item">Chưa có thành viên</div>';
 }
 
-function renderMilestones(submissions) {
+function renderMilestones(submissions, milestones) {
     const submissionMap = new Map();
     submissions.forEach(submission => {
         const number = Number(submission.milestone || submission.milestone_step);
         if (!submissionMap.has(number)) submissionMap.set(number, submission);
     });
 
-    document.getElementById('milestoneTracker').innerHTML = [1, 2, 3, 4, 5].map(number => {
+    const tracker = document.getElementById('milestoneTracker');
+    if (!milestones.length) {
+        tracker.innerHTML = '<p style="grid-column: 1 / -1; color: #64748b;">Giảng viên chưa cấu hình mốc tiến độ.</p>';
+        return;
+    }
+
+    tracker.innerHTML = milestones.map(milestone => {
+        const number = Number(milestone.step);
         const submission = submissionMap.get(number);
         const complete = Boolean(submission);
         const color = complete ? '#16a34a' : '#cbd5e1';
         const label = complete ? 'HOÀN THÀNH' : 'CHƯA NỘP';
         return `<div class="milestone-box" style="border-color: ${color};">
             <span style="font-size: 12px; color: ${complete ? '#16a34a' : '#64748b'}; font-weight: 700;">MỐC ${number} (${label})</span>
-            <h4 style="margin-top: 4px;">${milestoneNames[number]}</h4>
+            <h4 style="margin-top: 4px;">${escapeHtml(milestone.name)}</h4>
             <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${complete ? 100 : 0}%; background: ${color};"></div></div>
             <small>${complete ? `Đã nộp ngày ${formatDate(submission.submitted_at || submission.createdAt)}` : 'Chưa có bài nộp'}</small>
         </div>`;
@@ -92,9 +93,10 @@ function renderSubmissions(submissions) {
     body.innerHTML = submissions.map(submission => {
         const fileName = submission.original_name || submission.file_name || 'Bài nộp';
         const fileUrl = getFileUrl(submission.file_path, submission.file_name);
+        const milestoneNumber = Number(submission.milestone || submission.milestone_step);
         return `<tr>
             <td><strong>Mốc ${submission.milestone || submission.milestone_step || '?'}</strong><br><small>${formatDate(submission.submitted_at || submission.createdAt)}</small></td>
-            <td>${escapeHtml(milestoneNames[submission.milestone] || 'Báo cáo tiến độ')}</td>
+            <td>${escapeHtml(milestoneNames[milestoneNumber] || 'Chưa cấu hình mốc này')}</td>
             <td><a href="${fileUrl}" target="_blank" rel="noopener" style="color:#2563eb;"><i class="fa-solid ${getFileIcon(fileName)}"></i> ${escapeHtml(fileName)}</a></td>
             <td><span class="badge badge-info">Đã nộp</span></td>
             <td><span style="color:#94a3b8;">Chưa có nhận xét</span></td>
@@ -125,19 +127,26 @@ async function loadProgressDetail() {
     }
 
     try {
-        const [topicsResponse, submissionsResponse] = await Promise.all([
+        const [topicsResponse, submissionsResponse, milestonesResponse] = await Promise.all([
             fetch(`${API_BASE}/api/topics/lecturer/${encodeURIComponent(user.user_code)}`),
-            fetch(`${API_BASE}/api/submissions/topic/${encodeURIComponent(topicId)}`)
+            fetch(`${API_BASE}/api/submissions/topic/${encodeURIComponent(topicId)}`),
+            fetch(`${API_BASE}/api/milestones/lecturer`, { headers: { Authorization: `Bearer ${auth.token}` } })
         ]);
         const topicsResult = await topicsResponse.json();
         const submissionsResult = await submissionsResponse.json();
+        const milestonesResult = milestonesResponse.ok ? await milestonesResponse.json() : { data: [] };
+        milestoneNames = Object.fromEntries((milestonesResult.data || []).map(item => [Number(item.step), item.name]));
         const topics = topicsResult?.data?.approved || [];
         const topic = topics.find(item => String(item._id) === String(topicId));
 
         if (!topic || !submissionsResponse.ok || !submissionsResult.success) throw new Error('Không tìm thấy dữ liệu đề tài');
         const submissions = submissionsResult.data || [];
+        const milestones = milestonesResult.data || [];
+        const countLabel = document.getElementById('progressMilestoneCount');
+        if (countLabel) countLabel.textContent = `${milestones.length} mốc báo cáo`;
         await renderHeader(topic);
-        renderMilestones(submissions);
+        milestoneNames = Object.fromEntries(milestones.map(item => [Number(item.step), item.name]));
+        renderMilestones(submissions, milestones);
         renderSubmissions(submissions);
     } catch (error) {
         console.error('Lỗi tải chi tiết tiến độ:', error);

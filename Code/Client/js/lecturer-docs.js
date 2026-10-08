@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user.user_code) document.getElementById("userCode").textContent = user.user_code;
 
     const lecturerCode = user.user_code;
+    const authHeaders = { Authorization: `Bearer ${auth.token}` };
 
     // 2. MODAL TẢI TÀI LIỆU MỚI
     const uploadModal = document.getElementById("uploadModal");
@@ -56,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchLecturerGroups() {
         try {
-            const response = await fetch(`${API_BASE}/api/groups/lecturer/${lecturerCode}`);
+            const response = await fetch(`${API_BASE}/api/groups/lecturer/${lecturerCode}`, { headers: authHeaders });
             const result = await response.json();
 
             if (!docTargetSelect) return;
@@ -104,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchMyDocuments() {
         try {
-            const response = await fetch(`${API_BASE}/api/documents/lecturer/${lecturerCode}`);
+            const response = await fetch(`${API_BASE}/api/documents/lecturer/${lecturerCode}`, { headers: authHeaders });
             const data = await response.json();
 
             if (!data.success) {
@@ -144,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         facultyDocsGrid.querySelectorAll(".btn-download-faculty").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const response = await fetch(`${API_BASE}/api/documents/download/${button.dataset.id}`, { method: "PATCH" });
+                const response = await fetch(`${API_BASE}/api/documents/download/${button.dataset.id}`, { method: "PATCH", headers: authHeaders });
                 const result = await response.json();
                 if (!response.ok || !result.success) {
                     showAppNotification(result.message || "Không thể tải tài liệu!");
@@ -266,8 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append("title", title);
             formData.append("category", category);
             formData.append("target", target);
-            formData.append("uploader_code", lecturerCode);
-            formData.append("uploader_name", user.full_name || "");
             formData.append("file", file);
 
             const originalBtnHtml = uploadSubmitBtn ? uploadSubmitBtn.innerHTML : "";
@@ -279,6 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const response = await fetch(`${API_BASE}/api/documents/upload`, {
                     method: "POST",
+                    headers: authHeaders,
                     body: formData
                 });
                 const data = await response.json();
@@ -317,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này không?")) return;
 
                 try {
-                    const response = await fetch(`${API_BASE}/api/documents/${docId}`, { method: "DELETE" });
+                    const response = await fetch(`${API_BASE}/api/documents/${docId}`, { method: "DELETE", headers: authHeaders });
                     const data = await response.json();
 
                     if (!response.ok || !data.success) {
@@ -343,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const docId = row.dataset.id;
 
                 try {
-                    const response = await fetch(`${API_BASE}/api/documents/download/${docId}`, { method: "PATCH" });
+                    const response = await fetch(`${API_BASE}/api/documents/download/${docId}`, { method: "PATCH", headers: authHeaders });
                     const data = await response.json();
 
                     if (!response.ok || !data.success) {
