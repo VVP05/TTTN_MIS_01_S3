@@ -21,61 +21,7 @@ body {
     min-height: 100vh;
 }
 
-/* SIDEBAR */
-.sidebar {
-    width: 250px;
-    background-color: #ffffff;
-    border-right: 1px solid #e2e8f0;
-    position: relative;
-    height: auto;
-    flex-shrink: 0;
-}
-
-.sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 20px 22px;
-    color: #2563eb;
-}
-
-.sidebar-brand .logo-icon { font-size: 20px; }
-.sidebar-brand .brand-name { font-weight: 800; font-size: 16px; letter-spacing: -0.3px; }
-
-.sidebar-menu-wrapper { padding-bottom: 20px; }
-
-.menu-heading {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    padding: 18px 22px 6px;
-    letter-spacing: 0.5px;
-}
-
-.menu-list { list-style: none; }
-
-.menu-item a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 22px;
-    color: #475569;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.15s ease;
-}
-
-.menu-item a i { font-size: 15px; width: 18px; color: #64748b; }
-
-.menu-item.active a {
-    background-color: #2563eb;
-    color: #ffffff;
-    border-radius: 8px;
-    margin: 0 12px;
-    padding: 10px 12px;
-}
-
-.menu-item.active a i { color: #ffffff; }
+/* SIDEBAR: dùng chung style trong lecturer.css (đã bỏ phần định nghĩa lại để đồng bộ với các trang giảng viên khác) */
 
 /* MAIN CONTENT */
 .main-content {

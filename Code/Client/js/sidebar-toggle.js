@@ -8,13 +8,13 @@
 
     // Logo thương hiệu hiện trên topbar khi sidebar thu gọn
     var navLeft = btn.parentElement;
-    var brandSrc = sidebar.querySelector('.brand-logo');
+    var brandSrc = sidebar.querySelector('.brand-logo') || sidebar.querySelector('.sidebar-brand');
     var topBrand = null;
     if (navLeft && brandSrc) {
         topBrand = document.createElement('div');
         topBrand.className = 'topbar-brand';
         var icon = brandSrc.querySelector('.logo-icon');
-        var title = brandSrc.querySelector('h2');
+        var title = brandSrc.querySelector('h2') || brandSrc.querySelector('.brand-name');
         if (icon) topBrand.appendChild(icon.cloneNode(true));
         if (title) {
             var t = document.createElement('span');

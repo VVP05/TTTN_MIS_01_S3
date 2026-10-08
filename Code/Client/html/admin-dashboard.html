@@ -18,48 +18,81 @@
     <div class="app-layout">
         <!-- SIDEBAR BÊN TRÁI -->
         <aside class="sidebar">
-            <div class="sidebar-top">
-                <div class="brand-logo">
-                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>QUẢN LÝ TTTN</h2>
-                </div>
-
-                <nav class="sidebar-menu">
-                    <ul>
-                        <li class="menu-item active"><a href="admin-dashboard.html"><i class="fa-solid fa-layer-group"></i> Tổng quan</a></li>
-                    </ul>
-
-                    <div class="menu-group-title">QUẢN LÝ NGƯỜI DÙNG</div>
-                    <ul>
-                        <li class="menu-item"><a href="admin-students.html"><i class="fa-solid fa-user-graduate"></i> Quản lý sinh viên</a></li>
-                        <li class="menu-item"><a href="admin-lecturers.html"><i class="fa-solid fa-chalkboard-user"></i> Quản lý giảng viên</a></li>
-                        <li class="menu-item"><a href="admin-accounts.html"><i class="fa-solid fa-user-shield"></i> Tài khoản Admin</a></li>
-                    </ul>
-
-                    <div class="menu-group-title">QUẢN LÝ NGHIỆP VỤ</div>
-                    <ul>
-                        <li class="menu-item">
-                            <a href="admin-topics.html">
-                                <i class="fa-solid fa-book-bookmark"></i> Duyệt đề tài 
-                                <span class="badge-menu blue" id="pendingTopicsBadge">0</span>
-                            </a>
-                        </li>
-                        <li class="menu-item"><a href="admin-groups.html"><i class="fa-solid fa-users-viewfinder"></i> Nhóm & Phân công</a></li>
-                        <li class="menu-item"><a href="admin-documents.html"><i class="fa-solid fa-file-lines"></i> Tài liệu & Biểu mẫu</a></li>
-                        <li class="menu-item"><a href="admin-notifications.html"><i class="fa-solid fa-bullhorn"></i> Thông báo hệ thống</a></li>
-                    </ul>
-
-                    <div class="menu-group-title">HỆ THỐNG</div>
-                    <ul>
-                        <li class="menu-item"><a href="admin-logs.html"><i class="fa-solid fa-clipboard-list"></i> Nhật ký hoạt động</a></li>
-                    </ul>
-                </nav>
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                <span class="brand-name">QUẢN LÝ TTTN</span>
             </div>
 
-            <div class="sidebar-bottom">
-                <div class="sidebar-footer">
-                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
-                </div>
+            <div class="sidebar-menu-wrapper">
+                <ul class="menu-list">
+                    <li class="menu-item active">
+                        <a href="admin-dashboard.html">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">QUẢN LÝ NGƯỜI DÙNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-students.html">
+                            <i class="fa-solid fa-user-graduate"></i>
+                            <span>Quản lý sinh viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-lecturers.html">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <span>Quản lý giảng viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-accounts.html">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <span>Tài khoản Admin</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">QUẢN LÝ NGHIỆP VỤ</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-topics.html">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                            <span>Duyệt đề tài</span>
+                            <span class="sidebar-badge" id="pendingTopicsBadge">0</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-teams.html">
+                            <i class="fa-solid fa-users-rectangle"></i>
+                            <span>Nhóm & Phân công</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-documents.html">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>Tài liệu & Biểu mẫu</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-notifications.html">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            <span>Thông báo hệ thống</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="menu-heading">HỆ THỐNG</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-logs.html">
+                            <i class="fa-solid fa-newspaper"></i>
+                            <span>Nhật ký hoạt động</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </aside>
 
