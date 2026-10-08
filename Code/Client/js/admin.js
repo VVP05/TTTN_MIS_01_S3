@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             
             sessionStorage.clear();
-            window.location.href = "login.html"; // Chuyển về login thay vì index nếu bạn có trang login riêng
+            window.location.href = "index.html";
         });
     }
 
