@@ -106,6 +106,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         return val;
     }
 
+    function clearCurrentStudentFromMemberField(inputEl) {
+        const enteredCode = extractCode(inputEl?.value).toUpperCase();
+        const currentStudentCode = String(user.user_code || "").trim().toUpperCase();
+        if (!enteredCode || enteredCode !== currentStudentCode) return;
+
+        inputEl.value = "";
+        showMessage("error", "Mã sinh viên của bạn đã là Trưởng nhóm, không thể nhập lại ở Thành viên 2 hoặc 3.");
+    }
+
+    [partnerInput, member3Input].forEach(inputEl => {
+        inputEl?.addEventListener("blur", () => clearCurrentStudentFromMemberField(inputEl));
+    });
+
     /**
      * Hiển thị hộp thông báo phản hồi người dùng
      */
@@ -734,6 +747,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showMessage("error", "Vui lòng nhập Tên đề tài!");
                 if (topicTitleInput) topicTitleInput.focus();
                 return;
+            }
+
+            if (selectedRole === "LEADER") {
+                const ownCode = String(user.user_code || "").trim().toUpperCase();
+                if (rawPartnerInput.toUpperCase() === ownCode || rawMember3Input.toUpperCase() === ownCode) {
+                    showMessage("error", "Mã sinh viên của bạn đã là Trưởng nhóm, không thể đăng ký thêm ở Thành viên 2 hoặc 3.");
+                    (rawPartnerInput.toUpperCase() === ownCode ? partnerInput : member3Input)?.focus();
+                    return;
+                }
             }
 
             const leaderCode = selectedRole === "LEADER" ? user.user_code : rawLeaderInput;

@@ -80,6 +80,12 @@ exports.registerTopic = async (req, res) => {
             return res.status(403).json({ message: 'Mã Trưởng nhóm phải trùng với tài khoản đang đăng nhập!' });
         }
 
+        if (registrationRole === 'LEADER' && [member2_code, member3_code].includes(requesterCode)) {
+            return res.status(400).json({
+                message: 'Mã sinh viên của bạn đã là Trưởng nhóm, không thể đăng ký thêm ở Thành viên 2 hoặc 3.'
+            });
+        }
+
         if (registrationRole === 'LEADER') {
             const acceptedMembership = await GroupJoinRequest.findOne({
                 member_code: codePattern(requesterCode),
@@ -832,6 +838,21 @@ exports.getLecturerTopics = async (req, res) => {
     } catch (error) {
         console.error("Lỗi lấy danh sách đề tài:", error);
         res.status(500).json({ message: 'Lỗi lấy danh sách đề tài!' });
+    }
+};
+
+exports.getLecturerPendingReviewStatus = async (req, res) => {
+    try {
+        const lecturerCode = String(req.params.lecturer_code || '').trim();
+        const pendingCount = await Topic.countDocuments({
+            lecturer_code: lecturerCode,
+            status: { $in: ['PENDING', 'NEED_REVISION'] }
+        });
+
+        return res.json({ success: true, hasPendingReview: pendingCount > 0 });
+    } catch (error) {
+        console.error('Lỗi kiểm tra đề tài chờ duyệt:', error);
+        return res.status(500).json({ success: false, message: 'Không thể kiểm tra đề tài chờ duyệt.' });
     }
 };
 

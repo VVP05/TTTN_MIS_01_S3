@@ -22,6 +22,17 @@ const requireStudentRole = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Chỉ sinh viên mới được nộp báo cáo.' });
 };
 
+const requireLecturerOwnCode = (req, res, next) => {
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const userCode = String(req.user?.user_code || '').toUpperCase();
+    const requestedCode = String(req.params.lecturer_code || '').toUpperCase();
+
+    if (userRole !== 'LECTURER' || userCode !== requestedCode) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền xem dữ liệu giảng viên này.' });
+    }
+    return next();
+};
+
 // Cấu hình thư mục lưu file tải lên (uploads/)
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -64,6 +75,7 @@ const {
     updateLecturerPoolTopicStatus,
 
     // Các hàm cho Giảng viên
+    getLecturerPendingReviewStatus,
     getLecturerTopics, 
     createLecturerTopic,
     createLecturerPoolTopic,
@@ -118,6 +130,7 @@ router.post('/:topic_id/upload-milestone', authMiddleware, requireStudentRole, u
 // ==========================================
 
 // Giảng viên xem danh sách đề tài
+router.get('/lecturer/:lecturer_code/pending-review', authMiddleware, requireLecturerOwnCode, getLecturerPendingReviewStatus);
 router.get('/lecturer/:lecturer_code', getLecturerTopics);
 
 // Giảng viên lấy Ma Trận Tiến Độ 5 mốc

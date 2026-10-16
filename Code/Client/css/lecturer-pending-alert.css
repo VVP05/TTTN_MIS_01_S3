@@ -1,0 +1,45 @@
+.sidebar-menu .menu-item:not(.active) > a.has-pending-review,
+.menu-item:not(.active) > a.has-pending-review {
+    color: #be123c;
+    background-color: #fff1f2;
+}
+
+.sidebar-menu a.has-pending-review::after,
+.menu-item a.has-pending-review::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    margin-left: auto;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background: #e11d48;
+    box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.16);
+    animation: pending-review-pulse 1.8s ease-in-out infinite;
+}
+
+.sidebar-menu .menu-item.active a.has-pending-review::after,
+.menu-item.active a.has-pending-review::after {
+    border-color: #2563eb;
+}
+
+.notification-btn.has-pending-review {
+    color: #e11d48 !important;
+    animation: pending-review-bell 1.8s ease-in-out infinite;
+}
+
+@keyframes pending-review-pulse {
+    50% { box-shadow: 0 0 0 5px rgba(225, 29, 72, 0.08); }
+}
+
+@keyframes pending-review-bell {
+    50% { transform: scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-menu a.has-pending-review::after,
+    .menu-item a.has-pending-review::after,
+    .notification-btn.has-pending-review {
+        animation: none;
+    }
+}
