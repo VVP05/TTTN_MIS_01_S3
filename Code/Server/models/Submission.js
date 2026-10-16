@@ -25,8 +25,15 @@ const submissionSchema = new mongoose.Schema({
     file_name: { 
         type: String 
     },
+    stored_filename: {
+        type: String
+    },
     file_size: { 
         type: Number 
+    },
+    is_draft: {
+        type: Boolean,
+        default: false
     },
     submitted_at: { 
         type: Date, 

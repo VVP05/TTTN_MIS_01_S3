@@ -29,12 +29,12 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage, defParamCharset: 'utf8' });
 
 // API GET: /api/submissions/topic/:topic_id
 router.get('/topic/:topic_id', async (req, res) => {
     try {
-        const submissions = await Submission.find({ topic_id: req.params.topic_id })
+        const submissions = await Submission.find({ topic_id: req.params.topic_id, is_draft: { $ne: true } })
             .sort({ milestone: 1, submitted_at: -1 })
             .lean();
 

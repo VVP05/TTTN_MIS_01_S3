@@ -5,6 +5,21 @@ const LecturerTopic = require('../models/LecturerTopic');
 const User = require('../models/User');
 const GroupJoinRequest = require('../models/GroupJoinRequest');
 const fs = require('fs');
+const path = require('path');
+
+async function removeUploadedReportFile(filePath) {
+    if (!filePath) return;
+
+    const uploadRoot = path.resolve(__dirname, '../uploads');
+    const resolvedPath = path.resolve(filePath);
+    if (!resolvedPath.startsWith(`${uploadRoot}${path.sep}`)) return;
+
+    try {
+        await fs.promises.unlink(resolvedPath);
+    } catch (error) {
+        if (error.code !== 'ENOENT') console.error('Không thể xóa file báo cáo cũ:', error);
+    }
+}
 
 // =========================================================================
 // PHẦN 1: LOGIC DÀNH CHO SINH VIÊN
@@ -346,25 +361,49 @@ exports.registerTopic = async (req, res) => {
 // 2. Lấy đề tài của sinh viên
 exports.getMyTopic = async (req, res) => {
     try {
-        const userCode = req.params.user_code;
-
-        const codePattern = new RegExp(`^${String(userCode).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
-        const topic = await Topic.findOne({
+        const userCode = String(req.params.user_code || '').trim();
+        const codePattern = code => new RegExp(`^${String(code || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+        const studentTopicFilter = {
             $or: [
-                { leader_code: codePattern },
-                { member2_code: codePattern },
-                { member3_code: codePattern }
+                { leader_code: codePattern(userCode) },
+                { member2_code: codePattern(userCode) },
+                { member3_code: codePattern(userCode) }
             ]
-        }).sort({ updatedAt: -1 }).lean();
+        };
 
+        let topic = await Topic.findOne({ ...studentTopicFilter, status: 'APPROVED' })
+            .sort({ updatedAt: -1 })
+            .lean();
         if (!topic) {
-            const requestCodePattern = new RegExp(`^${String(userCode).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
-            const joinRequest = await GroupJoinRequest.findOne({
-                member_code: requestCodePattern,
+            topic = await Topic.findOne(studentTopicFilter).sort({ updatedAt: -1 }).lean();
+        }
+
+        let joinRequest = null;
+        if (!topic) {
+            joinRequest = await GroupJoinRequest.findOne({
+                member_code: codePattern(userCode),
                 status: { $in: ['PENDING', 'ACCEPTED', 'REJECTED'] }
             }).sort({ createdAt: -1 }).lean();
 
-            if (joinRequest) {
+            if (joinRequest?.status === 'ACCEPTED') {
+                const leaderFilter = { leader_code: codePattern(joinRequest.leader_code) };
+                topic = await Topic.findOne({ ...leaderFilter, status: 'APPROVED' })
+                    .sort({ updatedAt: -1 })
+                    .lean();
+                if (!topic) topic = await Topic.findOne(leaderFilter).sort({ updatedAt: -1 }).lean();
+
+                if (topic && String(topic.leader_code || '').toUpperCase() !== userCode.toUpperCase()) {
+                    const memberCodes = [topic.member2_code, topic.member3_code]
+                        .filter(Boolean)
+                        .map(code => String(code).toUpperCase());
+                    if (!memberCodes.includes(userCode.toUpperCase())) {
+                        if (!topic.member2_code) topic.member2_code = userCode;
+                        else if (!topic.member3_code) topic.member3_code = userCode;
+                    }
+                }
+            }
+
+            if (!topic && joinRequest) {
                 const joinStatus = joinRequest.status === 'ACCEPTED'
                     ? 'JOIN_ACCEPTED'
                     : joinRequest.status === 'REJECTED' ? 'JOIN_REJECTED' : 'JOIN_PENDING';
@@ -379,7 +418,7 @@ exports.getMyTopic = async (req, res) => {
                 });
             }
 
-            return res.status(404).json({ message: "Không tìm thấy đề tài nào!" });
+            if (!topic) return res.status(404).json({ message: "Không tìm thấy đề tài nào!" });
         }
 
         const submissions = await Submission.find({ topic_id: topic._id }).lean();
@@ -399,8 +438,9 @@ exports.getMyTopic = async (req, res) => {
                 topic[`milestone${step}_file`] = {
                     name: sub.file_name || sub.original_name || `Bài nộp mốc ${step}`,
                     path: sub.file_path,
-                    filename: sub.file_name || sub.original_name || 'file.pdf',
-                    submittedAt: sub.submitted_at || sub.createdAt || new Date()
+                    filename: sub.stored_filename || String(sub.file_path || '').split(/[\\/]/).pop(),
+                    submittedAt: sub.submitted_at || sub.createdAt || new Date(),
+                    isDraft: Boolean(sub.is_draft)
                 };
             } else if (topic[`milestone${step}_file`] && !topic[`milestone${step}_file`].name) {
                 topic[`milestone${step}_file`] = {
@@ -508,6 +548,7 @@ exports.uploadMilestone = async (req, res) => {
         const topic_id = req.params.topic_id || req.body.topic_id;
         const mIndex = req.params.mIndex || req.body.milestoneIndex || req.body.milestone;
         const file = req.file;
+        const isDraft = String(req.body.isDraft || '').toLowerCase() === 'true';
         const discardFile = () => {
             if (file?.path) fs.unlink(file.path, error => {
                 if (error && error.code !== 'ENOENT') console.error('Lỗi xóa file milestone bị từ chối:', error);
@@ -561,13 +602,18 @@ exports.uploadMilestone = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Đã quá hạn nộp bài cho mốc này.' });
         }
 
+        const previousSubmission = await Submission.findOne({ topic_id, milestone: step })
+            .select('file_path')
+            .lean();
+
         const fileInfo = {
             name: file.originalname,
             path: file.path,
             filename: file.filename,
             mimetype: file.mimetype,
             size: file.size,
-            submittedAt: new Date()
+            submittedAt: new Date(),
+            isDraft
         };
 
         const updateData = {};
@@ -590,20 +636,126 @@ exports.uploadMilestone = async (req, res) => {
                 milestone: step,
                 file_name: file.originalname,
                 file_path: file.path,
+                stored_filename: file.filename,
+                file_size: file.size,
+                is_draft: isDraft,
                 submitted_at: new Date()
             },
             { upsert: true, new: true }
         );
 
+        if (previousSubmission?.file_path && previousSubmission.file_path !== file.path) {
+            await removeUploadedReportFile(previousSubmission.file_path);
+        }
+
         return res.status(200).json({
             success: true,
-            message: `Đã nộp thành công báo cáo Mốc ${step}!`,
+            message: isDraft
+                ? `Đã lưu bản nháp Mốc ${step}. Bấm "Nộp bài" để gửi chính thức.`
+                : `Đã nộp thành công báo cáo Mốc ${step}!`,
             data: updatedTopic
         });
 
     } catch (error) {
         console.error("Lỗi upload milestone:", error);
         return res.status(500).json({ success: false, message: "Lỗi Server: " + error.message });
+    }
+};
+
+exports.submitMilestoneDraft = async (req, res) => {
+    try {
+        const { topic_id } = req.params;
+        const step = Number(req.params.mIndex);
+        if (!Number.isInteger(step) || step < 1) {
+            return res.status(400).json({ success: false, message: 'Mốc nộp bài không hợp lệ.' });
+        }
+
+        const studentCode = String(req.user?.user_code || '').trim();
+        const escapedStudentCode = studentCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const studentCodePattern = new RegExp(`^${escapedStudentCode}$`, 'i');
+        const topic = await Topic.findOne({
+            _id: topic_id,
+            status: 'APPROVED',
+            $or: [
+                { leader_code: studentCodePattern },
+                { member2_code: studentCodePattern },
+                { member3_code: studentCodePattern }
+            ]
+        });
+        if (!topic) {
+            return res.status(403).json({ success: false, message: 'Bạn không có quyền nộp bài cho đề tài này.' });
+        }
+
+        const milestone = await Milestone.findOne({ lecturerCode: topic.lecturer_code, topicId: null, step });
+        const now = new Date();
+        if (!milestone || now < milestone.startDate || (now > milestone.endDate && !milestone.allowLate)) {
+            return res.status(403).json({ success: false, message: 'Mốc này hiện không nhận bài nộp.' });
+        }
+
+        const submission = await Submission.findOne({ topic_id, milestone: step });
+        if (!submission) {
+            return res.status(404).json({ success: false, message: 'Chưa có bản nháp để nộp.' });
+        }
+        if (!submission.is_draft) {
+            return res.status(409).json({ success: false, message: 'Bài ở mốc này đã được nộp chính thức.' });
+        }
+
+        submission.is_draft = false;
+        submission.submitted_at = now;
+        await submission.save();
+
+        return res.json({ success: true, message: `Đã nộp chính thức bài làm Mốc ${step}.` });
+    } catch (error) {
+        console.error('Lỗi nộp chính thức bài làm:', error);
+        return res.status(500).json({ success: false, message: 'Không thể nộp bài lúc này.' });
+    }
+};
+
+exports.deleteMilestoneSubmission = async (req, res) => {
+    try {
+        const { topic_id } = req.params;
+        const step = Number(req.params.mIndex);
+        if (!Number.isInteger(step) || step < 1) {
+            return res.status(400).json({ success: false, message: 'Mốc nộp bài không hợp lệ.' });
+        }
+
+        const studentCode = String(req.user?.user_code || '').trim();
+        const escapedStudentCode = studentCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const studentCodePattern = new RegExp(`^${escapedStudentCode}$`, 'i');
+        const topic = await Topic.findOne({
+            _id: topic_id,
+            status: 'APPROVED',
+            $or: [
+                { leader_code: studentCodePattern },
+                { member2_code: studentCodePattern },
+                { member3_code: studentCodePattern }
+            ]
+        });
+
+        if (!topic) {
+            return res.status(403).json({ success: false, message: 'Bạn không có quyền sửa bài nộp của đề tài này.' });
+        }
+
+        const milestone = await Milestone.findOne({ lecturerCode: topic.lecturer_code, topicId: null, step });
+        if (!milestone || (new Date() > milestone.endDate && !milestone.allowLate)) {
+            return res.status(403).json({ success: false, message: 'Đã hết thời gian chỉnh sửa bài nộp ở mốc này.' });
+        }
+
+        const submission = await Submission.findOne({ topic_id, milestone: step }).lean();
+        const milestoneField = `milestone${step}_file`;
+        const topicFile = topic[milestoneField];
+        if (!submission && !topicFile) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy bài nộp ở mốc này.' });
+        }
+
+        await Submission.deleteMany({ topic_id, milestone: step });
+        await Topic.updateOne({ _id: topic_id }, { $unset: { [milestoneField]: '' } });
+        await removeUploadedReportFile(submission?.file_path || topicFile?.path);
+
+        return res.json({ success: true, message: `Đã loại bỏ bài nộp Mốc ${step}. Bạn có thể nộp lại trong thời hạn cho phép.` });
+    } catch (error) {
+        console.error('Lỗi xóa bài nộp milestone:', error);
+        return res.status(500).json({ success: false, message: 'Không thể xóa bài nộp lúc này.' });
     }
 };
 
@@ -762,8 +914,9 @@ exports.getLecturerTopics = async (req, res) => {
             .map(item => item.step);
 
         const topicIds = topics.map(t => t._id);
-        const submissions = await Submission.find({ 
-            topic_id: { $in: topicIds } 
+        const submissions = await Submission.find({
+            topic_id: { $in: topicIds },
+            is_draft: { $ne: true }
         }).lean();
 
         const enrichedTopics = topics.map(topic => {
@@ -1056,8 +1209,9 @@ exports.getLecturerProgressMatrix = async (req, res) => {
             .map(item => item.step)
             .sort((a, b) => a - b);
 
-        const submissions = await Submission.find({ 
-            topic_id: { $in: topicIds } 
+        const submissions = await Submission.find({
+            topic_id: { $in: topicIds },
+            is_draft: { $ne: true }
         }).lean();
 
         const matrixData = topics.map(topic => {

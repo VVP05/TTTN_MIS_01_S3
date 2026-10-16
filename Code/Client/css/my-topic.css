@@ -342,6 +342,179 @@ body {
 .file-name { font-size: 13.5px; font-weight: 600; color: #2563eb; text-decoration: none; }
 .file-submitted small { display: block; font-size: 11.5px; color: #64748b; margin-top: 2px; }
 
+.submission-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.submission-status-row strong { color: #14532d; }
+.submission-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.milestone-body > .submission-actions:first-child { margin-top: 0; margin-bottom: 34px; }
+.submission-actions button, .btn-cancel-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 7px;
+    background: #e2e8f0;
+    color: #1e293b;
+    font: inherit;
+    cursor: pointer;
+}
+.submission-actions .submission-action-delete { background: #fff1f2; color: #be123c; }
+.submission-actions .submission-action-submit { background: #2563eb; color: #ffffff; }
+.submission-actions button:disabled { cursor: not-allowed; opacity: 0.5; }
+.submission-closed-note { display: block; margin-top: 9px; color: #b45309; }
+.submission-status-heading { margin: 0 0 42px; color: #3f315f; font-size: 24px; font-weight: 700; }
+.submission-status-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 16px; }
+.submission-status-table th,
+.submission-status-table td { padding: 16px 14px; border: 1px solid #d6dbe1; text-align: left; vertical-align: middle; }
+.submission-status-table th { width: 21%; background: #f7f7f7; color: #1f2937; font-weight: 600; }
+.submission-status-table td { background: #ffffff; color: #111827; }
+.submission-status-table .submission-row-success td { background: #cfeecf; }
+.submission-status-table .submission-row-overdue td { background: #fee2e2; color: #991b1b; }
+.submission-status-table .submission-row-file th,
+.submission-status-table .submission-row-file td { background: #ededed; }
+.submission-file-link { color: #243b7a; text-decoration: none; overflow-wrap: anywhere; }
+.submission-file-link:hover { text-decoration: underline; }
+.submission-file-date { margin-left: 6px; white-space: nowrap; }
+.editing-submission-note { margin-bottom: 12px; color: #475569; }
+.btn-cancel-edit { border: 1px solid #cbd5e1; background: #ffffff; }
+
+.add-submission-actions { margin-top: 18px; }
+.btn-add-submission {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 6px;
+    background: #cfd5dc;
+    color: #1e293b;
+    font: inherit;
+    cursor: pointer;
+}
+.btn-add-submission:hover:not(:disabled) { background: #bbc4ce; }
+.btn-add-submission:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.submission-upload-panel { margin-top: 18px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
+.submission-upload-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.submission-upload-header h4 { color: #3f315f; font-size: 20px; }
+.submission-upload-header h4 i { margin-right: 8px; font-size: 14px; }
+.submission-upload-header span { color: #334155; text-align: right; }
+.submission-upload-panel .upload-form { padding: 16px; }
+.submission-upload-panel .upload-box {
+    min-height: 170px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+.submission-upload-panel .upload-box:hover { background: #f8fafc; }
+.submission-upload-panel .upload-icon { margin-bottom: 8px; }
+.submission-upload-panel .upload-actions { justify-content: flex-start; gap: 10px; }
+.btn-submit-changes {
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 7px;
+    background: #2563eb;
+    color: #ffffff;
+    font: inherit;
+    cursor: pointer;
+}
+.btn-submit-changes:disabled { cursor: not-allowed; opacity: 0.5 !important; }
+.submission-upload-panel .btn-cancel-edit { padding: 10px 16px; background: #cfd5dc; }
+
+@media (max-width: 600px) {
+    .submission-status-row { align-items: flex-start; flex-direction: column; }
+    .submission-status-heading { margin-bottom: 20px; font-size: 20px; }
+    .submission-status-table { font-size: 13px; }
+    .submission-status-table th, .submission-status-table td { padding: 11px 9px; }
+    .submission-status-table th { width: 34%; }
+    .submission-file-date { display: block; margin: 5px 0 0; white-space: normal; }
+    .submission-actions { flex-direction: column; }
+    .submission-actions button, .btn-cancel-edit { justify-content: center; width: 100%; }
+    .submission-upload-header { align-items: flex-start; flex-direction: column; }
+    .submission-upload-header span { text-align: left; }
+    .submission-upload-panel .upload-actions { flex-direction: column; }
+    .submission-upload-panel .upload-actions button { justify-content: center; width: 100%; }
+}
+
+.file-manager-zone { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
+.file-manager-toolbar { display: flex; align-items: center; min-height: 58px; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+.btn-open-file-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: #cfd5dc;
+    color: #1e293b;
+    font: inherit;
+    cursor: pointer;
+}
+.btn-open-file-picker:hover { background: #bbc4ce; }
+.file-manager-limit { margin-left: auto; color: #64748b; font-size: 12px; }
+.file-manager-list { min-height: 170px; padding: 20px 24px; }
+.file-manager-folder, .file-manager-item { display: flex; align-items: center; gap: 10px; min-height: 36px; }
+.file-manager-folder { color: #334155; }
+.file-manager-folder i { font-size: 19px; }
+.file-manager-item { margin-left: 28px; color: #2563eb; }
+.file-manager-item > i { color: #475569; font-size: 20px; }
+.file-manager-item span { overflow-wrap: anywhere; }
+.file-manager-item small { margin-left: auto; color: #64748b; white-space: nowrap; }
+.file-manager-empty { margin: 5px 0 0 28px; color: #94a3b8; font-size: 13px; }
+.btn-remove-file { border: 0; background: transparent; color: #64748b; cursor: pointer; font-size: 16px; }
+.btn-remove-file:hover { color: #be123c; }
+
+.file-picker-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.38);
+}
+.file-picker-dialog { width: min(700px, 100%); background: #ffffff; border-radius: 5px; box-shadow: 0 18px 55px rgba(15, 23, 42, 0.25); }
+.file-picker-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; }
+.file-picker-header h3 { color: #3f315f; font-size: 21px; }
+.file-picker-close { border: 0; background: transparent; color: #64748b; font-size: 25px; cursor: pointer; }
+.file-picker-body { display: grid; grid-template-columns: 170px minmax(0, 1fr); min-height: 300px; }
+.file-picker-body aside { padding: 18px 10px; border-right: 1px solid #e2e8f0; }
+.file-picker-source { width: 100%; padding: 10px; border: 0; border-radius: 5px; background: #2563eb; color: #ffffff; text-align: left; }
+.file-picker-fields { display: flex; flex-direction: column; gap: 9px; padding: 20px; }
+.file-picker-fields label { color: #334155; font-size: 13px; }
+.file-picker-fields input[type="file"] { width: 100%; }
+.file-picker-fields input[type="text"] { min-height: 38px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 5px; color: #334155; }
+.file-picker-fields input[readonly] { background: #f8fafc; }
+.file-picker-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.file-picker-actions button:disabled { cursor: not-allowed; opacity: 0.5 !important; }
+
+@media (max-width: 600px) {
+    .file-picker-body { grid-template-columns: 1fr; }
+    .file-picker-body aside { padding: 12px 16px 0; border-right: 0; }
+    .file-manager-list { min-height: 130px; padding: 16px; }
+    .file-manager-item { margin-left: 16px; flex-wrap: wrap; }
+    .file-manager-limit { max-width: 50%; text-align: right; }
+}
+
 .lecturer-feedback {
     margin-top: 14px;
     padding: 12px 14px;

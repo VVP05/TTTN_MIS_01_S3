@@ -52,7 +52,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 25 * 1024 * 1024 } // Giới hạn 25MB
+    limits: { fileSize: 25 * 1024 * 1024 }, // Giới hạn 25MB
+    defParamCharset: 'utf8'
 });
 
 // Import ĐẦY ĐỦ các hàm từ topicController
@@ -80,7 +81,9 @@ const {
     createLecturerTopic,
     createLecturerPoolTopic,
     updateTopicStatus,
-    getLecturerProgressMatrix 
+    getLecturerProgressMatrix,
+    deleteMilestoneSubmission,
+    submitMilestoneDraft
 } = require('../controllers/topicController');
 
 
@@ -121,6 +124,8 @@ router.delete('/cancel/:user_code', cancelTopic);
 router.delete('/delete/:topic_id', cancelTopic);
 
 // Route nộp báo cáo mốc
+router.delete('/:topic_id/milestone/:mIndex/submission', authMiddleware, requireStudentRole, deleteMilestoneSubmission);
+router.post('/:topic_id/milestone/:mIndex/submit', authMiddleware, requireStudentRole, submitMilestoneDraft);
 router.post('/:topic_id/upload-milestone/:mIndex', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
 router.post('/:topic_id/upload-milestone', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
 
