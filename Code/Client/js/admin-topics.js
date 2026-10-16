@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const pendingCount = topicList.filter(t => String(t.status).toUpperCase() === "PENDING").length;
         pendingBadgeCount.textContent = pendingCount;
+        pendingBadgeCount.hidden = pendingCount === 0;
 
         if (data.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding: 20px; color: #94a3b8;">Không tìm thấy đề tài phù hợp</td></tr>`;

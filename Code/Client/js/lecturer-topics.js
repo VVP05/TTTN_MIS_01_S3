@@ -112,6 +112,12 @@ async function loadLecturerTopics(lecturerCode, token) {
                 badgePending.textContent = allTopicsData.pending.length;
             }
 
+            const badgeApproved = document.getElementById("badge-approved");
+            if (badgeApproved) badgeApproved.textContent = allTopicsData.approved.length;
+
+            const badgeMyTopics = document.getElementById("badge-my-topics");
+            if (badgeMyTopics) badgeMyTopics.textContent = allTopicsData.myPool.length;
+
             // Render ra giao diện
             filterAndRender();
         } else {
