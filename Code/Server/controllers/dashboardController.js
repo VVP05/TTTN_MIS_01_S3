@@ -66,9 +66,7 @@ exports.getAdminDashboardStats = async (req, res) => {
             rejectedTopicsFromTopic,
             needRevisionTopicsFromTopic,
             approvedTopicsFromPool,
-            pendingTopicsFromPool,
             rejectedTopicsFromPool,
-            pendingPoolList,
             allTopics,
             allPoolTopics
         ] = await Promise.all([
@@ -79,52 +77,46 @@ exports.getAdminDashboardStats = async (req, res) => {
             Topic.countDocuments({ ...topicFilter, status: { $regex: pendingStatusRegex } }),
             Topic.countDocuments({ ...topicFilter, status: { $regex: rejectedStatusRegex } }),
             Topic.countDocuments({ ...topicFilter, status: { $regex: revisionStatusRegex } }),
-            LecturerTopic.countDocuments({ status: { $regex: approvedStatusRegex } }),
-            LecturerTopic.countDocuments({ status: { $regex: pendingStatusRegex } }),
+            LecturerTopic.countDocuments({
+                $or: [
+                    { status: { $regex: approvedStatusRegex } },
+                    { status: 'PENDING' }
+                ]
+            }),
             LecturerTopic.countDocuments({ status: { $regex: rejectedStatusRegex } }),
-            LecturerTopic.find({ status: { $regex: pendingStatusRegex } })
-                .sort({ createdAt: -1 })
-                .limit(5)
-                .lean(),
             Topic.find(topicFilter).lean(),
             LecturerTopic.find({}).lean()
         ]);
 
         const totalPendingFromTopic = allTopics.filter(item => matchesStatus(item.status, [pendingStatusRegex, 'pending', 'chờ duyệt', 'cho duyet', 'cho_duyet', 'chờ phe duyet', 'cho phe duyet'])).length;
-        const totalPendingFromPool = allPoolTopics.filter(item => matchesStatus(item.status, [pendingStatusRegex, 'pending', 'chờ duyệt', 'cho duyet', 'cho_duyet', 'chờ phe duyet', 'cho phe duyet'])).length;
         const totalApprovedFromTopic = allTopics.filter(item => matchesStatus(item.status, [approvedStatusRegex, 'approved', 'registered', 'da phe duyet', 'đã phê duyệt', 'đã duyệt'])).length;
-        const totalApprovedFromPool = allPoolTopics.filter(item => matchesStatus(item.status, [approvedStatusRegex, 'approved', 'registered', 'da phe duyet', 'đã phê duyệt', 'đã duyệt'])).length;
+        const totalApprovedFromPool = allPoolTopics.filter(item =>
+            matchesStatus(item.status, [approvedStatusRegex, 'approved', 'registered', 'da phe duyet', 'đã phê duyệt', 'đã duyệt']) || item.status === 'PENDING'
+        ).length;
 
         const approvedTopics = totalApprovedFromTopic + totalApprovedFromPool;
-        const pendingTopics = totalPendingFromTopic + totalPendingFromPool;
+        const pendingTopics = totalPendingFromTopic;
         const rejectedTopics = rejectedTopicsFromTopic + rejectedTopicsFromPool;
         const needRevisionTopics = needRevisionTopicsFromTopic;
 
         // Đề tài đang thực hiện = Đã duyệt
         const inProgressTopics = approvedTopics;
 
-        // 2. Lấy danh sách 5 đề tài chờ duyệt mới nhất (gồm cả sinh viên và giảng viên gửi lên kho)
-        const [pendingListFromTopic, pendingListFromPool] = await Promise.all([
-            Topic.find({
-                ...topicFilter,
-                status: { $regex: pendingStatusRegex }
-            })
-                .sort({ createdAt: -1 })
-                .limit(5)
-                .lean(),
-            pendingPoolList
-        ]);
-
-        const pendingList = [...pendingListFromTopic, ...pendingListFromPool]
+        // 2. Lấy danh sách đề tài nhóm đang chờ giảng viên xử lý.
+        const pendingList = (await Topic.find({
+            ...topicFilter,
+            status: { $regex: pendingStatusRegex }
+        })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean())
             .map(item => ({
                 ...item,
-                source: item.source || (item.lecturer_code ? 'LECTURER' : 'STUDENT'),
-                topic_code: item.topic_code || (item._id ? `POOL-${String(item._id).slice(-6).toUpperCase()}` : 'N/A'),
+                topic_code: item.topic_code || (item._id ? `DT-${String(item._id).slice(-6).toUpperCase()}` : 'N/A'),
                 lecturer_name: item.lecturer_name || item.lecturer_code || 'Chưa xác định',
                 leader_code: item.leader_code || 'N/A'
             }))
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-            .slice(0, 5);
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
         // 3. Thống kê số lượng đăng ký theo 6 tháng gần nhất (Cho Line Chart)
         const monthlyRegistrations = [0, 0, 0, 0, 0, 0];
@@ -166,7 +158,7 @@ exports.getAdminDashboardStats = async (req, res) => {
                     student: approvedTopicsFromTopic
                 },
                 pendingBySource: {
-                    lecturer: pendingTopicsFromPool,
+                    lecturer: 0,
                     student: pendingTopicsFromTopic
                 }
             },

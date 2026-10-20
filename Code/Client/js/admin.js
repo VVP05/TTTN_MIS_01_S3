@@ -125,7 +125,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateElement("kpiTotalTopics", kpi.totalTopics);
         updateElement("kpiApprovedTopics", kpi.approvedTopics);
         updateElement("kpiPendingTopics", kpi.pendingTopics);
-        updateElement("pendingTopicsBadge", kpi.pendingTopics);
 
         const ratioEl = document.getElementById("kpiApprovedRatio");
         if (ratioEl) {
@@ -256,7 +255,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // D. Đổ dữ liệu vào bảng Đề tài chờ duyệt
+    // D. Đổ dữ liệu vào bảng đề tài nhóm chờ giảng viên xử lý
     function renderPendingTable(pendingList) {
         const tbody = document.getElementById("pendingTopicsTable");
         if (!tbody) return;
@@ -265,7 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; color: #6b7280; padding: 20px;">
-                        Hiện không có đề tài nào chờ phê duyệt.
+                        Hiện không có đề tài nhóm nào đang chờ giảng viên xử lý.
                     </td>
                 </tr>
             `;
@@ -278,11 +277,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <td>${t.title || 'N/A'}</td>
                 <td>MSSV: ${t.leader_code || 'N/A'}</td>
                 <td>GV: ${t.lecturer_code || t.lecturer_name || 'N/A'}</td>
-                <td class="table-actions">
-                    <button class="btn-action btn-view" title="Xem & Xét duyệt" onclick="window.location.href='admin-topics.html'">
-                        <i class="fa-solid fa-eye"></i> Xem & Duyệt
-                    </button>
-                </td>
             </tr>
         `).join('');
     }

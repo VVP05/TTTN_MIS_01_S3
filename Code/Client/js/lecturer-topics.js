@@ -11,6 +11,7 @@ let allTopicsData = {
 // Biến tạm lưu trữ ID đề tài và hành động đang thao tác trong Modal
 let currentSelectedTopicId = null;
 let currentActionType = null; // 'APPROVE' | 'REJECT' | 'REVISION'
+let editingPoolTopicId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA ĐĂNG NHẬP (Bắt buộc Token và Role là LECTURER)
@@ -304,10 +305,10 @@ function renderMyTopicsTable(list) {
             <td><strong>${topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"))}</strong></td>
             <td><strong>${topic.title}</strong></td>
             <td><span class="tag ${tagClass}">${topic.category || "Web / Ứng dụng"}</span></td>
-            <td>${topic.description || topic.requirements || "Không có yêu cầu"}</td>
+            <td>${topic.requirements || topic.description || "Không có yêu cầu"}</td>
             <td>${statusBadge}</td>
             <td>
-                <button class="btn-text-edit" onclick="showAppNotification('Chức năng chỉnh sửa đề tài kho đang được hoàn thiện!')">Sửa</button>
+                <button type="button" class="btn-text-edit" data-edit-pool-topic="${topic._id}">Sửa</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -348,12 +349,43 @@ function setupModals(lecturerCode, token) {
     const openCreateBtn = document.getElementById("openCreateModalBtn");
     if (openCreateBtn) {
         openCreateBtn.addEventListener("click", () => {
+            resetPoolTopicForm();
             if (createModal) createModal.style.display = "flex";
         });
     }
 
-    // Xử lý Form thêm đề tài mới vào Kho Gợi ý (POST /api/topics/lecturer-pool)
     const createForm = document.getElementById("createTopicForm");
+    const poolTopicsBody = document.getElementById("tbody-mytopics");
+    const modalTitle = document.getElementById("createTopicModalTitle");
+    const saveButton = document.getElementById("savePoolTopicBtn");
+
+    function resetPoolTopicForm() {
+        editingPoolTopicId = null;
+        if (createForm) createForm.reset();
+        if (modalTitle) modalTitle.textContent = "Thêm đề tài vào kho hướng dẫn";
+        if (saveButton) saveButton.textContent = "Lưu & Đăng lên kho";
+    }
+
+    if (poolTopicsBody) {
+        poolTopicsBody.addEventListener("click", (event) => {
+            const editButton = event.target.closest("[data-edit-pool-topic]");
+            if (!editButton) return;
+
+            const topic = allTopicsData.myPool.find(item => item._id === editButton.dataset.editPoolTopic);
+            if (!topic) return;
+
+            editingPoolTopicId = topic._id;
+            document.getElementById("createTitle").value = topic.title || "";
+            document.getElementById("createCategory").value = topic.category || "Web / Ứng dụng";
+            document.getElementById("createMaxGroups").value = topic.max_groups || 1;
+            document.getElementById("createDescription").value = topic.description || "";
+            document.getElementById("createRequirements").value = topic.requirements || "";
+            if (modalTitle) modalTitle.textContent = "Chỉnh sửa đề tài trong kho";
+            if (saveButton) saveButton.textContent = "Lưu thay đổi";
+            if (createModal) createModal.style.display = "flex";
+        });
+    }
+
     if (createForm) {
         createForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -361,6 +393,7 @@ function setupModals(lecturerCode, token) {
             const categoryInput = document.getElementById("createCategory")?.value;
             const maxGroupsInput = document.getElementById("createMaxGroups")?.value;
             const descriptionInput = document.getElementById("createDescription")?.value.trim();
+            const requirementsInput = document.getElementById("createRequirements")?.value.trim();
 
             if (!titleInput) {
                 showAppNotification("Vui lòng nhập tên đề tài!");
@@ -368,8 +401,12 @@ function setupModals(lecturerCode, token) {
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/lecturer-pool`, {
-                    method: "POST",
+                const isEditing = Boolean(editingPoolTopicId);
+                const url = isEditing
+                    ? `${API_BASE_URL}/lecturer-pool/${encodeURIComponent(lecturerCode)}/${encodeURIComponent(editingPoolTopicId)}`
+                    : `${API_BASE_URL}/lecturer-pool`;
+                const response = await fetch(url, {
+                    method: isEditing ? "PUT" : "POST",
                     headers: { 
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${token}`
@@ -379,15 +416,18 @@ function setupModals(lecturerCode, token) {
                         title: titleInput,
                         category: categoryInput || "Web / Ứng dụng",
                         description: descriptionInput || "Chưa có mô tả chi tiết",
+                        requirements: requirementsInput || "",
                         max_groups: Number(maxGroupsInput) || 1
                     })
                 });
 
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    showAppNotification("Đã lưu đề tài mới vào Kho gợi ý cho sinh viên thành công!");
+                    showAppNotification(isEditing
+                        ? "Đã cập nhật đề tài trong kho."
+                        : "Đề tài đã được thêm vào Kho và hiển thị cho sinh viên.");
                     if (createModal) createModal.style.display = "none";
-                    createForm.reset();
+                    resetPoolTopicForm();
                     
                     // Tải lại dữ liệu và tự động kích hoạt Tab Kho đề tài để xem kết quả
                     await loadLecturerTopics(lecturerCode, token);

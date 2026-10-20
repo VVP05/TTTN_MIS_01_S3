@@ -762,7 +762,7 @@ exports.deleteMilestoneSubmission = async (req, res) => {
 // 6. Lấy danh sách đề tài gợi ý trong Kho (Cho SV & GV xem)
 exports.getLecturerPoolTopics = async (req, res) => {
     try {
-        const pool = await LecturerTopic.find({ is_active: true }).sort({ createdAt: -1 });
+        const pool = await LecturerTopic.find({ status: { $ne: 'REJECTED' } }).sort({ createdAt: -1 });
         return res.status(200).json({ success: true, data: pool });
     } catch (error) {
         console.error("Lỗi lấy kho đề tài giảng viên:", error);
@@ -870,6 +870,9 @@ exports.registerPoolTopic = async (req, res) => {
         if (!poolTopic) {
             return res.status(404).json({ message: "Không tìm thấy đề tài mẫu trong kho!" });
         }
+        if (poolTopic.status === 'REJECTED') {
+            return res.status(404).json({ message: "Đề tài này hiện không khả dụng trong kho!" });
+        }
 
         const newTopic = new Topic({
             leader_code,
@@ -878,6 +881,7 @@ exports.registerPoolTopic = async (req, res) => {
             lecturer_code: poolTopic.lecturer_code,
             title: poolTopic.title,
             description: poolTopic.description,
+            requirements: poolTopic.requirements || '',
             category: poolTopic.category || 'Web / Ứng dụng',
             source: 'LECTURER',
             pool_topic_id: pool_topic_id, // Bổ sung ID liên kết kho
@@ -959,7 +963,7 @@ exports.getLecturerTopics = async (req, res) => {
         const pendingTopics = enrichedTopics.filter(t => t.status === 'PENDING' || t.status === 'NEED_REVISION');
         const approvedTopics = enrichedTopics.filter(t => t.status === 'APPROVED');
 
-        // BỔ SUNG: Tự động đánh dấu trạng thái 'REGISTERED' cho danh sách trong Kho nếu đã được Duyệt
+        // Đánh dấu đề tài trong kho đã được nhóm đăng ký.
         const approvedTitles = approvedTopics.map(t => (t.title || "").trim().toLowerCase());
         const approvedPoolIds = approvedTopics.map(t => t.pool_topic_id ? t.pool_topic_id.toString() : null).filter(Boolean);
 
@@ -967,15 +971,16 @@ exports.getLecturerTopics = async (req, res) => {
             const itemTitle = (poolItem.title || "").trim().toLowerCase();
             const itemId = poolItem._id.toString();
 
-            const isApproved = approvedTitles.includes(itemTitle) || 
+            const isRegistered = approvedTitles.includes(itemTitle) ||
                                approvedPoolIds.includes(itemId) || 
                                poolItem.status === 'REGISTERED' || 
                                poolItem.is_registered === true;
 
             return {
                 ...poolItem,
-                status: isApproved ? 'REGISTERED' : (poolItem.status || 'OPEN'),
-                is_registered: isApproved
+                status: isRegistered ? 'REGISTERED' : (poolItem.status === 'REJECTED' ? 'REJECTED' : 'OPEN'),
+                is_active: poolItem.status !== 'REJECTED',
+                is_registered: isRegistered
             };
         });
 
@@ -1041,16 +1046,17 @@ exports.createLecturerTopic = async (req, res) => {
 // 3. Giảng viên thêm đề tài gợi ý vào Collection 'lecturer_topics'
 exports.createLecturerPoolTopic = async (req, res) => {
     try {
-        const { lecturer_code, title, description, category, max_groups } = req.body;
+        const { lecturer_code, title, description, requirements, category, max_groups } = req.body;
 
         const newTopic = new LecturerTopic({
             lecturer_code,
             title,
             description,
+            requirements: requirements || '',
             category: category || 'Web / Ứng dụng',
             max_groups: Number(max_groups) || 1,
-            status: 'PENDING',
-            is_active: false,
+            status: 'APPROVED',
+            is_active: true,
             feedback: ''
         });
 
@@ -1058,7 +1064,7 @@ exports.createLecturerPoolTopic = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "Đã lưu đề tài vào Kho gợi ý thành công! Đang chờ xét duyệt Admin.",
+            message: "Đề tài đã được thêm vào Kho và hiển thị cho sinh viên.",
             data: newTopic
         });
     } catch (error) {
@@ -1067,77 +1073,46 @@ exports.createLecturerPoolTopic = async (req, res) => {
     }
 };
 
-// 4. Admin lấy danh sách đề tài Giảng viên đã đề xuất vào kho để duyệt
-exports.getAdminLecturerPoolTopics = async (req, res) => {
+exports.updateLecturerPoolTopic = async (req, res) => {
     try {
-        const poolTopics = await LecturerTopic.find({}).sort({ createdAt: -1 }).lean();
+        const { title, description, requirements, category, max_groups } = req.body;
+        const normalizedTitle = String(title || '').trim();
+        const normalizedMaxGroups = Number(max_groups);
 
-        const lecturerCodes = poolTopics.map(item => item.lecturer_code).filter(Boolean);
-        const lecturers = await User.find({ role: 'LECTURER', user_code: { $in: lecturerCodes } })
-            .select('user_code full_name')
-            .lean();
-
-        const lecturerMap = new Map(lecturers.map(l => [l.user_code, l.full_name]));
-
-        const enrichedTopics = poolTopics.map(item => ({
-            ...item,
-            lecturer_name: lecturerMap.get(item.lecturer_code) || item.lecturer_code || 'Chưa xác định'
-        }));
-
-        return res.status(200).json({ success: true, data: enrichedTopics });
-    } catch (error) {
-        console.error('Lỗi lấy danh sách đề tài kho để admin duyệt:', error);
-        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách đề tài kho!' });
-    }
-};
-
-// 5. Admin phê duyệt / từ chối đề tài Giảng viên gửi lên Kho
-exports.updateLecturerPoolTopicStatus = async (req, res) => {
-    try {
-        const { pool_topic_id } = req.params;
-        const { status, feedback } = req.body;
-        const normalizedStatus = String(status || '').toUpperCase();
-
-        const validStatuses = ['PENDING', 'APPROVED', 'REJECTED'];
-        if (!validStatuses.includes(normalizedStatus)) {
-            return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ. Vui lòng gửi PENDING / APPROVED / REJECTED.' });
+        if (!normalizedTitle) {
+            return res.status(400).json({ success: false, message: 'Tên đề tài không được để trống.' });
+        }
+        if (!Number.isInteger(normalizedMaxGroups) || normalizedMaxGroups < 1 || normalizedMaxGroups > 3) {
+            return res.status(400).json({ success: false, message: 'Số nhóm tối đa phải từ 1 đến 3.' });
         }
 
-        const updateData = {
-            status: normalizedStatus,
-            feedback: feedback || ''
-        };
-
-        if (normalizedStatus === 'APPROVED') {
-            updateData.is_active = true;
-        } else {
-            updateData.is_active = false;
-        }
-
-        const poolTopic = await LecturerTopic.findByIdAndUpdate(
-            pool_topic_id,
-            updateData,
-            { new: true }
-        ).lean();
-
+        const poolTopic = await LecturerTopic.findOne({
+            _id: req.params.pool_topic_id,
+            lecturer_code: req.user.user_code
+        });
         if (!poolTopic) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy đề tài trong kho để cập nhật!' });
+            return res.status(404).json({ success: false, message: 'Không tìm thấy đề tài trong kho của bạn.' });
         }
 
-        const message = normalizedStatus === 'APPROVED'
-            ? 'Đã phê duyệt đề tài và mở trạng thái hiển thị.'
-            : normalizedStatus === 'REJECTED'
-            ? 'Đã từ chối đề tài.'
-            : 'Đã cập nhật trạng thái đề tài.';
+        poolTopic.title = normalizedTitle;
+        poolTopic.description = String(description || '').trim();
+        poolTopic.requirements = String(requirements || '').trim();
+        poolTopic.category = category || 'Web / Ứng dụng';
+        poolTopic.max_groups = normalizedMaxGroups;
+        await poolTopic.save();
 
-        return res.status(200).json({ success: true, message, data: poolTopic });
+        return res.json({
+            success: true,
+            message: 'Đã cập nhật đề tài trong kho.',
+            data: poolTopic
+        });
     } catch (error) {
-        console.error('Lỗi cập nhật trạng thái đề tài kho:', error);
-        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi cập nhật trạng thái đề tài kho!' });
+        console.error('Lỗi cập nhật đề tài trong kho giảng viên:', error);
+        return res.status(500).json({ success: false, message: 'Không thể cập nhật đề tài lúc này.' });
     }
 };
 
-// 6. Cập nhật trạng thái duyệt/yêu cầu sửa/từ chối đề tài (Bổ sung tự đổi status Kho khi Phê duyệt)
+// 4. Cập nhật trạng thái duyệt/yêu cầu sửa/từ chối đề tài sinh viên
 exports.updateTopicStatus = async (req, res) => {
     try {
         const { topic_id } = req.params;

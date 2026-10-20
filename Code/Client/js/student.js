@@ -158,10 +158,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (member3Input) member3Input.disabled = disabled || (selectedRole === "MEMBER");
         
         roleRadios.forEach(r => r.disabled = disabled);
-        if (lecturerSelect) lecturerSelect.disabled = disabled;
-        if (proposedSelect) proposedSelect.disabled = disabled;
-        if (topicTitleInput) topicTitleInput.disabled = disabled;
-        if (topicDescInput) topicDescInput.disabled = disabled;
+        if (lecturerSelect) lecturerSelect.disabled = disabled || selectedRole === "MEMBER";
+        if (proposedSelect) proposedSelect.disabled = disabled || selectedRole === "MEMBER";
+        if (topicTitleInput) topicTitleInput.disabled = disabled || selectedRole === "MEMBER";
+        if (topicDescInput) topicDescInput.disabled = disabled || selectedRole === "MEMBER";
     }
 
     /**

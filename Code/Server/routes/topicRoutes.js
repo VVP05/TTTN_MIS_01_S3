@@ -71,15 +71,12 @@ const {
     getAllTopicsForAdmin,
     assignLecturerToTopic,
 
-    // Admin
-    getAdminLecturerPoolTopics,
-    updateLecturerPoolTopicStatus,
-
     // Các hàm cho Giảng viên
     getLecturerPendingReviewStatus,
     getLecturerTopics, 
     createLecturerTopic,
     createLecturerPoolTopic,
+    updateLecturerPoolTopic,
     updateTopicStatus,
     getLecturerProgressMatrix,
     deleteMilestoneSubmission,
@@ -97,12 +94,6 @@ router.patch('/admin/assign-lecturer/:topic_id', assignLecturerToTopic);
 
 router.get('/pool', getLecturerPoolTopics);
 router.get('/available', getLecturerPoolTopics);
-
-// ==========================================
-// ROUTES CHO ADMIN
-// ==========================================
-router.get('/admin/pool', authMiddleware, requireAdminRole, getAdminLecturerPoolTopics);
-router.put('/admin/pool/:pool_topic_id/status', authMiddleware, requireAdminRole, updateLecturerPoolTopicStatus);
 
 // Sinh viên chọn đăng ký 1 đề tài từ Kho
 router.post('/register-pool', registerPoolTopic);
@@ -147,6 +138,7 @@ router.post('/lecturer/create', createLecturerTopic);
 // Giảng viên thêm / lấy Kho đề tài gợi ý
 router.post('/lecturer-pool', createLecturerPoolTopic);
 router.get('/lecturer-pool', getLecturerPoolTopics);
+router.put('/lecturer-pool/:lecturer_code/:pool_topic_id', authMiddleware, requireLecturerOwnCode, updateLecturerPoolTopic);
 
 // Giảng viên Phê duyệt / Yêu cầu sửa / Từ chối
 router.put('/update-status/:topic_id', updateTopicStatus);
