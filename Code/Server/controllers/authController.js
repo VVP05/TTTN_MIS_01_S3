@@ -252,6 +252,22 @@ exports.updateLecturer = async (req, res) => {
     }
 };
 
+exports.deleteLecturer = async (req, res) => {
+    try {
+        const userCode = String(req.params.user_code || '').trim();
+        const lecturer = await User.findOneAndDelete({ user_code: userCode, role: 'LECTURER' });
+
+        if (!lecturer) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy giảng viên.' });
+        }
+
+        return res.status(200).json({ success: true, message: 'Xóa giảng viên thành công!' });
+    } catch (error) {
+        console.error('Lỗi xóa giảng viên:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi xóa giảng viên!', error: error.message });
+    }
+};
+
 // Lấy danh sách tất cả Admin
 exports.getAdmins = async (req, res) => {
     try {

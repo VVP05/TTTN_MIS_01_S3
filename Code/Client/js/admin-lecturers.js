@@ -21,6 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelLogout = document.getElementById("cancelLogout");
     const confirmLogout = document.getElementById("confirmLogout");
 
+    function getAdminToken() {
+        try {
+            const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+            return auth?.user?.role === "ADMIN" ? auth.token : null;
+        } catch (error) {
+            console.error("Không thể đọc phiên đăng nhập quản trị viên:", error);
+            return null;
+        }
+    }
+
     async function fetchLecturers() {
         try {
             const response = await fetch("http://localhost:5000/api/auth/lecturers");
@@ -195,11 +205,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         document.querySelectorAll(".delete-btn").forEach(btn => {
-            btn.onclick = (e) => {
+            btn.onclick = async (e) => {
                 const id = e.currentTarget.getAttribute("data-id");
-                if (confirm(`Bạn có chắc muốn xóa giảng viên mã ${id}?`)) {
-                    lecturerList = lecturerList.filter(l => l.id !== id);
-                    renderLecturers(lecturerList);
+                if (!confirm(`Bạn có chắc muốn xóa giảng viên mã ${id}?`)) return;
+
+                const token = getAdminToken();
+                if (!token) {
+                    showAppNotification("Phiên đăng nhập Admin không hợp lệ. Vui lòng đăng nhập lại.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:5000/api/auth/lecturers/${encodeURIComponent(id)}`, {
+                        method: "DELETE",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || "Xóa giảng viên thất bại.");
+                    }
+
+                    lecturerList = lecturerList.filter(lecturer => lecturer.id !== id);
+                    handleFilter();
+                    showAppNotification(result.message || "Xóa giảng viên thành công!");
+                } catch (error) {
+                    console.error("Lỗi xóa giảng viên:", error);
+                    showAppNotification(error.message || "Không thể xóa giảng viên.");
                 }
             };
         });

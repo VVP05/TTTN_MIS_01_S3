@@ -12,6 +12,7 @@ const {
     updateStudentProfile,
     createLecturer,
     updateLecturer,
+    deleteLecturer,
     changePassword,
     forgotPassword
 } = require('../controllers/authController');
@@ -30,6 +31,7 @@ router.get('/admins', getAdmins);
 router.get('/lecturers', getLecturers);
 router.post('/lecturers', createLecturer);
 router.put('/lecturers/:user_code', updateLecturer);
+router.delete('/lecturers/:user_code', authMiddleware, requireRole('ADMIN'), deleteLecturer);
 router.get('/students', getStudents);
 router.post('/students', createStudent);
 router.put('/students/:user_code', updateStudent);
