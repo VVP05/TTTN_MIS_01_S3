@@ -19,6 +19,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelLogout = document.getElementById("cancelLogout");
     const confirmLogout = document.getElementById("confirmLogout");
 
+    function getAdminToken() {
+        try {
+            const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+            return auth?.user?.role === "ADMIN" ? auth.token : null;
+        } catch (error) {
+            console.error("Không thể đọc phiên đăng nhập quản trị viên:", error);
+            return null;
+        }
+    }
+
     async function fetchStudents() {
         try {
             const response = await fetch("http://localhost:5000/api/auth/students");
@@ -199,11 +209,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         document.querySelectorAll(".delete-btn").forEach(btn => {
-            btn.onclick = (e) => {
+            btn.onclick = async (e) => {
                 const id = e.currentTarget.getAttribute("data-id");
-                if (confirm(`Bạn chắc chắn muốn xóa sinh viên ${id}?`)) {
-                    studentList = studentList.filter(s => s.id !== id);
-                    renderStudents(studentList);
+                if (!confirm(`Bạn chắc chắn muốn xóa sinh viên ${id}?`)) return;
+
+                const token = getAdminToken();
+                if (!token) {
+                    showAppNotification("Phiên đăng nhập Admin không hợp lệ. Vui lòng đăng nhập lại.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:5000/api/auth/students/${encodeURIComponent(id)}`, {
+                        method: "DELETE",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || "Xóa sinh viên thất bại.");
+                    }
+
+                    studentList = studentList.filter(student => student.id !== id);
+                    handleFilter();
+                    showAppNotification(result.message || "Xóa sinh viên thành công!");
+                } catch (error) {
+                    console.error("Lỗi xóa sinh viên:", error);
+                    showAppNotification(error.message || "Không thể xóa sinh viên.");
                 }
             };
         });

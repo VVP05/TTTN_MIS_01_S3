@@ -179,6 +179,22 @@ exports.updateStudent = async (req, res) => {
     }
 };
 
+exports.deleteStudent = async (req, res) => {
+    try {
+        const userCode = String(req.params.user_code || '').trim();
+        const student = await User.findOneAndDelete({ user_code: userCode, role: 'STUDENT' });
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy sinh viên.' });
+        }
+
+        return res.status(200).json({ success: true, message: 'Xóa sinh viên thành công!' });
+    } catch (error) {
+        console.error('Lỗi xóa sinh viên:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi xóa sinh viên!', error: error.message });
+    }
+};
+
 // Tạo giảng viên mới
 exports.createLecturer = async (req, res) => {
     try {
