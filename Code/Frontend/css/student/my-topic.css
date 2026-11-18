@@ -399,6 +399,7 @@ body {
 .history-status.approved { background: #dcfce7; color: #15803d; }
 .history-status.revision_requested { background: #fff7ed; color: #c2410c; }
 .history-status.draft { background: #f1f5f9; color: #475569; }
+.history-status.withdrawn, .history-status.superseded { background: #f1f5f9; color: #64748b; }
 .milestone-submission-history li > small { color: #64748b; font-size: 11px; }
 .milestone-submission-history li > a { overflow-wrap: anywhere; color: #2563eb; font-size: 12px; font-weight: 600; }
 .milestone-submission-history li > p { margin: 0; color: #475569; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }

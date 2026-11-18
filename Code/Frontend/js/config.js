@@ -1,11 +1,8 @@
-window.APP_CONFIG = Object.freeze({ API_BASE_URL: "https://manage-tttn.onrender.com" });
-
-const configuredApiUrl = new URL(window.APP_CONFIG.API_BASE_URL);
 const localHosts = new Set(["localhost", "127.0.0.1"]);
-if (localHosts.has(window.location.hostname) && localHosts.has(configuredApiUrl.hostname)) {
-    configuredApiUrl.hostname = window.location.hostname;
-    window.APP_CONFIG = Object.freeze({ API_BASE_URL: configuredApiUrl.origin });
-}
+const apiBaseUrl = localHosts.has(window.location.hostname)
+    ? `http://${window.location.hostname}:5000`
+    : "https://manage-tttn.onrender.com";
+window.APP_CONFIG = Object.freeze({ API_BASE_URL: apiBaseUrl });
 
 const authStorageKeys = ["studentAuth", "lecturerAuth", "adminAuth"];
 const authSessionIdKey = "authSessionId";

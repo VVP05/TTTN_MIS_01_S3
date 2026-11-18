@@ -22,6 +22,12 @@ const seedCollections = [
     { name: 'todos', model: Todo }
 ];
 
+const assertDevelopmentSeedEnvironment = (nodeEnv = process.env.NODE_ENV) => {
+    if (nodeEnv !== 'development') {
+        throw new Error('Lệnh seed chỉ được chạy khi NODE_ENV=development.');
+    }
+};
+
 const assertCollectionsEmpty = async (collections) => {
     const counts = await Promise.all(collections.map(async ({ name, model }) => ({
         name,
@@ -37,6 +43,7 @@ const assertCollectionsEmpty = async (collections) => {
 
 const seedData = async () => {
     try {
+        assertDevelopmentSeedEnvironment();
         await mongoose.connect(MONGO_URI);
         console.log('✅ Đã kết nối MongoDB thành công!');
 
@@ -81,4 +88,4 @@ if (require.main === module) {
     seedData();
 }
 
-module.exports = { assertCollectionsEmpty };
+module.exports = { assertCollectionsEmpty, assertDevelopmentSeedEnvironment };

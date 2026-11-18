@@ -1,4 +1,6 @@
 const Notification = require('../models/Notification');
+const Topic = require('../models/Topic');
+const User = require('../models/User');
 
 function getUserCode(req) {
     return String(req.user?.user_code || '').trim().toUpperCase();
@@ -85,7 +87,10 @@ exports.getLecturerNotifications = async (req, res) => {
 // 1c. Lấy danh sách thông báo cho Admin quản lý
 exports.getAllNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find({ event_key: { $exists: false } }).sort({ createdAt: -1 });
+        const notifications = await Notification.find({
+            event_key: { $exists: false },
+            type: { $in: ['SYSTEM', null] }
+        }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, notifications });
     } catch (error) {
         res.status(500).json({ message: "Lỗi máy chủ!", error: error.message });
@@ -95,7 +100,7 @@ exports.getAllNotifications = async (req, res) => {
 // 2. Tạo thông báo mới
 exports.createNotification = async (req, res) => {
     try {
-        const { title, content, target, priority, isPinned, status, recipient_code, type, sender_name } = req.body;
+        const { title, content, target, priority, isPinned, status, recipient_code } = req.body;
 
         if (!title || !content || !target || !status) {
             return res.status(400).json({ success: false, message: 'Vui lòng cung cấp đủ Title, Nội dung, Đối tượng và Trạng thái.' });
@@ -107,9 +112,9 @@ exports.createNotification = async (req, res) => {
             title,
             content,
             priority: priority || 'info',
-            type: type || 'SYSTEM',
+            type: 'SYSTEM',
             status,
-            sender_name: sender_name || 'Hệ thống',
+            sender_name: 'Admin Hệ thống',
             is_read: false,
             isPinned: Boolean(isPinned)
         });
@@ -121,6 +126,85 @@ exports.createNotification = async (req, res) => {
     }
 };
 
+exports.createLecturerNotification = async (req, res) => {
+    try {
+        const title = String(req.body.title || '').trim();
+        const content = String(req.body.content || '').trim();
+        const lecturerCode = getUserCode(req);
+        const rawRecipientCodes = req.body.recipient_codes;
+
+        if (!title || !content || !Array.isArray(rawRecipientCodes) || rawRecipientCodes.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập tiêu đề, nội dung và ít nhất một sinh viên nhận thông báo.'
+            });
+        }
+        if (title.length > 200 || content.length > 5000) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tiêu đề tối đa 200 ký tự và nội dung tối đa 5000 ký tự.'
+            });
+        }
+
+        const recipientCodes = [...new Set(rawRecipientCodes
+            .map(code => String(code || '').trim().toUpperCase())
+            .filter(Boolean))];
+        if (!recipientCodes.length || recipientCodes.length > 500) {
+            return res.status(400).json({
+                success: false,
+                message: 'Danh sách người nhận không hợp lệ hoặc vượt quá 500 sinh viên.'
+            });
+        }
+
+        const escapedLecturerCode = lecturerCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const lecturerPattern = new RegExp(`^${escapedLecturerCode}$`, 'i');
+        const [lecturer, topics] = await Promise.all([
+            User.findOne({ user_code: lecturerPattern, role: 'LECTURER' }).select('full_name').lean(),
+            Topic.find({ lecturer_code: lecturerPattern, status: 'APPROVED' })
+                .select('leader_code member2_code member3_code')
+                .lean()
+        ]);
+        if (!lecturer) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản giảng viên.' });
+        }
+
+        const eligibleRecipients = new Set(topics.flatMap(topic =>
+            [topic.leader_code, topic.member2_code, topic.member3_code]
+                .filter(Boolean)
+                .map(code => String(code).trim().toUpperCase())
+        ));
+        const unauthorizedRecipients = recipientCodes.filter(code => !eligibleRecipients.has(code));
+        if (unauthorizedRecipients.length) {
+            return res.status(403).json({
+                success: false,
+                message: 'Chỉ có thể gửi thông báo cho sinh viên thuộc đề tài đã được duyệt do bạn hướng dẫn.'
+            });
+        }
+
+        const notifications = await Notification.insertMany(recipientCodes.map(recipientCode => ({
+            recipient_code: recipientCode,
+            target: 'students',
+            type: 'LECTURER',
+            title,
+            content,
+            priority: 'info',
+            status: 'published',
+            sender_name: lecturer.full_name || 'Giảng viên',
+            is_read: false,
+            read_by: []
+        })));
+
+        return res.status(201).json({
+            success: true,
+            message: `Đã gửi thông báo đến ${notifications.length} sinh viên.`,
+            sent_count: notifications.length
+        });
+    } catch (error) {
+        console.error('Lỗi giảng viên gửi thông báo:', error);
+        return res.status(500).json({ success: false, message: 'Không thể gửi thông báo lúc này.' });
+    }
+};
+
 // 3. Cập nhật thông báo
 exports.updateNotification = async (req, res) => {
     try {
@@ -128,7 +212,7 @@ exports.updateNotification = async (req, res) => {
         const { title, content, target, priority, isPinned, status } = req.body;
 
         const notification = await Notification.findOneAndUpdate(
-            { _id: id, event_key: { $exists: false } },
+            { _id: id, event_key: { $exists: false }, type: { $in: ['SYSTEM', null] } },
             {
                 title,
                 content,
@@ -157,7 +241,8 @@ exports.deleteNotification = async (req, res) => {
         const { id } = req.params;
         const notification = await Notification.findOneAndDelete({
             _id: id,
-            event_key: { $exists: false }
+            event_key: { $exists: false },
+            type: { $in: ['SYSTEM', null] }
         });
         if (!notification) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo.' });

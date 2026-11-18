@@ -60,7 +60,12 @@ async function renderHeader(topic, token) {
 
 function renderMilestones(submissions, milestones) {
     const submissionMap = new Map();
-    submissions.forEach(submission => {
+    [...submissions]
+        .sort((left, right) =>
+            (Number(right.attempt) || 0) - (Number(left.attempt) || 0) ||
+            new Date(right.submitted_at || right.createdAt) - new Date(left.submitted_at || left.createdAt)
+        )
+        .forEach(submission => {
         const number = Number(submission.milestone || submission.milestone_step);
         if (!submissionMap.has(number)) submissionMap.set(number, submission);
     });
@@ -76,13 +81,20 @@ function renderMilestones(submissions, milestones) {
         const submission = submissionMap.get(number);
         const status = submission?.review_status || (submission ? 'PENDING_REVIEW' : '');
         const complete = status === 'APPROVED';
-        const color = complete ? '#16a34a' : status === 'REVISION_REQUESTED' ? '#f97316' : submission ? '#2563eb' : '#cbd5e1';
-        const label = complete ? 'ĐÃ DUYỆT' : status === 'REVISION_REQUESTED' ? 'CẦN NỘP LẠI' : submission ? 'CHỜ NHẬN XÉT' : 'CHƯA NỘP';
+        const withdrawn = status === 'WITHDRAWN';
+        const superseded = status === 'SUPERSEDED';
+        const activeSubmission = submission && !withdrawn && !superseded;
+        const color = complete ? '#16a34a' : status === 'REVISION_REQUESTED' ? '#f97316' : activeSubmission ? '#2563eb' : '#cbd5e1';
+        const label = complete ? 'ĐÃ DUYỆT'
+            : status === 'REVISION_REQUESTED' ? 'CẦN NỘP LẠI'
+                : withdrawn ? 'ĐÃ RÚT BÀI'
+                    : superseded ? 'ĐÃ THAY THẾ'
+                        : activeSubmission ? 'CHỜ NHẬN XÉT' : 'CHƯA NỘP';
         return `<div class="milestone-box" style="border-color: ${color};">
             <span style="font-size: 12px; color: ${color}; font-weight: 700;">MỐC ${number} (${label})</span>
             <h4 style="margin-top: 4px;">${escapeHtml(milestone.name)}</h4>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${submission ? 100 : 0}%; background: ${color};"></div></div>
-            <small>${submission ? `Lần nộp ${Number(submission.attempt) || 1} · ${formatDate(submission.submitted_at || submission.createdAt)}` : 'Chưa có bài nộp'}</small>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${activeSubmission ? 100 : 0}%; background: ${color};"></div></div>
+            <small>${activeSubmission ? `Lần nộp ${Number(submission.attempt) || 1} · ${formatDate(submission.submitted_at || submission.createdAt)}` : withdrawn ? 'Sinh viên đã rút bài' : 'Chưa có bài nộp hiện hành'}</small>
         </div>`;
     }).join('');
 }
@@ -122,12 +134,16 @@ function renderSubmissions(submissions) {
         const statusLabels = {
             PENDING_REVIEW: 'Chờ nhận xét',
             APPROVED: 'Đã duyệt',
-            REVISION_REQUESTED: 'Yêu cầu nộp lại'
+            REVISION_REQUESTED: 'Yêu cầu nộp lại',
+            WITHDRAWN: 'Đã rút bài',
+            SUPERSEDED: 'Đã được thay thế'
         };
         const statusClass = {
             PENDING_REVIEW: 'pending-review',
             APPROVED: 'approved',
-            REVISION_REQUESTED: 'revision-requested'
+            REVISION_REQUESTED: 'revision-requested',
+            WITHDRAWN: 'withdrawn',
+            SUPERSEDED: 'superseded'
         };
         const reviewActions = status === 'PENDING_REVIEW'
             ? `<div class="submission-review-actions">

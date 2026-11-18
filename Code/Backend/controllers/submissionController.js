@@ -82,17 +82,27 @@ exports.reviewSubmission = async (req, res) => {
         if (!topic) {
             return res.status(403).json({ success: false, message: 'Bạn không được phân công hướng dẫn đề tài này.' });
         }
-        const currentStatus = submission.review_status || 'PENDING_REVIEW';
-        if (currentStatus !== 'PENDING_REVIEW') {
-            return res.status(409).json({ success: false, message: 'Bài nộp này đã được giảng viên xử lý.' });
+        const reviewedSubmission = await Submission.findOneAndUpdate(
+            {
+                _id: submission._id,
+                topic_id: submission.topic_id,
+                is_draft: { $ne: true },
+                review_status: 'PENDING_REVIEW'
+            },
+            {
+                $set: {
+                    review_status: reviewStatus,
+                    feedback,
+                    reviewed_by: req.user.user_code,
+                    reviewed_at: new Date()
+                }
+            },
+            { new: true }
+        );
+        if (!reviewedSubmission) {
+            return res.status(409).json({ success: false, message: 'Bài nộp này vừa được xử lý. Vui lòng tải lại trang.' });
         }
-
-        submission.review_status = reviewStatus;
-        submission.feedback = feedback;
-        submission.reviewed_by = req.user.user_code;
-        submission.reviewed_at = new Date();
-        await submission.save();
-        return res.json({ success: true, message: reviewStatus === 'APPROVED' ? 'Đã duyệt bài nộp.' : 'Đã gửi yêu cầu nộp lại.', data: submission });
+        return res.json({ success: true, message: reviewStatus === 'APPROVED' ? 'Đã duyệt bài nộp.' : 'Đã gửi yêu cầu nộp lại.', data: reviewedSubmission });
     } catch (error) {
         console.error('Lỗi nhận xét bài nộp:', error);
         return res.status(500).json({ success: false, message: 'Không thể lưu nhận xét bài nộp.' });

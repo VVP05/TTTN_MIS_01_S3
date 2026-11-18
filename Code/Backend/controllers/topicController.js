@@ -826,13 +826,20 @@ exports.uploadMilestone = async (req, res) => {
             discardFile();
             return res.status(403).json({ success: false, message: 'Đã quá hạn nộp bài cho mốc này.' });
         }
-        if (latestOfficialSubmission && latestReviewStatus !== 'REVISION_REQUESTED') {
+        const canReplacePendingSubmission = latestReviewStatus === 'PENDING_REVIEW' &&
+            (now <= milestone.endDate || milestone.allowLate);
+        const canReplaceWithdrawnSubmission = latestReviewStatus === 'WITHDRAWN' &&
+            (now <= milestone.endDate || milestone.allowLate);
+        if (latestOfficialSubmission && latestReviewStatus !== 'REVISION_REQUESTED' &&
+            !canReplacePendingSubmission && !canReplaceWithdrawnSubmission) {
             discardFile();
             return res.status(409).json({
                 success: false,
                 message: latestReviewStatus === 'APPROVED'
                     ? 'Bài nộp đã được duyệt, không thể thay đổi.'
-                    : 'Bài nộp đang chờ giảng viên nhận xét.'
+                    : latestReviewStatus === 'PENDING_REVIEW'
+                        ? 'Chỉ có thể thay đổi bài đang chờ nhận xét trong thời hạn nộp.'
+                        : 'Bài nộp này không thể thay đổi.'
             });
         }
 
@@ -952,18 +959,43 @@ exports.submitMilestoneDraft = async (req, res) => {
             topic_id,
             milestone: step,
             is_draft: { $ne: true }
-        }).sort({ attempt: -1, submitted_at: -1, createdAt: -1 }).select('review_status').lean();
+        }).sort({ attempt: -1, submitted_at: -1, createdAt: -1 }).select('_id review_status').lean();
         const latestReviewStatus = latestOfficialSubmission?.review_status || 'PENDING_REVIEW';
         if (now > milestone.endDate && !milestone.allowLate && latestReviewStatus !== 'REVISION_REQUESTED') {
             return res.status(403).json({ success: false, message: 'Mốc này hiện không nhận bài nộp.' });
         }
-        if (latestOfficialSubmission && latestReviewStatus !== 'REVISION_REQUESTED') {
+        const canReplacePendingSubmission = Boolean(latestOfficialSubmission) &&
+            latestReviewStatus === 'PENDING_REVIEW' &&
+            (now <= milestone.endDate || milestone.allowLate);
+        const canResubmitWithdrawnSubmission = Boolean(latestOfficialSubmission) &&
+            latestReviewStatus === 'WITHDRAWN' &&
+            (now <= milestone.endDate || milestone.allowLate);
+        if (latestOfficialSubmission && latestReviewStatus !== 'REVISION_REQUESTED' &&
+            !canReplacePendingSubmission && !canResubmitWithdrawnSubmission) {
             return res.status(409).json({
                 success: false,
                 message: latestReviewStatus === 'APPROVED'
                     ? 'Bài nộp đã được duyệt, không thể nộp lại.'
-                    : 'Bài nộp đang chờ giảng viên nhận xét.'
+                    : latestReviewStatus === 'PENDING_REVIEW'
+                        ? 'Chỉ có thể thay đổi bài đang chờ nhận xét trong thời hạn nộp.'
+                        : 'Bài nộp này không thể nộp lại.'
             });
+        }
+
+        let supersededSubmissionId = null;
+        if (canReplacePendingSubmission) {
+            const superseded = await Submission.updateOne(
+                {
+                    _id: latestOfficialSubmission._id,
+                    is_draft: { $ne: true },
+                    review_status: 'PENDING_REVIEW'
+                },
+                { $set: { review_status: 'SUPERSEDED' } }
+            );
+            if (superseded.modifiedCount !== 1) {
+                return res.status(409).json({ success: false, message: 'Bài nộp vừa được giảng viên xử lý. Vui lòng tải lại trang.' });
+            }
+            supersededSubmissionId = latestOfficialSubmission._id;
         }
 
         submission.is_draft = false;
@@ -972,12 +1004,98 @@ exports.submitMilestoneDraft = async (req, res) => {
         submission.reviewed_by = null;
         submission.reviewed_at = null;
         submission.submitted_at = now;
-        await submission.save();
+        try {
+            await submission.save();
+        } catch (error) {
+            if (supersededSubmissionId) {
+                await Submission.updateOne(
+                    { _id: supersededSubmissionId, review_status: 'SUPERSEDED' },
+                    { $set: { review_status: 'PENDING_REVIEW' } }
+                );
+            }
+            throw error;
+        }
 
         return res.json({ success: true, message: `Đã nộp chính thức bài làm Mốc ${step}.` });
     } catch (error) {
         console.error('Lỗi nộp chính thức bài làm:', error);
         return res.status(500).json({ success: false, message: 'Không thể nộp bài lúc này.' });
+    }
+};
+
+exports.withdrawMilestoneSubmission = async (req, res) => {
+    try {
+        const { topic_id } = req.params;
+        const step = Number(req.params.mIndex);
+        if (!Number.isInteger(step) || step < 1) {
+            return res.status(400).json({ success: false, message: 'Mốc nộp bài không hợp lệ.' });
+        }
+
+        const studentCode = String(req.user?.user_code || '').trim();
+        const escapedStudentCode = studentCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const studentCodePattern = new RegExp(`^${escapedStudentCode}$`, 'i');
+        const topic = await Topic.findOne({
+            _id: topic_id,
+            status: 'APPROVED',
+            $or: [
+                { leader_code: studentCodePattern },
+                { member2_code: studentCodePattern },
+                { member3_code: studentCodePattern }
+            ]
+        });
+        if (!topic) {
+            return res.status(403).json({ success: false, message: 'Bạn không có quyền rút bài nộp của đề tài này.' });
+        }
+
+        const milestone = await Milestone.findOne({ lecturerCode: topic.lecturer_code, topicId: null, step });
+        if (!milestone) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy mốc nộp bài.' });
+        }
+
+        const now = new Date();
+        if (now > milestone.endDate && !milestone.allowLate) {
+            return res.status(403).json({ success: false, message: 'Đã hết thời hạn rút bài nộp.' });
+        }
+
+        const draft = await Submission.findOne({ topic_id, milestone: step, is_draft: true }).select('_id').lean();
+        if (draft) {
+            return res.status(409).json({ success: false, message: 'Bạn đang có bản nháp. Hãy nộp hoặc xóa bản nháp trước.' });
+        }
+
+        const latestSubmission = await Submission.findOne({
+            topic_id,
+            milestone: step,
+            is_draft: { $ne: true }
+        }).sort({ attempt: -1, submitted_at: -1, createdAt: -1 }).select('_id review_status').lean();
+        if (!latestSubmission || latestSubmission.review_status !== 'PENDING_REVIEW') {
+            return res.status(409).json({ success: false, message: 'Chỉ có thể rút bài đang chờ giảng viên nhận xét.' });
+        }
+
+        const withdrawnSubmission = await Submission.findOneAndUpdate(
+            {
+                _id: latestSubmission._id,
+                topic_id,
+                milestone: step,
+                is_draft: { $ne: true },
+                review_status: 'PENDING_REVIEW'
+            },
+            {
+                $set: {
+                    review_status: 'WITHDRAWN',
+                    withdrawn_by: studentCode,
+                    withdrawn_at: now
+                }
+            },
+            { new: true }
+        );
+        if (!withdrawnSubmission) {
+            return res.status(409).json({ success: false, message: 'Bài nộp vừa được giảng viên xử lý. Vui lòng tải lại trang.' });
+        }
+
+        return res.json({ success: true, message: 'Đã rút bài nộp. Bạn có thể tải bài mới lên trong thời hạn.' });
+    } catch (error) {
+        console.error('Lỗi rút bài nộp milestone:', error);
+        return res.status(500).json({ success: false, message: 'Không thể rút bài nộp lúc này.' });
     }
 };
 
@@ -1011,7 +1129,9 @@ exports.deleteMilestoneSubmission = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Đã hết thời gian chỉnh sửa bài nộp ở mốc này.' });
         }
 
-        const submission = await Submission.findOne({ topic_id, milestone: step, is_draft: true }).lean();
+        const submission = await Submission.findOne({ topic_id, milestone: step, is_draft: true })
+            .select('_id file_path stored_filename')
+            .lean();
         const latestOfficialSubmission = await Submission.findOne({
             topic_id,
             milestone: step,
@@ -1021,20 +1141,29 @@ exports.deleteMilestoneSubmission = async (req, res) => {
         if (new Date() > milestone.endDate && !milestone.allowLate && !resubmissionRequested) {
             return res.status(403).json({ success: false, message: 'Đã hết thời gian chỉnh sửa bài nộp ở mốc này.' });
         }
+
         const milestoneField = `milestone${step}_file`;
         const topicFile = topic[milestoneField];
         if (!submission) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy bản nháp cần xóa.' });
         }
 
-        await Submission.deleteOne({ _id: submission._id });
         const currentFilePath = topicFile?.path || '';
-        if (currentFilePath === submission.file_path) {
+        const currentStoredFilename = topicFile?.filename || path.basename(currentFilePath);
+        const isCurrentDraftFile = topicFile?.isDraft === true ||
+            (submission.stored_filename && currentStoredFilename === submission.stored_filename);
+        if (currentFilePath === submission.file_path || isCurrentDraftFile) {
             await Topic.updateOne({ _id: topic_id }, { $unset: { [milestoneField]: '' } });
         }
+        await Submission.deleteOne({ _id: submission._id });
         await removeUploadedReportFile(submission.file_path);
 
-        return res.json({ success: true, message: `Đã xóa bản nháp Mốc ${step}. Bạn có thể tải tệp khác lên.` });
+        return res.json({
+            success: true,
+            message: latestOfficialSubmission
+                ? `Đã xóa bản nháp Mốc ${step}. Bài nộp chính thức trước đó vẫn được giữ lại.`
+                : `Đã xóa bản nháp Mốc ${step}. Bạn có thể tải tệp khác lên.`
+        });
     } catch (error) {
         console.error('Lỗi xóa bài nộp milestone:', error);
         return res.status(500).json({ success: false, message: 'Không thể xóa bài nộp lúc này.' });

@@ -93,7 +93,8 @@ const {
     updateTopicStatus,
     getLecturerProgressMatrix,
     deleteMilestoneSubmission,
-    submitMilestoneDraft
+    submitMilestoneDraft,
+    withdrawMilestoneSubmission
 } = require('../controllers/topicController');
 
 
@@ -130,6 +131,7 @@ router.delete('/delete/:topic_id', authMiddleware, requireStudentRole, cancelTop
 // Route nộp báo cáo mốc
 router.delete('/:topic_id/milestone/:mIndex/submission', authMiddleware, requireStudentRole, deleteMilestoneSubmission);
 router.post('/:topic_id/milestone/:mIndex/submit', authMiddleware, requireStudentRole, submitMilestoneDraft);
+router.post('/:topic_id/milestone/:mIndex/withdraw', authMiddleware, requireStudentRole, withdrawMilestoneSubmission);
 router.post('/:topic_id/upload-milestone/:mIndex', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
 router.post('/:topic_id/upload-milestone', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
 

@@ -33,7 +33,10 @@ function getTopicMilestoneProgress(topics, milestones, submissions, now = new Da
         const byStep = submissionsByTopic.get(topicId);
         const existing = byStep.get(step);
         if (!existing || submittedAt > existing.submittedAt) {
-            byStep.set(step, { submittedAt });
+            byStep.set(step, {
+                submittedAt,
+                reviewStatus: submission.review_status || 'PENDING_REVIEW'
+            });
         }
     }
 
@@ -51,9 +54,14 @@ function getTopicMilestoneProgress(topics, milestones, submissions, now = new Da
 
         const milestoneStates = topicMilestones.map(milestone => {
             const step = Number(milestone.step);
-            const submission = submittedByStep.get(step);
+            const latestSubmission = submittedByStep.get(step);
+            const hasSubmissionRecord = Boolean(latestSubmission);
+            const submission = latestSubmission &&
+                !['WITHDRAWN', 'SUPERSEDED'].includes(latestSubmission.reviewStatus)
+                ? latestSubmission
+                : null;
             const directFile = topic[`milestone${step}_file`];
-            const hasDirectSubmission = directFile &&
+            const hasDirectSubmission = !hasSubmissionRecord && directFile &&
                 directFile.isDraft !== true &&
                 (directFile.name || directFile.path || directFile.filename);
             const directFileSubmittedAt = hasDirectSubmission ? getDirectFileDate(directFile) : null;

@@ -51,6 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. XỬ LÝ CHUYỂN TAB
     const tabButtons = document.querySelectorAll(".tab-btn");
     const tabContents = document.querySelectorAll(".tab-content");
+    const openCreateModalBtn = document.getElementById("openCreateModalBtn");
+    const updateCreateButtonVisibility = activeTab => {
+        if (openCreateModalBtn) openCreateModalBtn.hidden = activeTab !== "my-topics";
+    };
+
+    updateCreateButtonVisibility(document.querySelector(".tab-btn.active")?.dataset.tab);
 
     tabButtons.forEach(btn => {
         btn.addEventListener("click", () => {
@@ -61,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetTabId = btn.getAttribute("data-tab");
             const targetContent = document.getElementById(`tab-${targetTabId}`);
             if (targetContent) targetContent.classList.add("active");
+            updateCreateButtonVisibility(targetTabId);
 
             // Render lại dữ liệu cho phù hợp bộ lọc hiện tại
             filterAndRender();

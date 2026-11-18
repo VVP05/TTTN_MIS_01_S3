@@ -323,3 +323,46 @@ iframe {
         transition: none;
     }
 }
+
+.admin-menu-heading-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+}
+
+.admin-menu-heading-toggle:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+    border-radius: 6px;
+}
+
+.admin-menu-chevron {
+    width: 7px;
+    height: 7px;
+    margin-right: 4px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.18s ease;
+}
+
+.admin-menu-heading-toggle[aria-expanded="true"] .admin-menu-chevron {
+    transform: rotate(225deg);
+}
+
+.admin-nav-group-panel[hidden] {
+    display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-menu-chevron {
+        transition: none;
+    }
+}

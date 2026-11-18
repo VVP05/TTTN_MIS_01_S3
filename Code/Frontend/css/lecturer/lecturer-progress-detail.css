@@ -129,6 +129,7 @@ body {
 .submission-review-status.pending-review { background: #eff6ff; color: #1d4ed8; }
 .submission-review-status.approved { background: #dcfce7; color: #15803d; }
 .submission-review-status.revision-requested { background: #fff7ed; color: #c2410c; }
+.submission-review-status.withdrawn, .submission-review-status.superseded { background: #f1f5f9; color: #64748b; }
 .submission-review-actions { display: grid; min-width: 220px; gap: 8px; }
 .submission-review-feedback { width: 100%; min-height: 64px; padding: 8px; resize: vertical; border: 1px solid #cbd5e1; border-radius: 7px; color: #334155; font: inherit; font-size: 12px; }
 .submission-review-actions > div { display: flex; flex-wrap: wrap; gap: 6px; }

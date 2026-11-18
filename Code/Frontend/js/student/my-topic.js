@@ -435,8 +435,15 @@ function getSubmissionStatusLabel(status) {
         DRAFT: "Bản nháp",
         PENDING_REVIEW: "Chờ giảng viên nhận xét",
         APPROVED: "Đã duyệt",
-        REVISION_REQUESTED: "Yêu cầu nộp lại"
+        REVISION_REQUESTED: "Yêu cầu nộp lại",
+        WITHDRAWN: "Đã rút bài nộp",
+        SUPERSEDED: "Đã được thay thế"
     }[status] || "Chờ giảng viên nhận xét";
+}
+
+function isMilestoneSubmissionWindowOpen(milestone) {
+    const endTime = new Date(milestone?.endDate).getTime();
+    return Number.isFinite(endTime) && (Date.now() <= endTime || milestone?.allowLate);
 }
 
 function renderMilestoneSubmissionHistory(step) {
@@ -552,6 +559,8 @@ function renderMilestonesWorkflow(topicData) {
                 setMilestoneRevisionRequested(step, fileName, timeStr, mFile, milestone);
             } else if (mFile.review_status === "APPROVED") {
                 setMilestoneCompleted(step, fileName, timeStr, mFile, milestone);
+            } else if (mFile.review_status === "WITHDRAWN") {
+                setMilestoneWithdrawn(step, fileName, timeStr, mFile, milestone);
             } else {
                 setMilestoneUnderReview(step, fileName, timeStr, mFile, milestone);
             }
@@ -701,6 +710,7 @@ function setMilestoneCompleted(mIndex, fileName, timeStr, fileInfo, milestone) {
 
         document.getElementById(`deleteSubmissionM${mIndex}`)?.addEventListener("click", async event => {
             if (!currentTopicData?._id) return;
+            const button = event.currentTarget;
             const confirmed = await window.showConfirmDialog({
                 title: "Xác nhận xóa bài nộp",
                 message: `Bạn có chắc muốn loại bỏ bài nộp Mốc ${mIndex}? Mốc này sẽ cần được nộp lại.`,
@@ -710,7 +720,6 @@ function setMilestoneCompleted(mIndex, fileName, timeStr, fileInfo, milestone) {
             if (!confirmed) return;
 
             const auth = getAuthForRole("STUDENT");
-            const button = event.currentTarget;
             button.disabled = true;
             try {
                 const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/${currentTopicData._id}/milestone/${mIndex}/submission`, {
@@ -734,19 +743,90 @@ function setMilestoneUnderReview(mIndex, fileName, timeStr, fileInfo, milestone)
     const card = document.getElementById(`milestoneCard${mIndex}`);
     const badge = document.getElementById(`statusBadge${mIndex}`);
     const body = document.getElementById(`milestoneBody${mIndex}`);
+    const canChangeSubmission = isMilestoneSubmissionWindowOpen(milestone);
     if (card) card.className = "milestone-card active";
     if (badge) {
         badge.className = "m-badge warning";
         badge.textContent = "Chờ nhận xét";
     }
     if (body) {
-        body.innerHTML = renderSubmissionStatusTable(milestone, {
+        body.innerHTML = `
+            ${canChangeSubmission ? `<div class="submission-actions">
+                <button type="button" class="submission-action-edit" id="replaceSubmissionM${mIndex}">
+                    <i class="fa-solid fa-pen-to-square"></i> Thay file
+                </button>
+                <button type="button" class="submission-action-delete" id="withdrawSubmissionM${mIndex}">
+                    <i class="fa-solid fa-rotate-left"></i> Rút bài nộp
+                </button>
+            </div>` : '<small class="submission-closed-note">Chỉ có thể thay hoặc rút bài khi còn thời hạn nộp.</small>'}
+            ${renderSubmissionStatusTable(milestone, {
             submitted: true,
             fileName,
             fileInfo,
             timeStr,
             reviewStatus: "PENDING_REVIEW"
+        })}`;
+
+        document.getElementById(`replaceSubmissionM${mIndex}`)?.addEventListener("click", () => {
+            enableMilestoneUpload(mIndex, true, fileName, fileInfo, timeStr);
         });
+
+        document.getElementById(`withdrawSubmissionM${mIndex}`)?.addEventListener("click", async event => {
+            if (!currentTopicData?._id) return;
+            const button = event.currentTarget;
+            const confirmed = await window.showConfirmDialog({
+                title: "Xác nhận rút bài nộp",
+                message: `Rút bài nộp Mốc ${mIndex}? Bản nộp hiện tại vẫn được lưu trong lịch sử và bạn có thể nộp lại khi còn hạn.`,
+                confirmText: "Rút bài nộp",
+                danger: true
+            });
+            if (!confirmed) return;
+
+            const auth = getAuthForRole("STUDENT");
+            button.disabled = true;
+            try {
+                const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/${currentTopicData._id}/milestone/${mIndex}/withdraw`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${auth?.token || ""}` }
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || "Không thể rút bài nộp.");
+                showAppNotification(result.message || "Đã rút bài nộp.");
+                if (auth?.user?.user_code) await loadMyTopic(auth.user.user_code);
+            } catch (error) {
+                showAppNotification(error.message || "Không thể rút bài nộp.");
+                button.disabled = false;
+            }
+        });
+    }
+}
+
+function setMilestoneWithdrawn(mIndex, fileName, timeStr, fileInfo, milestone) {
+    const canResubmit = isMilestoneSubmissionWindowOpen(milestone);
+
+    if (canResubmit) {
+        enableMilestoneUpload(mIndex);
+        return;
+    }
+
+    const card = document.getElementById(`milestoneCard${mIndex}`);
+    const badge = document.getElementById(`statusBadge${mIndex}`);
+    const body = document.getElementById(`milestoneBody${mIndex}`);
+    if (card) card.className = "milestone-card locked";
+    if (badge) {
+        badge.className = "m-badge gray";
+        badge.textContent = "Đã rút bài";
+    }
+    if (body) {
+        body.innerHTML = `
+            <small class="submission-closed-note">Đã hết thời hạn nộp lại bài.</small>
+            ${renderSubmissionStatusTable(milestone, {
+                submitted: true,
+                fileName,
+                fileInfo,
+                timeStr,
+                reviewStatus: "WITHDRAWN"
+            })}`;
     }
 }
 
@@ -791,9 +871,8 @@ function setMilestoneDraft(mIndex, fileName, timeStr, fileInfo, milestone) {
         .filter(item => Number(item.milestone || item.milestone_step) === mIndex && !item.is_draft)
         .sort((a, b) => new Date(b.submitted_at || b.createdAt) - new Date(a.submitted_at || a.createdAt))[0];
     const resubmissionRequested = getSubmissionReviewStatus(latestOfficialSubmission) === "REVISION_REQUESTED";
-    const canEditSubmission = Boolean(milestone && (
-        new Date() <= new Date(milestone.endDate) || milestone.allowLate || resubmissionRequested
-    ));
+    const canEditSubmission = Boolean(milestone &&
+        (isMilestoneSubmissionWindowOpen(milestone) || resubmissionRequested));
 
     if (card) card.className = "milestone-card active";
     if (badge) {
@@ -806,7 +885,7 @@ function setMilestoneDraft(mIndex, fileName, timeStr, fileInfo, milestone) {
         <div class="submission-actions">
             <button type="button" class="submission-action-submit" id="submitDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-paper-plane"></i> Nộp bài</button>
             <button type="button" class="submission-action-edit" id="editDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-pen-to-square"></i> Sửa bài nộp</button>
-            <button type="button" class="submission-action-delete" id="deleteDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-trash-can"></i> Loại bỏ bài nộp</button>
+            <button type="button" class="submission-action-delete" id="deleteDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-trash-can"></i> Xóa bản nháp</button>
         </div>
         ${renderSubmissionStatusTable(milestone, { draft: true, fileName, fileInfo, timeStr })}`;
 
@@ -836,15 +915,15 @@ function setMilestoneDraft(mIndex, fileName, timeStr, fileInfo, milestone) {
 
     document.getElementById(`deleteDraftM${mIndex}`)?.addEventListener("click", async event => {
         if (!currentTopicData?._id) return;
+        const button = event.currentTarget;
         const confirmed = await window.showConfirmDialog({
             title: "Xác nhận xóa bản nháp",
-            message: `Bạn có chắc muốn loại bỏ bản nháp Mốc ${mIndex}?`,
+            message: `Xóa bản nháp Mốc ${mIndex}? Nếu đã có bài nộp chính thức trước đó, bài đó vẫn được giữ lại.`,
             confirmText: "Xóa bản nháp",
             danger: true
         });
         if (!confirmed) return;
         const auth = getAuthForRole("STUDENT");
-        const button = event.currentTarget;
         button.disabled = true;
         try {
             const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/${currentTopicData._id}/milestone/${mIndex}/submission`, {

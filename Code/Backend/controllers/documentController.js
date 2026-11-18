@@ -37,7 +37,7 @@ exports.getStudentDocuments = async (req, res) => {
     }
 };
 
-// 2b. Lấy toàn bộ tài liệu cho màn hình quản trị
+// 2b. Lấy tài liệu do quản trị viên chia sẻ cho màn hình quản trị
 exports.getAllDocuments = async (req, res) => {
     try {
         const documents = await Document.find().sort({ createdAt: -1 }).lean();
@@ -52,7 +52,8 @@ exports.getAllDocuments = async (req, res) => {
                 uploader_role: document.uploader_role || uploader?.role || (document.uploader_code === 'ADMIN' ? 'ADMIN' : 'LECTURER')
             };
         });
-        res.status(200).json({ success: true, documents: enrichedDocuments });
+        const adminDocuments = enrichedDocuments.filter(document => document.uploader_role === 'ADMIN');
+        res.status(200).json({ success: true, documents: adminDocuments });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách tài liệu!', error: error.message });
     }

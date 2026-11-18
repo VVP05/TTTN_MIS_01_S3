@@ -37,7 +37,7 @@ const upload = multer({
 // GET  /api/documents/lecturer/:lecturerCode  -> Danh sách tài liệu do 1 GVHD chia sẻ
 router.get('/lecturer/:lecturerCode', authMiddleware, requireRole('LECTURER'), documentController.getLecturerDocuments);
 
-// GET /api/documents/admin/all -> Toàn bộ tài liệu cho Admin quản lý
+// GET /api/documents/admin/all -> Tài liệu do Admin chia sẻ
 router.get('/admin/all', authMiddleware, requireRole('ADMIN'), documentController.getAllDocuments);
 
 // GET  /api/documents/student  -> Danh sách tài liệu công khai cho Sinh viên xem

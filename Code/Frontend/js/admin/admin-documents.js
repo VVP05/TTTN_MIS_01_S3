@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("documentForm");
     const tableBody = document.getElementById("documentTableBody");
     const searchInput = document.getElementById("searchInput");
-    const uploaderFilter = document.getElementById("uploaderFilter");
     const targetFilter = document.getElementById("targetFilter");
     const message = document.getElementById("formMessage");
     let documents = [];
@@ -29,7 +28,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function renderDocuments() {
         const query = searchInput.value.trim().toLowerCase();
-        const selectedUploader = uploaderFilter.value;
         const selectedTarget = targetFilter.value;
         const filtered = documents.filter(doc => {
             const role = doc.uploader_role || (doc.uploader_code === "ADMIN" ? "ADMIN" : "LECTURER");
@@ -40,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const matchesTarget = !selectedTarget
                 || (selectedTarget === "students" && (lecturerSharedWithStudents || ["students", "tất cả sinh viên"].includes(recipient)))
                 || (selectedTarget === "lecturers" && recipient === "tất cả giảng viên");
-            return matchesQuery && matchesUploader && matchesTarget;
+            return matchesQuery && matchesTarget;
         });
         if (!filtered.length) {
             tableBody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:24px;color:#94a3b8">Chưa có tài liệu phù hợp.</td></tr>`;
@@ -121,7 +119,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     searchInput.addEventListener("input", renderDocuments);
-    uploaderFilter.addEventListener("change", renderDocuments);
     targetFilter.addEventListener("change", renderDocuments);
     document.getElementById("logoutBtn").addEventListener("click", () => {
         window.logoutSession();

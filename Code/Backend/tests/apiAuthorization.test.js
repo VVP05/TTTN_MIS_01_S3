@@ -1,14 +1,29 @@
 const assert = require('node:assert/strict');
 const { after, before, test } = require('node:test');
 const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 process.env.JWT_SECRET = 'test-only-jwt-secret-for-api-authorization-suite';
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const Document = require('../models/Document');
 const Topic = require('../models/Topic');
+const Milestone = require('../models/Milestone');
+const Submission = require('../models/Submission');
+const Notification = require('../models/Notification');
 const { AvailabilitySlot, Meeting, Todo } = require('../models/Schedule');
+const {
+    submitMilestoneDraft,
+    withdrawMilestoneSubmission,
+    deleteMilestoneSubmission
+} = require('../controllers/topicController');
+const {
+    createLecturerNotification,
+    getAllNotifications
+} = require('../controllers/notificationController');
+const { getAllDocuments } = require('../controllers/documentController');
 const { getLecturerQuotaStatus } = require('../services/lecturerQuota');
 const { getTopicMilestoneProgress, getMilestoneProgressSeries } = require('../services/milestoneProgress');
 const { getAvailablePoolTopicSlot } = require('../services/poolTopicCapacity');
@@ -18,7 +33,7 @@ const authRoutes = require('../routes/authRoutes');
 const scheduleRoutes = require('../routes/scheduleRoutes');
 const topicRoutes = require('../routes/topicRoutes');
 const getJwtSecret = require('../utils/jwtSecret');
-const { assertCollectionsEmpty } = require('../seed');
+const { assertCollectionsEmpty, assertDevelopmentSeedEnvironment } = require('../seed');
 const passwordResetEmail = require('../services/passwordResetEmail');
 
 const secretKey = process.env.JWT_SECRET;
@@ -37,6 +52,25 @@ app.get('/test/identity', authMiddleware, (req, res) => res.json({
 
 let server;
 let baseUrl;
+
+test('production defaults cross-site authentication cookies to secure SameSite=None', () => {
+    const modulePath = require.resolve('../utils/authCookie');
+    const result = spawnSync(process.execPath, [
+        '-e',
+        `const { authCookieOptions } = require(${JSON.stringify(modulePath)}); console.log(JSON.stringify({ sameSite: authCookieOptions.sameSite, secure: authCookieOptions.secure }));`
+    ], {
+        encoding: 'utf8',
+        env: {
+            ...process.env,
+            NODE_ENV: 'production',
+            AUTH_COOKIE_SAME_SITE: '',
+            AUTH_COOKIE_SECURE: ''
+        }
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), { sameSite: 'none', secure: true });
+});
 
 test('JWT secret configuration rejects missing or placeholder values', () => {
     const originalSecret = process.env.JWT_SECRET;
@@ -69,6 +103,36 @@ test('seed safety check rejects any populated collection and accepts empty colle
         ]),
         /topics/
     );
+});
+
+test('sample data seeding is allowed only in development', () => {
+    assert.doesNotThrow(() => assertDevelopmentSeedEnvironment('development'));
+    assert.throws(() => assertDevelopmentSeedEnvironment('production'), /NODE_ENV=development/);
+    assert.throws(() => assertDevelopmentSeedEnvironment(undefined), /NODE_ENV=development/);
+});
+
+test('login failures are rate-limited per account instead of blocking everyone on the same network', async t => {
+    t.mock.method(User, 'findOne', async () => null);
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+        const response = await request('/api/auth/login', {
+            method: 'POST',
+            body: { user_code: 'RATE_LIMITED_USER', password: 'wrong-password' }
+        });
+        assert.equal(response.status, 400);
+    }
+
+    const blockedAccountResponse = await request('/api/auth/login', {
+        method: 'POST',
+        body: { user_code: 'RATE_LIMITED_USER', password: 'wrong-password' }
+    });
+    assert.equal(blockedAccountResponse.status, 429);
+
+    const otherAccountResponse = await request('/api/auth/login', {
+        method: 'POST',
+        body: { user_code: 'ANOTHER_USER', password: 'wrong-password' }
+    });
+    assert.equal(otherAccountResponse.status, 400);
 });
 
 test('forgot password sends a one-time email link without revealing whether an account exists', async t => {
@@ -359,6 +423,238 @@ test('legacy file uploads without timestamps are not classified as on-time or la
     assert.equal(topicProgress.milestones[0].status, 'submitted_unknown');
     assert.equal(topicProgress.is_late, false);
     assert.equal(chart.series.find(series => series.name === 'Thiếu thời gian nộp').data[0], 1);
+});
+
+test('withdrawn and superseded milestone submissions do not count as completed', () => {
+    const topics = [
+        { _id: 'topic-withdrawn', lecturer_code: 'GV01' },
+        { _id: 'topic-superseded', lecturer_code: 'GV01' }
+    ];
+    const milestones = [{
+        lecturerCode: 'GV01',
+        step: 1,
+        startDate: new Date('2025-03-01T00:00:00Z'),
+        endDate: new Date('2025-03-20T00:00:00Z')
+    }];
+    const submissions = [
+        {
+            topic_id: 'topic-withdrawn',
+            milestone: 1,
+            review_status: 'WITHDRAWN',
+            submitted_at: new Date('2025-03-05T00:00:00Z')
+        },
+        {
+            topic_id: 'topic-superseded',
+            milestone: 1,
+            review_status: 'SUPERSEDED',
+            submitted_at: new Date('2025-03-05T00:00:00Z')
+        }
+    ];
+
+    const progress = getTopicMilestoneProgress(
+        topics,
+        milestones,
+        submissions,
+        new Date('2025-03-10T00:00:00Z')
+    );
+
+    for (const topic of topics) {
+        const topicProgress = progress.get(topic._id);
+        assert.equal(topicProgress.completed_milestones, 0);
+        assert.equal(topicProgress.milestones[0].status, 'in_progress');
+    }
+});
+
+test('submitting a replacement supersedes the pending attempt', async t => {
+    const previousSubmission = { _id: 'submission-old', review_status: 'PENDING_REVIEW' };
+    const draft = {
+        is_draft: true,
+        async save() {
+            this.saved = true;
+        }
+    };
+    let supersededFilter;
+    t.mock.method(Topic, 'findOne', async () => ({
+        _id: 'topic-1',
+        lecturer_code: 'GV01'
+    }));
+    t.mock.method(Milestone, 'findOne', async () => ({
+        startDate: new Date(Date.now() - 60_000),
+        endDate: new Date(Date.now() + 60_000),
+        allowLate: false
+    }));
+    t.mock.method(Submission, 'findOne', filter => {
+        if (filter.is_draft === true) return draft;
+        return {
+            sort() { return this; },
+            select() { return this; },
+            lean: async () => previousSubmission
+        };
+    });
+    t.mock.method(Submission, 'updateOne', async (filter, update) => {
+        supersededFilter = filter;
+        assert.equal(update.$set.review_status, 'SUPERSEDED');
+        return { modifiedCount: 1 };
+    });
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await submitMilestoneDraft({
+        params: { topic_id: 'topic-1', mIndex: '1' },
+        user: { user_code: 'SV01' }
+    }, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.success, true);
+    assert.equal(draft.saved, true);
+    assert.equal(draft.review_status, 'PENDING_REVIEW');
+    assert.equal(supersededFilter._id, previousSubmission._id);
+});
+
+test('first official submission does not expect a previous attempt', async t => {
+    const draft = {
+        is_draft: true,
+        async save() {
+            this.saved = true;
+        }
+    };
+    let updateCalled = false;
+    t.mock.method(Topic, 'findOne', async () => ({
+        _id: 'topic-1',
+        lecturer_code: 'GV01'
+    }));
+    t.mock.method(Milestone, 'findOne', async () => ({
+        startDate: new Date(Date.now() - 60_000),
+        endDate: new Date(Date.now() + 60_000),
+        allowLate: false
+    }));
+    t.mock.method(Submission, 'findOne', filter => {
+        if (filter.is_draft === true) return draft;
+        return {
+            sort() { return this; },
+            select() { return this; },
+            lean: async () => null
+        };
+    });
+    t.mock.method(Submission, 'updateOne', async () => {
+        updateCalled = true;
+        return { modifiedCount: 1 };
+    });
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await submitMilestoneDraft({
+        params: { topic_id: 'topic-1', mIndex: '1' },
+        user: { user_code: 'SV01' }
+    }, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.success, true);
+    assert.equal(draft.saved, true);
+    assert.equal(draft.review_status, 'PENDING_REVIEW');
+    assert.equal(updateCalled, false);
+});
+
+test('students can withdraw a pending submission within the deadline', async t => {
+    const previousSubmission = { _id: 'submission-old', review_status: 'PENDING_REVIEW' };
+    let withdrawalUpdate;
+    const queryResult = value => ({
+        select() { return this; },
+        sort() { return this; },
+        lean: async () => value
+    });
+    t.mock.method(Topic, 'findOne', async () => ({
+        _id: 'topic-1',
+        lecturer_code: 'GV01'
+    }));
+    t.mock.method(Milestone, 'findOne', async () => ({
+        startDate: new Date('2025-03-01T00:00:00Z'),
+        endDate: new Date(Date.now() + 60_000),
+        allowLate: false
+    }));
+    t.mock.method(Submission, 'findOne', filter => queryResult(
+        filter.is_draft === true ? null : previousSubmission
+    ));
+    t.mock.method(Submission, 'findOneAndUpdate', async (filter, update) => {
+        withdrawalUpdate = { filter, update };
+        return { ...previousSubmission, review_status: 'WITHDRAWN' };
+    });
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await withdrawMilestoneSubmission({
+        params: { topic_id: 'topic-1', mIndex: '1' },
+        user: { user_code: 'SV01' }
+    }, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.success, true);
+    assert.equal(withdrawalUpdate.filter._id, previousSubmission._id);
+    assert.equal(withdrawalUpdate.update.$set.review_status, 'WITHDRAWN');
+    assert.equal(withdrawalUpdate.update.$set.withdrawn_by, 'SV01');
+});
+
+test('deleting a draft clears a stale draft pointer from the topic', async t => {
+    let topicUpdate;
+    let deletedSubmission;
+    const draft = {
+        _id: 'draft-1',
+        file_path: 'C:\\uploads\\new-file.docx',
+        stored_filename: 'new-file.docx'
+    };
+    const queryResult = value => ({
+        select() { return this; },
+        sort() { return this; },
+        lean: async () => value
+    });
+    t.mock.method(Topic, 'findOne', async () => ({
+        _id: 'topic-1',
+        lecturer_code: 'GV01',
+        milestone1_file: {
+            path: 'C:\\uploads\\old-file.docx',
+            filename: 'old-file.docx',
+            isDraft: true
+        }
+    }));
+    t.mock.method(Milestone, 'findOne', async () => ({
+        endDate: new Date(Date.now() + 60_000),
+        allowLate: false
+    }));
+    t.mock.method(Submission, 'findOne', filter =>
+        queryResult(filter.is_draft === true ? draft : null)
+    );
+    t.mock.method(Topic, 'updateOne', async (filter, update) => {
+        topicUpdate = { filter, update };
+        return { modifiedCount: 1 };
+    });
+    t.mock.method(Submission, 'deleteOne', async filter => {
+        deletedSubmission = filter._id;
+        return { deletedCount: 1 };
+    });
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await deleteMilestoneSubmission({
+        params: { topic_id: 'topic-1', mIndex: '1' },
+        user: { user_code: 'SV01' }
+    }, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.success, true);
+    assert.equal(deletedSubmission, draft._id);
+    assert.deepEqual(topicUpdate.update.$unset, { milestone1_file: '' });
 });
 
 test('milestone progress with no configured milestones is not marked late', () => {
@@ -674,6 +970,138 @@ test('lecturer schedule reads are limited to the signed-in lecturer', async t =>
     });
     assert.equal(ownSchedule.status, 200);
     assert.equal(findCalled, true);
+});
+
+test('lecturers can send notifications only to students in their approved topics', async t => {
+    let insertedNotifications;
+    t.mock.method(User, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => ({ full_name: 'Giảng viên A' })
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => [{
+            leader_code: 'SV01',
+            member2_code: 'SV02',
+            member3_code: null
+        }]
+    }));
+    t.mock.method(Notification, 'insertMany', async notifications => {
+        insertedNotifications = notifications;
+        return notifications.map((notification, index) => ({ ...notification, _id: `notification-${index}` }));
+    });
+
+    const response = {
+        statusCode: 201,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await createLecturerNotification({
+        user: { role: 'LECTURER', user_code: 'GV01' },
+        body: { title: 'Nhắc nộp bài', content: 'Nộp trước hạn', recipient_codes: ['sv01', 'SV02'] }
+    }, response);
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(response.body.sent_count, 2);
+    assert.deepEqual(insertedNotifications.map(notification => notification.recipient_code), ['SV01', 'SV02']);
+    assert.ok(insertedNotifications.every(notification =>
+        notification.type === 'LECTURER' &&
+        notification.target === 'students' &&
+        notification.sender_name === 'Giảng viên A' &&
+        notification.status === 'published'
+    ));
+});
+
+test('lecturers cannot send notifications to students outside their approved topics', async t => {
+    let insertCalled = false;
+    t.mock.method(User, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => ({ full_name: 'Giảng viên A' })
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => [{ leader_code: 'SV01' }]
+    }));
+    t.mock.method(Notification, 'insertMany', async () => {
+        insertCalled = true;
+        return [];
+    });
+
+    const response = {
+        statusCode: 201,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await createLecturerNotification({
+        user: { role: 'LECTURER', user_code: 'GV01' },
+        body: { title: 'Nhắc nộp bài', content: 'Nộp trước hạn', recipient_codes: ['SV99'] }
+    }, response);
+
+    assert.equal(response.statusCode, 403);
+    assert.equal(response.body.success, false);
+    assert.equal(insertCalled, false);
+});
+
+test('admin notification list excludes lecturer notifications', async t => {
+    const storedNotifications = [
+        { _id: 'system-notification', type: 'SYSTEM', title: 'Thông báo hệ thống' },
+        { _id: 'lecturer-document-notification', type: 'LECTURER', title: 'Tài liệu mới' },
+        { _id: 'legacy-system-notification', title: 'Thông báo cũ' }
+    ];
+    t.mock.method(Notification, 'find', filter => {
+        assert.deepEqual(filter, {
+            event_key: { $exists: false },
+            type: { $in: ['SYSTEM', null] }
+        });
+        return {
+            sort: async () => storedNotifications.filter(notification =>
+                notification.type === 'SYSTEM' || notification.type == null
+            )
+        };
+    });
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await getAllNotifications({}, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(
+        response.body.notifications.map(notification => notification._id),
+        ['system-notification', 'legacy-system-notification']
+    );
+});
+
+test('admin document list includes administrator uploads but excludes lecturer uploads', async t => {
+    const storedDocuments = [
+        { _id: 'admin-doc', uploader_code: 'ADMIN01', uploader_role: 'ADMIN', title: 'Biểu mẫu chung' },
+        { _id: 'lecturer-doc', uploader_code: 'GV01', uploader_role: 'LECTURER', title: 'Tài liệu nhóm' },
+        { _id: 'legacy-admin-doc', uploader_code: 'ADMIN02', title: 'Biểu mẫu cũ' }
+    ];
+    t.mock.method(Document, 'find', () => ({
+        sort() { return this; },
+        lean: async () => storedDocuments
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => [
+            { user_code: 'ADMIN02', full_name: 'Quản trị viên 2', role: 'ADMIN' },
+            { user_code: 'GV01', full_name: 'Giảng viên 1', role: 'LECTURER' }
+        ]
+    }));
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await getAllDocuments({}, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body.documents.map(document => document._id), ['admin-doc', 'legacy-admin-doc']);
+    assert.equal(response.body.documents[1].uploader_role, 'ADMIN');
 });
 
 test('lecturers can view their own availability and students can view their supervisor slots', async t => {

@@ -34,8 +34,6 @@ const Milestone = require('./models/Milestone');
 const Topic = require('./models/Topic');
 const Semester = require('./models/Semester');
 const Notification = require('./models/Notification');
-const User = require('./models/User');
-const bcrypt = require('bcryptjs');
 const {
 	startMilestoneReminderJob,
 	startSemesterRegistrationNotifier
@@ -47,44 +45,6 @@ app.use(createCorsMiddleware());
 app.use(express.json());
 app.use(activityLogger);
 
-// Hàm tự động khởi tạo tài khoản mẫu nếu DB đang trống
-const seedUsersIfEmpty = async () => {
-	try {
-		const count = await User.countDocuments();
-		if (count === 0) {
-			const salt = await bcrypt.genSalt(10);
-			const hashedPassword = await bcrypt.hash('123456', salt);
-			const users = [
-				{ user_code: 'ADMIN01', password: hashedPassword, full_name: 'Quản Trị Viên', role: 'ADMIN', email: 'admin01@tttn.edu.vn' },
-				{ user_code: 'GV01', password: hashedPassword, full_name: 'TS. Nguyễn Văn An', role: 'LECTURER', max_quota: 5, email: 'gv01@tttn.edu.vn' },
-				{ user_code: 'GV02', password: hashedPassword, full_name: 'TS. Lê Thị Bình', role: 'LECTURER', max_quota: 5, email: 'gv02@tttn.edu.vn' },
-				{ user_code: 'GV03', password: hashedPassword, full_name: 'TS. Trần Thị Ngọc', role: 'LECTURER', max_quota: 5, email: 'gv03@tttn.edu.vn' },
-				{ user_code: 'SV01', password: hashedPassword, full_name: 'Trần Văn Bảo', role: 'STUDENT', email: 'sv01@tttn.edu.vn' },
-				{ user_code: 'SV02', password: hashedPassword, full_name: 'Trần Văn Khải', role: 'STUDENT', email: 'sv02@tttn.edu.vn' },
-				{ user_code: 'SV03', password: hashedPassword, full_name: 'Nguyễn Thị Chung', role: 'STUDENT', email: 'sv03@tttn.edu.vn' },
-				{ user_code: 'SV04', password: hashedPassword, full_name: 'Võ Văn Phụng', role: 'STUDENT', email: 'sv04@tttn.edu.vn' },
-				{ user_code: 'SV05', password: hashedPassword, full_name: 'Võ Văn Huy', role: 'STUDENT', email: 'sv05@tttn.edu.vn' },
-				{ user_code: 'SV06', password: hashedPassword, full_name: 'Nguyễn Văn Hoàng', role: 'STUDENT', email: 'sv06@tttn.edu.vn' },
-				{ user_code: 'SV07', password: hashedPassword, full_name: 'Nguyễn Minh Hoàng', role: 'STUDENT', email: 'sv07@tttn.edu.vn' },
-				{ user_code: 'SV08', password: hashedPassword, full_name: 'Võ Văn Hoàng', role: 'STUDENT', email: 'sv08@tttn.edu.vn' },
-			];
-			await User.insertMany(users);
-			console.log('👤 Tự động khởi tạo tài khoản mẫu thành công!');
-		}
-	} catch (err) {
-		console.error('❌ Lỗi tự động seed tài khoản:', err.message);
-	}
-};
-
-// Route kích hoạt seed qua trình duyệt nếu cần
-app.get('/api/seed', async (req, res) => {
-	try {
-		await seedUsersIfEmpty();
-		res.json({ success: true, message: 'Đã kiểm tra và khởi tạo tài khoản mẫu thành công!' });
-	} catch (err) {
-		res.status(500).json({ success: false, error: err.message });
-	}
-});
 app.get('/uploads/:filename', authMiddleware, (req, res, next) => {
 	if (['STUDENT', 'LECTURER'].includes(String(req.user?.role || '').toUpperCase())) return next();
 	return res.status(403).json({ success: false, message: 'Bạn không có quyền tải tệp báo cáo.' });
@@ -139,7 +99,6 @@ connectDB()
 			ActivityLog.init()
 		]);
 	})
-	.then(() => seedUsersIfEmpty())
 	.then(() => {
 		startMilestoneReminderJob();
 		startSemesterRegistrationNotifier();

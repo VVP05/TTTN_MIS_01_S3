@@ -3,7 +3,8 @@ const AUTH_COOKIE_ROLES = Object.freeze(['ADMIN', 'LECTURER', 'STUDENT']);
 const AUTH_COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
 const TAB_SESSION_ID_PATTERN = /^[a-f0-9]{32}$/i;
 
-const sameSite = String(process.env.AUTH_COOKIE_SAME_SITE || 'lax').toLowerCase();
+const defaultSameSite = process.env.NODE_ENV === 'production' ? 'none' : 'lax';
+const sameSite = String(process.env.AUTH_COOKIE_SAME_SITE || defaultSameSite).toLowerCase();
 if (!['strict', 'lax', 'none'].includes(sameSite)) {
     throw new Error('AUTH_COOKIE_SAME_SITE must be Strict, Lax, or None.');
 }

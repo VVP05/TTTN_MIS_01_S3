@@ -35,6 +35,10 @@
     transition: all 0.2s ease;
 }
 
+.btn-primary[hidden] {
+    display: none;
+}
+
 .btn-primary:hover {
     background-color: #1d4ed8;
     transform: translateY(-1px);

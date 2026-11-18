@@ -10,7 +10,7 @@ const requireRole = (...roles) => (req, res, next) => {
 
 const requireAdminRole = requireRole('ADMIN', 'ADMINISTRATOR', 'QUAN_TRI', 'QUAN_TRI_VIEN');
 
-// Lấy danh sách tất cả thông báo (Admin quản lý)
+// Admin chỉ quản lý thông báo hệ thống
 router.get('/admin/all', authMiddleware, requireAdminRole, notificationController.getAllNotifications);
 
 // Lấy danh sách thông báo cho Giảng viên
@@ -21,6 +21,7 @@ router.get('/:studentCode', authMiddleware, requireRole('STUDENT'), notification
 
 // Tạo thông báo mới
 router.post('/', authMiddleware, requireAdminRole, notificationController.createNotification);
+router.post('/lecturer', authMiddleware, requireRole('LECTURER'), notificationController.createLecturerNotification);
 
 // Cập nhật thông báo
 router.put('/:id', authMiddleware, requireAdminRole, notificationController.updateNotification);

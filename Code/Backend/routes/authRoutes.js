@@ -22,7 +22,8 @@ const {
 } = require('../controllers/authController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const {
-    loginRateLimit,
+    loginIpRateLimit,
+    loginAccountRateLimit,
     passwordResetRequestRateLimit,
     passwordResetSubmitRateLimit
 } = require('../middlewares/authRateLimit');
@@ -60,7 +61,7 @@ const requireSelfCode = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Bạn chỉ có thể cập nhật hồ sơ của tài khoản mình.' });
 };
 
-router.post('/login', loginRateLimit, login);
+router.post('/login', loginIpRateLimit, loginAccountRateLimit, login);
 router.get('/session', authMiddleware, getSession);
 router.post('/logout', (req, res, next) => {
     if (req.get('X-CSRF-Protection') !== '1') {

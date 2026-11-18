@@ -137,7 +137,9 @@ TTTN_MIS_01_S3/
 
 Không cần chỉnh các thiết lập cookie để chạy cục bộ. Không gửi hoặc commit file `.env`; chỉ commit `.env.example`. Nếu đổi `FRONTEND_API_BASE_URL`, xem bước cập nhật cấu hình frontend ở mục 6.3.
 
-Lệnh `npm --prefix Code/Backend run seed` chỉ tạo tài khoản mẫu trên cơ sở dữ liệu trống. Lệnh sẽ từ chối chạy nếu các collection người dùng, đề tài, nhóm, tài liệu, cuộc họp hoặc công việc đã có dữ liệu; không chạy trên cơ sở dữ liệu thật.
+Khi triển khai frontend và API trên các website khác nhau (ví dụ frontend tĩnh và API trên Render), cookie đăng nhập cần `SameSite=None; Secure`. Backend tự dùng cấu hình này ở production; nếu đã đặt `AUTH_COOKIE_SAME_SITE` trong cấu hình dịch vụ, hãy đặt giá trị là `none` thay vì `lax`.
+
+Backend không tự tạo tài khoản mẫu khi khởi động và không còn endpoint `/api/seed`. Lệnh `npm --prefix Code/Backend run seed` chỉ chạy khi `.env` đặt `NODE_ENV=development`, và chỉ tạo tài khoản mẫu trên cơ sở dữ liệu trống. Lệnh sẽ từ chối chạy nếu các collection người dùng, đề tài, nhóm, tài liệu, cuộc họp hoặc công việc đã có dữ liệu; không chạy trên cơ sở dữ liệu thật.
 Tài khoản mới được tạo với mật khẩu ban đầu `123456` và bắt buộc đổi mật khẩu lần đầu đăng nhập. Yêu cầu đăng nhập và đặt lại mật khẩu cũng được giới hạn số lần thử.
 
 ### 6.2. Cài dependencies và chạy backend

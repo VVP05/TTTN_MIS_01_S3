@@ -41,7 +41,7 @@ const submissionSchema = new mongoose.Schema({
     },
     review_status: {
         type: String,
-        enum: ['DRAFT', 'PENDING_REVIEW', 'APPROVED', 'REVISION_REQUESTED'],
+        enum: ['DRAFT', 'PENDING_REVIEW', 'APPROVED', 'REVISION_REQUESTED', 'WITHDRAWN', 'SUPERSEDED'],
         default: 'PENDING_REVIEW'
     },
     feedback: {
@@ -54,6 +54,14 @@ const submissionSchema = new mongoose.Schema({
         default: null
     },
     reviewed_at: {
+        type: Date,
+        default: null
+    },
+    withdrawn_by: {
+        type: String,
+        default: null
+    },
+    withdrawn_at: {
         type: Date,
         default: null
     },

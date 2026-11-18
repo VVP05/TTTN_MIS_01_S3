@@ -1,7 +1,7 @@
 // LƯU Ý: Đang để mặc định '/api/topics' để hiển thị ngay đề tài bạn vừa duyệt.
 // Khi nào Backend làm xong API cho bảng Group thì đổi thành: window.APP_CONFIG.API_BASE_URL + '/api/groups'
 const API_BASE_URL = window.APP_CONFIG.API_BASE_URL + '/api/topics';
-const NOTIFICATION_API_URL = window.APP_CONFIG.API_BASE_URL + '/api/notifications';
+const NOTIFICATION_API_URL = window.APP_CONFIG.API_BASE_URL + '/api/notifications/lecturer';
 let allGroupsData = [];
 
 let notifyRecipients = [];
@@ -94,7 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             body: JSON.stringify(payload)
         });
-        return response.json();
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Không thể gửi thông báo.');
+        }
+        return result;
     }
 
     async function handleSendMessage() {
@@ -111,55 +115,35 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const senderName = user.full_name || 'Giảng viên';
-        let payloads = [];
-
-        if (notifyMode === 'BROADCAST') {
-            payloads.push({
-                title,
-                content,
-                target: 'students',
-                type: 'LECTURER',
-                sender_name: senderName,
-                status: 'published'
-            });
-        } else {
-            const recipients = [...new Set(notifyRecipients.filter(code => code && code.toString().trim() !== ''))];
-            if (recipients.length === 0) {
-                showAppNotification('Không tìm thấy sinh viên để gửi thông báo.');
-                return;
-            }
-
-            recipients.forEach(code => {
-                payloads.push({
-                    title,
-                    content,
-                    recipient_code: code,
-                    target: 'students',
-                    type: 'LECTURER',
-                    sender_name: senderName,
-                    status: 'published'
-                });
-            });
+        const recipients = notifyMode === 'BROADCAST'
+            ? allGroupsData.flatMap(group => [
+                group.leader_code || group.leaderCode || group.student_code,
+                group.member2_code || group.member2Code,
+                group.member3_code || group.member3Code
+            ])
+            : notifyRecipients;
+        const recipientCodes = [...new Set(recipients
+            .filter(code => code && code.toString().trim() !== '')
+            .map(code => code.toString().trim().toUpperCase()))];
+        if (recipientCodes.length === 0) {
+            showAppNotification('Không tìm thấy sinh viên để gửi thông báo.');
+            return;
         }
 
         try {
-            const results = await Promise.all(payloads.map(payload => postNotification(payload)));
-            const failed = results.filter(r => !r.success);
-
-            if (failed.length > 0) {
-                console.error('Một số thông báo gửi không thành công:', failed);
-                showAppNotification(`Gửi thông báo không thành công với ${failed.length} mục.`);
-            } else {
-                showAppNotification('Thông báo đã được gửi thành công đến sinh viên.');
-                if (messageModal) messageModal.style.display = 'none';
-                sendMessageForm.reset();
-                notifyMode = null;
-                notifyRecipients = [];
-            }
+            const result = await postNotification({
+                title,
+                content,
+                recipient_codes: recipientCodes
+            });
+            showAppNotification(result.message || 'Thông báo đã được gửi thành công đến sinh viên.');
+            if (messageModal) messageModal.style.display = 'none';
+            sendMessageForm.reset();
+            notifyMode = null;
+            notifyRecipients = [];
         } catch (error) {
             console.error('Lỗi gửi thông báo:', error);
-            showAppNotification('Gửi thông báo thất bại. Vui lòng thử lại sau.');
+            showAppNotification(error.message || 'Gửi thông báo thất bại. Vui lòng thử lại sau.');
         }
     }
 
