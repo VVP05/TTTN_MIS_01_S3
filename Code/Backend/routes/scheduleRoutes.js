@@ -17,6 +17,7 @@ router.get("/availability/:lecturerCode", verifyToken, scheduleController.getAva
 // Quản lý To-do List
 router.post("/todos/add", verifyToken, scheduleController.addTodo);
 router.patch("/todos/toggle/:todoId", verifyToken, scheduleController.toggleTodo);
+router.delete("/todos/:todoId", verifyToken, scheduleController.deleteTodo);
 
 // ==========================================
 // 2. CÁC ROUTE DÀNH CHO GIẢNG VIÊN (LECTURER)

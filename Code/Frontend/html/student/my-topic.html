@@ -89,15 +89,15 @@
             <main class="content-body">
                 
                 <!-- HEADER TRANG -->
-                <div class="page-title-card">
-                    <div class="title-left">
-                        <h1>Đề tài Thực tập Tốt nghiệp của tôi</h1>
-                        <p>Theo dõi tiến độ, chi tiết đề tài và nộp báo cáo định kỳ cho Giảng viên hướng dẫn.</p>
+                <div class="page-title-card topic-page-title">
+                    <div class="topic-page-heading">
+                        <span class="topic-page-icon"><i class="fa-solid fa-book-open-reader"></i></span>
+                        <div class="title-left">
+                            <h1>Đề tài Thực tập Tốt nghiệp của tôi</h1>
+                            <p>Theo dõi tiến độ, chi tiết đề tài và nộp báo cáo định kỳ cho Giảng viên hướng dẫn.</p>
+                        </div>
                     </div>
-                    <div class="title-right" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                        
-                            
-                        </button>
+                    <div class="title-right">
                         <div class="status-banner pending" id="topicStatusBanner">
                             <i class="fa-solid fa-circle-notch fa-spin"></i>
                             <span>Trạng thái: <strong id="topicStatusText">Đang kiểm tra...</strong></span>
@@ -105,8 +105,8 @@
                     </div>
                 </div>
                 <!-- KHỐI THÔNG TIN CHI TIẾT (CHUẨN THEO CLASS CSS CÓ SẴN) -->
-                <div class="card-box margin-top-20">
-                    <div class="card-header">
+                <div class="card-box topic-detail-card margin-top-20">
+                    <div class="card-header topic-detail-header">
                         <h3><i class="fa-solid fa-circle-info text-blue"></i> Thông tin chi tiết</h3>
                     </div>
 
@@ -130,14 +130,14 @@
                         </div>
 
                         <!-- CỘT 1 (BÊN TRÁI): GIẢNG VIÊN & THÀNH VIÊN NHÓM -->
-                        <div class="detail-item">
+                        <div class="detail-item topic-team-details">
                             <div class="team-members-group">
                                 <div>
                                     <span class="label">Giảng viên hướng dẫn:</span>
                                     <div class="value font-bold" id="topicLecturer">--</div>
                                 </div>
-                                <div>
-                                    <span class="label">Trưởng nhóm:</span>
+                                <div class="topic-leader-item">
+                                    <span class="label"><i class="fa-solid fa-crown" aria-hidden="true"></i> Trưởng nhóm</span>
                                     <div class="value" id="topicLeader">--</div>
                                 </div>
                                 <div>
@@ -152,7 +152,7 @@
                         </div>
 
         <!-- CỘT 2 (BÊN PHẢI): MÔ TẢ & NHẬN XÉT -->
-        <div class="detail-item">
+        <div class="detail-item topic-description-details">
             <div class="team-members-group">
                 <div>
                     <span class="label">Mô tả mục tiêu / Phạm vi đề tài:</span>
@@ -170,7 +170,7 @@
 </div>
 
                 <!-- KHU VỰC NỘP BÁO CÁO TIẾN ĐỘ -->
-                <div class="section-header-row margin-top-24">
+                <div class="section-header-row topic-milestone-heading margin-top-24">
                     <h3 class="section-title"><i class="fa-solid fa-list-check text-blue"></i> Tiến độ nộp báo cáo</h3>
                     <span class="sub-text">Sinh viên cần tuân thủ đúng thời hạn nộp bài của từng mốc.</span>
                 </div>
@@ -201,6 +201,7 @@
 
     <!-- JS APP -->
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/confirm-dialog.js"></script>
     <script src="../../js/common/notif-badge.js"></script>
     <script src="../../js/student/my-topic.js"></script>

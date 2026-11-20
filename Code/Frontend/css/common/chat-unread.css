@@ -1,0 +1,66 @@
+.chat-unread-badge {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    min-width: 18px;
+    height: 18px;
+    margin-left: auto;
+    padding: 0 5px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, .2);
+}
+
+.chat-unread-badge[hidden] {
+    display: none;
+}
+
+.chat-tab .chat-unread-badge {
+    margin-left: 4px;
+    border: 0;
+    background: #ef4444;
+    color: #fff;
+}
+
+.chat-tab.active .chat-unread-badge {
+    border: 1px solid rgba(255, 255, 255, .75);
+    background: #fff;
+    color: #dc2626;
+}
+
+.chat-button-unread {
+    margin-left: 3px;
+    border: 0;
+}
+
+.sidebar .menu-item a > .chat-unread-badge {
+    margin-left: auto;
+}
+
+.chat-sidebar-unread-dot {
+    flex: 0 0 12px;
+    width: 12px;
+    min-width: 12px;
+    height: 12px;
+    padding: 0;
+    border-radius: 50%;
+    background: #e11d48;
+    font-size: 0;
+    box-shadow: 0 0 0 2px rgba(225, 29, 72, .16);
+    animation: pending-review-pulse 1.8s ease-in-out infinite;
+}
+
+.sidebar .sidebar-menu .menu-item:not(.active) > a.has-unread-chat {
+    color: #be123c;
+    background-color: #fff1f2;
+}
+
+.sidebar .sidebar-menu .menu-item.active > a .chat-sidebar-unread-dot {
+    border-color: #2563eb;
+}
+

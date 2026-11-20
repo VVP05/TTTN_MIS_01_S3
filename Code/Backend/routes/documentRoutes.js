@@ -31,6 +31,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
+    defParamCharset: 'utf8',
     limits: { fileSize: 25 * 1024 * 1024 } // Giới hạn 25MB, đồng bộ với giới hạn báo cáo tiến độ
 });
 

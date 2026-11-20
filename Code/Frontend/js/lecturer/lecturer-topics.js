@@ -52,8 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabButtons = document.querySelectorAll(".tab-btn");
     const tabContents = document.querySelectorAll(".tab-content");
     const openCreateModalBtn = document.getElementById("openCreateModalBtn");
+    const openTopicImportBtn = document.getElementById("openTopicImportBtn");
     const updateCreateButtonVisibility = activeTab => {
         if (openCreateModalBtn) openCreateModalBtn.hidden = activeTab !== "my-topics";
+        if (openTopicImportBtn) openTopicImportBtn.hidden = activeTab !== "my-topics";
     };
 
     updateCreateButtonVisibility(document.querySelector(".tab-btn.active")?.dataset.tab);
@@ -325,6 +327,7 @@ function setupModals(lecturerCode, token) {
     const createModal = document.getElementById("createTopicModal");
     const revisionModal = document.getElementById("revisionModal");
     const confirmModal = document.getElementById("actionConfirmModal");
+    const topicImportModal = document.getElementById("topicImportModal");
 
     // Đóng Modal khi bấm nút X hoặc Hủy
     document.querySelectorAll(".btn-close-modal").forEach(btn => {
@@ -332,6 +335,7 @@ function setupModals(lecturerCode, token) {
             if (createModal) createModal.style.display = "none";
             if (revisionModal) revisionModal.style.display = "none";
             if (confirmModal) confirmModal.style.display = "none";
+            if (topicImportModal) topicImportModal.style.display = "none";
         });
     });
 
@@ -429,6 +433,171 @@ function setupModals(lecturerCode, token) {
             }
         });
     }
+
+    const openImportButton = document.getElementById("openTopicImportBtn");
+    const importFileInput = document.getElementById("topicImportFile");
+    const previewImportButton = document.getElementById("previewTopicImportBtn");
+    const confirmImportButton = document.getElementById("confirmTopicImportBtn");
+    const importSummary = document.getElementById("topicImportSummary");
+    const importMessage = document.getElementById("topicImportMessage");
+    const previewBody = document.getElementById("topicImportPreviewBody");
+    let previewValidCount = 0;
+    let previewedFile = null;
+
+    function clearTopicImportPreview() {
+        previewValidCount = 0;
+        previewedFile = null;
+        importSummary.textContent = "";
+        importMessage.textContent = "";
+        importMessage.className = "topic-import-message";
+        confirmImportButton.disabled = true;
+        previewBody.replaceChildren();
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 5;
+        cell.className = "topic-import-empty";
+        cell.textContent = "Chưa có dữ liệu xem trước.";
+        row.appendChild(cell);
+        previewBody.appendChild(row);
+    }
+
+    function setTopicImportMessage(message, type) {
+        importMessage.textContent = message;
+        importMessage.className = `topic-import-message ${type || ""}`;
+    }
+
+    function renderTopicImportRows(rows) {
+        previewBody.replaceChildren();
+        rows.forEach(rowData => {
+            const row = document.createElement("tr");
+            const rowNumber = document.createElement("td");
+            rowNumber.textContent = String(rowData.rowNumber);
+            row.appendChild(rowNumber);
+
+            const title = document.createElement("td");
+            title.textContent = rowData.title || "";
+            row.appendChild(title);
+
+            const description = document.createElement("td");
+            description.textContent = rowData.description || "";
+            row.appendChild(description);
+
+            const category = document.createElement("td");
+            category.textContent = rowData.category || "";
+            row.appendChild(category);
+
+            const validation = document.createElement("td");
+            validation.textContent = rowData.valid
+                ? "Hợp lệ"
+                : rowData.errors.join(" ");
+            validation.className = rowData.valid ? "topic-import-valid" : "topic-import-invalid";
+            row.appendChild(validation);
+            previewBody.appendChild(row);
+        });
+    }
+
+    async function sendTopicImportFile(url) {
+        if (typeof window.verifyAuthSession === "function" &&
+            !await window.verifyAuthSession("LECTURER")) {
+            throw new Error("Không thể xác minh phiên Giảng viên.");
+        }
+        const file = importFileInput.files?.[0];
+        if (!file) throw new Error("Vui lòng chọn file Excel.");
+
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await apiFetch(url, { method: "POST", body: formData });
+        let result;
+        try {
+            result = await response.json();
+        } catch (error) {
+            throw new Error("Máy chủ trả về phản hồi không hợp lệ.");
+        }
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Không thể xử lý file Excel.");
+        }
+        return result.data;
+    }
+
+    openImportButton?.addEventListener("click", () => {
+        importFileInput.value = "";
+        clearTopicImportPreview();
+        if (topicImportModal) topicImportModal.style.display = "flex";
+    });
+    importFileInput?.addEventListener("change", clearTopicImportPreview);
+
+    document.getElementById("downloadTopicTemplateBtn")?.addEventListener("click", async () => {
+        try {
+            if (typeof window.verifyAuthSession === "function" &&
+                !await window.verifyAuthSession("LECTURER")) {
+                throw new Error("Không thể xác minh phiên Giảng viên.");
+            }
+            const response = await apiFetch(`${API_BASE_URL}/lecturer-pool/import/template`);
+            if (!response.ok) {
+                let result = {};
+                try { result = await response.json(); } catch (error) { }
+                throw new Error(result.message || "Không tải được file mẫu.");
+            }
+            const linkUrl = URL.createObjectURL(await response.blob());
+            const link = document.createElement("a");
+            link.href = linkUrl;
+            link.download = "mau-import-de-tai.xlsx";
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(linkUrl), 0);
+        } catch (error) {
+            setTopicImportMessage(error.message || "Không tải được file mẫu.", "error");
+        }
+    });
+
+    previewImportButton?.addEventListener("click", async () => {
+        clearTopicImportPreview();
+        previewImportButton.disabled = true;
+        previewImportButton.textContent = "Đang kiểm tra...";
+        try {
+            const data = await sendTopicImportFile(`${API_BASE_URL}/lecturer-pool/import/preview`);
+            previewValidCount = data.valid_count;
+            const selectedFile = importFileInput.files[0];
+            previewedFile = `${selectedFile.name}:${selectedFile.size}:${selectedFile.lastModified}`;
+            importSummary.textContent = `Tổng ${data.total_rows} dòng: ${data.valid_count} hợp lệ, ${data.error_count} có lỗi.`;
+            renderTopicImportRows(data.rows);
+            confirmImportButton.disabled = previewValidCount === 0;
+            setTopicImportMessage(
+                previewValidCount
+                    ? "Có thể import các dòng hợp lệ; các dòng lỗi sẽ được bỏ qua."
+                    : "Không có dòng hợp lệ để import.",
+                previewValidCount ? "success" : "error"
+            );
+        } catch (error) {
+            setTopicImportMessage(error.message || "Không thể kiểm tra file Excel.", "error");
+        } finally {
+            previewImportButton.disabled = false;
+            previewImportButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Kiểm tra & xem trước';
+        }
+    });
+
+    confirmImportButton?.addEventListener("click", async () => {
+        const selectedFile = importFileInput.files?.[0];
+        if (!previewValidCount || !selectedFile ||
+            previewedFile !== `${selectedFile.name}:${selectedFile.size}:${selectedFile.lastModified}`) return;
+        confirmImportButton.disabled = true;
+        previewImportButton.disabled = true;
+        confirmImportButton.textContent = "Đang import...";
+        try {
+            const data = await sendTopicImportFile(`${API_BASE_URL}/lecturer-pool/import`);
+            previewValidCount = 0;
+            importSummary.textContent = `Đã import ${data.imported_count}/${data.total_rows} đề tài hợp lệ.`;
+            setTopicImportMessage(data.message, data.imported_count ? "success" : "error");
+            confirmImportButton.disabled = true;
+            showAppNotification(data.message || "Đã import đề tài vào kho.");
+            if (data.imported_count) await loadLecturerTopics(lecturerCode, token);
+        } catch (error) {
+            setTopicImportMessage(error.message || "Không thể import đề tài.", "error");
+            confirmImportButton.disabled = false;
+        } finally {
+            previewImportButton.disabled = false;
+            confirmImportButton.textContent = "Import đề tài hợp lệ";
+        }
+    });
 
     const rejectModal = document.getElementById("rejectTopicModal");
     const rejectReasonInput = document.getElementById("rejectReasonInput");

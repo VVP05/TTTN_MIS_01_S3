@@ -39,6 +39,7 @@
 @media (prefers-reduced-motion: reduce) {
     .sidebar-menu a.has-pending-review::after,
     .menu-item a.has-pending-review::after,
+    .chat-sidebar-unread-dot,
     .notification-btn.has-pending-review {
         animation: none;
     }

@@ -29,6 +29,7 @@ const TodoSchema = new mongoose.Schema({
     assigned_to: { type: String, default: "" },
     title: { type: String, required: true },
     due_date: { type: Date, default: null },
+    status: { type: String, enum: ["NOT_STARTED", "IN_PROGRESS", "COMPLETED"] },
     is_completed: { type: Boolean, default: false }
 }, { timestamps: true });
 

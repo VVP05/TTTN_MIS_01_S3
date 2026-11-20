@@ -1,5 +1,7 @@
 // Biến lưu thông tin đề tài & giảng viên thu thập từ API
 let currentScheduleTopicInfo = null;
+let chatRoom = "INTERNAL";
+let chatPollTimer = null;
 
 function getAuthForRole(role) {
     const activeSession = sessionStorage.getItem("activeAuth");
@@ -34,7 +36,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const userCodeEl = document.getElementById("userCode");
         if (userCodeEl) userCodeEl.textContent = user.user_code;
     }
-
     // 2. TẢI DỮ LIỆU TỪ BACKEND
     await loadScheduleData(user.user_code);
 
@@ -256,9 +257,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 // HÀM CALL API LẤY TOÀN BỘ DỮ LIỆU ĐỂ RENDER
 // =========================================================
 async function loadScheduleData(studentCode) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 12000);
     try {
         const token = getAuthForRole("STUDENT")?.token;
         const res = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/schedule/my-schedule/${studentCode}`, {
+            signal: controller.signal,
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -271,7 +275,12 @@ async function loadScheduleData(studentCode) {
         }
 
         if (!res.ok) {
-            console.warn("Chưa tải được dữ liệu tiến độ.");
+            let errorMessage = "Không thể tải dữ liệu lịch làm việc.";
+            try {
+                const errorData = await res.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch {}
+            renderScheduleLoadError(errorMessage);
             return;
         }
 
@@ -301,6 +310,7 @@ async function loadScheduleData(studentCode) {
             currentScheduleTopicInfo = data.topic;
             renderTodoAssigneeOptions(data.topic, studentCode);
             unlockScheduleControls();
+            setupGroupChat(data.topic, studentCode);
 
             // Render các con số thống kê ở Top-bar
             renderTopStats(data.stats);
@@ -314,7 +324,25 @@ async function loadScheduleData(studentCode) {
         }
     } catch (err) {
         console.error("Lỗi khi kết nối API schedule:", err);
+        renderScheduleLoadError(err.name === "AbortError"
+            ? "Máy chủ không phản hồi. Vui lòng thử tải lại trang."
+            : "Lỗi kết nối máy chủ. Vui lòng thử lại.");
+    } finally {
+        window.clearTimeout(timeoutId);
     }
+}
+
+function renderScheduleLoadError(message) {
+    const meetings = document.getElementById("meetingsListContainer");
+    const todos = document.getElementById("todoList");
+    const chatMessages = document.getElementById("chatMessages");
+    if (meetings) meetings.innerHTML = `<p style="text-align:center;color:#dc2626;padding:20px;">${escapeChatText(message)}</p>`;
+    if (todos) todos.innerHTML = `<p style="text-align:center;color:#dc2626;padding:15px 0;">${escapeChatText(message)}</p>`;
+    if (chatMessages) chatMessages.innerHTML = `<p class="chat-empty">${escapeChatText(message)}</p>`;
+    const chatInput = document.getElementById("chatInput");
+    const chatForm = document.getElementById("chatForm");
+    if (chatInput) chatInput.disabled = true;
+    if (chatForm?.querySelector('button[type="submit"]')) chatForm.querySelector('button[type="submit"]').disabled = true;
 }
 
 // =========================================================
@@ -325,6 +353,8 @@ function unlockScheduleControls() {
     const newTodoInput = document.getElementById("newTodoInput");
     const btnAddTodo = document.getElementById("btnAddTodo");
     const todoAssignee = document.getElementById("todoAssignee");
+    const chatInput = document.getElementById("chatInput");
+    const chatForm = document.getElementById("chatForm");
 
     if (btnOpenBooking) {
         btnOpenBooking.disabled = false;
@@ -342,6 +372,158 @@ function unlockScheduleControls() {
         btnAddTodo.style.cursor = "pointer";
     }
     if (todoAssignee) todoAssignee.disabled = false;
+    if (chatInput) chatInput.disabled = false;
+    if (chatForm?.querySelector('button[type="submit"]')) chatForm.querySelector('button[type="submit"]').disabled = false;
+}
+
+function setupGroupChat(topic, studentCode) {
+    const chatInput = document.getElementById("chatInput");
+    const chatForm = document.getElementById("chatForm");
+    const chatSubtitle = document.getElementById("chatSubtitle");
+    const lecturerTab = document.getElementById("lecturerChatTab");
+    const isLeader = String(topic.leader_code || "").toUpperCase() === String(studentCode || "").toUpperCase();
+
+    if (lecturerTab) lecturerTab.disabled = !isLeader;
+    if (!isLeader) {
+        chatRoom = "INTERNAL";
+    }
+
+    document.querySelectorAll(".chat-tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.chatRoom === chatRoom);
+        tab.onclick = () => {
+            if (tab.disabled) return;
+            chatRoom = tab.dataset.chatRoom;
+            document.querySelectorAll(".chat-tab").forEach(item => item.classList.toggle("active", item === tab));
+            if (chatSubtitle) chatSubtitle.textContent = chatRoom === "LECTURER"
+                ? "Trao đổi riêng giữa trưởng nhóm và giảng viên hướng dẫn"
+                : "Trao đổi nhanh với thành viên trong nhóm";
+            loadChatMessages(topic);
+        };
+    });
+
+    if (chatForm) {
+        chatForm.onsubmit = async event => {
+            event.preventDefault();
+            const content = chatInput?.value.trim();
+            if (!content) return;
+            await sendChatMessage(topic, content);
+        };
+    }
+
+    loadChatMessages(topic);
+    if (chatPollTimer) clearInterval(chatPollTimer);
+    chatPollTimer = setInterval(() => loadChatMessages(topic), 5000);
+}
+
+async function loadChatMessages(topic) {
+    const container = document.getElementById("chatMessages");
+    const topicId = topic?._id || topic?.id;
+    if (!container || !topicId) return;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+    try {
+        const auth = getAuthForRole("STUDENT");
+        const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/chat/topics/${encodeURIComponent(topicId)}?room=${chatRoom}`, {
+            signal: controller.signal,
+            headers: { "Authorization": `Bearer ${auth?.token || ""}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Không thể tải tin nhắn.");
+        if (window.refreshChatUnreadSidebar) await window.refreshChatUnreadSidebar();
+        const messages = result.data || [];
+        if (!messages.length) {
+            container.innerHTML = '<p class="chat-empty">Chưa có tin nhắn nào.</p>';
+            return;
+        }
+
+        const userCode = String(auth?.user?.user_code || "").toUpperCase();
+        let previousDay = "";
+        container.innerHTML = messages.map(message => {
+            const mine = String(message.sender_code || "").toUpperCase() === userCode;
+            const createdAt = new Date(message.created_at);
+            const time = createdAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+            const dayKey = createdAt.toLocaleDateString("vi-VN");
+            const dayDivider = dayKey !== previousDay
+                ? `<div class="chat-day-separator"><span>${formatChatDay(createdAt)}</span></div>`
+                : "";
+            previousDay = dayKey;
+            const senderName = mine ? "Bạn" : (message.sender_name || message.sender_code);
+            return `
+                ${dayDivider}
+                <div class="chat-message ${mine ? "mine" : ""}">
+                    <span class="chat-avatar"><i class="fa-solid fa-user"></i></span>
+                    <div class="chat-message-body">
+                        <div class="chat-meta"><span>${escapeChatText(senderName)}</span><span>${time}</span></div>
+                        <div class="chat-bubble">${escapeChatText(message.content)}</div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+        container.scrollTop = container.scrollHeight;
+    } catch (error) {
+        container.innerHTML = `<p class="chat-empty">${escapeChatText(error.message)}</p>`;
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+}
+
+async function sendChatMessage(topic, content) {
+    const auth = getAuthForRole("STUDENT");
+    const input = document.getElementById("chatInput");
+    const topicId = topic?._id || topic?.id;
+    if (!topicId) return;
+    try {
+        const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/chat/topics/${encodeURIComponent(topicId)}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${auth?.token || ""}`
+            },
+            body: JSON.stringify({ room_type: chatRoom, content })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Không thể gửi tin nhắn.");
+        if (input) input.value = "";
+        await loadChatMessages(topic);
+    } catch (error) {
+        showAppNotification(error.message);
+    }
+}
+
+function escapeChatText(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function formatChatDay(date) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const formatDate = value => value.toLocaleDateString("vi-VN");
+    if (formatDate(date) === formatDate(today)) return `Hôm nay, ${formatDate(date)}`;
+    if (formatDate(date) === formatDate(yesterday)) return `Hôm qua, ${formatDate(date)}`;
+    return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+window.addEventListener("chat:unread-updated", event => {
+    const roomCounts = new Map((event.detail.rooms || []).map(room => [
+        room.room_type,
+        Number(room.unread_count) || 0
+    ]));
+    setChatUnreadBadge("internalChatBadge", roomCounts.get("INTERNAL") || 0);
+    setChatUnreadBadge("lecturerChatBadge", roomCounts.get("LECTURER") || 0);
+});
+
+function setChatUnreadBadge(elementId, count) {
+    const badge = document.getElementById(elementId);
+    if (!badge) return;
+    const unreadCount = Math.max(0, Number(count) || 0);
+    badge.hidden = unreadCount === 0;
+    badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+    badge.setAttribute("aria-label", `${unreadCount} tin nhắn chưa đọc`);
 }
 
 function renderTodoAssigneeOptions(topic, currentStudentCode) {
@@ -362,6 +544,15 @@ function renderTodoAssigneeOptions(topic, currentStudentCode) {
 // =========================================================
 function renderScheduleLockedState(reason) {
     currentScheduleTopicInfo = null;
+    if (chatPollTimer) clearInterval(chatPollTimer);
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const chatForm = document.getElementById("chatForm");
+    const lecturerChatTab = document.getElementById("lecturerChatTab");
+    if (chatMessages) chatMessages.innerHTML = '<p class="chat-empty">Chat sẽ mở sau khi đề tài được duyệt.</p>';
+    if (chatInput) chatInput.disabled = true;
+    if (chatForm) chatForm.querySelector("button").disabled = true;
+    if (lecturerChatTab) lecturerChatTab.disabled = true;
 
     const btnOpenBooking = document.getElementById("btnOpenBookingModal");
     const meetingsContainer = document.getElementById("meetingsListContainer") || document.getElementById("meetingsContainer");
@@ -591,7 +782,7 @@ function renderTodoList(todos) {
     if (!todoList) return;
 
     if (todoCounter) {
-        const completedCount = todos.filter(t => t.is_completed === true).length;
+        const completedCount = todos.filter(todo => getTodoStatus(todo) === "COMPLETED").length;
         todoCounter.textContent = `${completedCount}/${todos.length}`;
     }
 
@@ -600,48 +791,78 @@ function renderTodoList(todos) {
         return;
     }
 
+    const currentStudentCode = String(getAuthForRole("STUDENT")?.user?.user_code || "").trim().toUpperCase();
+    const leaderCode = String(currentScheduleTopicInfo?.leader_code || "").trim().toUpperCase();
     todoList.innerHTML = todos.map((item, index) => {
-        const isCompleted = item.is_completed === true;
-        const dueDate = item.due_date ? new Date(item.due_date) : null;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dueDay = dueDate ? new Date(dueDate) : null;
-        if (dueDay) dueDay.setHours(0, 0, 0, 0);
-        const daysUntilDue = dueDay ? Math.ceil((dueDay - today) / 86400000) : null;
-        const statusLabel = isCompleted ? '☑ Hoàn thành' : 'Chưa hoàn thành';
+        const status = getTodoStatus(item);
+        const isCompleted = status === "COMPLETED";
+        const creatorCode = String(item.created_by || item.student_code || "").trim().toUpperCase();
+        const canDelete = currentStudentCode && (currentStudentCode === creatorCode || currentStudentCode === leaderCode);
+        const dueDay = getTodoDueDay(item.due_date);
+        const now = new Date();
+        const todayOrdinal = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+        const dueOrdinal = dueDay ? Date.UTC(dueDay.getFullYear(), dueDay.getMonth(), dueDay.getDate()) : null;
+        const daysUntilDue = dueOrdinal === null ? null : Math.round((dueOrdinal - todayOrdinal) / 86400000);
+        const isOverdue = !isCompleted && daysUntilDue !== null && daysUntilDue < 0;
+        const isDueSoon = !isCompleted && daysUntilDue !== null && daysUntilDue >= 0 && daysUntilDue <= 2;
+        const statusClass = status === "COMPLETED" ? "completed" : status === "IN_PROGRESS" ? "in-progress" : "pending";
         const dueLabel = dueDay
-            ? `Hạn ${dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-            : '';
-        const dueClass = !dueDay ? '' : daysUntilDue < 0 ? 'overdue' : daysUntilDue <= 2 ? 'soon' : 'pending';
+            ? isOverdue
+                ? `Quá hạn ${dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+                : `Hạn ${dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+            : 'Chưa đặt hạn';
+        const dueClass = !dueDay ? 'none' : isCompleted ? 'completed' : isOverdue ? 'overdue' : isDueSoon ? 'soon' : 'pending';
 
         return `
-        <div class="todo-item todo-tone-${index % 4} ${isCompleted ? 'done' : ''}" data-id="${item._id}">
-            <div class="todo-check-wrap">
-                <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleTodoStatus('${item._id}')" aria-label="Đánh dấu công việc hoàn thành" />
-            </div>
+        <div class="todo-item todo-tone-${index % 4} ${isCompleted ? 'done' : ''} ${isOverdue ? 'todo-overdue' : ''}" data-id="${item._id}">
             <div class="todo-content">
-                <strong class="todo-title">${item.title}</strong>
+                <div class="todo-title-row">
+                    <strong class="todo-title">${item.title}</strong>
+                    <select class="todo-status-select ${statusClass}" aria-label="Trạng thái công việc" onchange="updateTodoStatus('${item._id}', this.value)">
+                        <option value="NOT_STARTED" ${status === "NOT_STARTED" ? "selected" : ""}>Chưa hoàn thành</option>
+                        <option value="IN_PROGRESS" ${status === "IN_PROGRESS" ? "selected" : ""}>Đang thực hiện</option>
+                        <option value="COMPLETED" ${status === "COMPLETED" ? "selected" : ""}>Đã hoàn thành</option>
+                    </select>
+                </div>
                 <small class="todo-meta">${item.assigned_to ? `Phụ trách: ${item.assigned_to}` : "Phụ trách: Cả nhóm"}${item.created_by ? ` · Tạo bởi ${item.created_by}` : ""}</small>
+                <small class="todo-deadline ${dueClass}"><i class="fa-regular fa-calendar"></i> ${dueLabel}</small>
             </div>
-            <span class="todo-status ${isCompleted ? 'completed' : 'pending'}">${statusLabel}</span>
-            ${dueLabel ? `<span class="todo-deadline ${dueClass}">${dueLabel}</span>` : ''}
-            <span class="todo-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+            ${canDelete ? `<button type="button" class="todo-delete-btn" aria-label="Xóa công việc" title="Xóa công việc" onclick="deleteTodo('${item._id}')"><i class="fa-regular fa-trash-can"></i></button>` : ""}
         </div>
     `;
     }).join("");
 }
 
+function getTodoStatus(todo) {
+    if (["NOT_STARTED", "IN_PROGRESS", "COMPLETED"].includes(todo.status)) return todo.status;
+    return todo.is_completed === true ? "COMPLETED" : "NOT_STARTED";
+}
+
+function getTodoDueDay(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ""));
+    if (!match) return null;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    const dueDay = new Date(year, month, day);
+    if (dueDay.getFullYear() !== year || dueDay.getMonth() !== month || dueDay.getDate() !== day) return null;
+    return dueDay;
+}
+
 // =========================================================
 // HÀM TOGGLE CẬP NHẬT TRẠNG THÁI CHECKBOX KHI USER CLICK
 // =========================================================
-async function toggleTodoStatus(todoId) {
+async function updateTodoStatus(todoId, status) {
     try {
         const token = getAuthForRole("STUDENT")?.token;
         const res = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/schedule/todos/toggle/${todoId}`, {
             method: "PATCH",
             headers: {
-                "Authorization": `Bearer ${token}`
-            }
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ status })
         });
 
         if (res.ok) {
@@ -652,10 +873,43 @@ async function toggleTodoStatus(todoId) {
                 await loadScheduleData(user.user_code);
             }
         } else {
-            showAppNotification("Không thể cập nhật trạng thái công việc!");
+            const result = await res.json();
+            throw new Error(result.message || "Không thể cập nhật trạng thái công việc.");
         }
     } catch (err) {
-        console.error("Lỗi toggle todo:", err);
+        console.error("Lỗi cập nhật trạng thái công việc:", err);
+        showAppNotification(err.message || "Không thể cập nhật trạng thái công việc.");
+    }
+}
+
+async function deleteTodo(todoId) {
+    try {
+        if (typeof window.showConfirmDialog !== "function") {
+            throw new Error("Không thể mở hộp thoại xác nhận xóa.");
+        }
+        const confirmed = await window.showConfirmDialog({
+            title: "Xóa công việc?",
+            message: "Công việc này sẽ bị xóa khỏi danh sách của cả nhóm.",
+            confirmText: "Xóa công việc",
+            danger: true
+        });
+        if (!confirmed) return;
+
+        const auth = getAuthForRole("STUDENT");
+        const userCode = auth?.user?.user_code;
+        if (!userCode) throw new Error("Vui lòng đăng nhập lại để xóa công việc.");
+
+        const res = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/schedule/todos/${encodeURIComponent(todoId)}`, {
+            method: "DELETE"
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || "Không thể xóa công việc.");
+
+        await loadScheduleData(userCode);
+        showAppNotification(result.message || "Đã xóa công việc.", "success");
+    } catch (err) {
+        console.error("Lỗi xóa công việc:", err);
+        showAppNotification(err.message || "Không thể xóa công việc.");
     }
 }
 
@@ -663,6 +917,6 @@ function renderTodoProgress(todos) {
     const progressEl = document.getElementById("statTodoProgress");
     if (!progressEl) return;
 
-    const completedCount = todos.filter(todo => todo.is_completed === true).length;
+    const completedCount = todos.filter(todo => getTodoStatus(todo) === "COMPLETED").length;
     progressEl.innerHTML = `${completedCount} <small>/ ${todos.length}</small>`;
 }

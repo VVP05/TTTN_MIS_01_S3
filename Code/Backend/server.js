@@ -26,6 +26,8 @@ const ActivityLog = require('./models/ActivityLog');
 const documentRoutes = require('./routes/documentRoutes');
 const milestoneRoutes = require('./routes/milestoneRoutes');
 const semesterRoutes = require('./routes/semesterRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 const activityLogger = require('./middlewares/activityLogger');
 const authMiddleware = require('./middlewares/authMiddleware');
 const submissionController = require('./controllers/submissionController');
@@ -34,6 +36,8 @@ const Milestone = require('./models/Milestone');
 const Topic = require('./models/Topic');
 const Semester = require('./models/Semester');
 const Notification = require('./models/Notification');
+const ChatMessage = require('./models/ChatMessage');
+const ChatReadState = require('./models/ChatReadState');
 const {
 	startMilestoneReminderJob,
 	startSemesterRegistrationNotifier
@@ -65,6 +69,8 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/milestones', milestoneRoutes);
 app.use('/api/semesters', semesterRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/api/groups/lecturer/:lecturerCode', groupController.getGroupsByLecturer);
 
@@ -95,6 +101,8 @@ connectDB()
 			Milestone.syncIndexes(),
 			Topic.init(),
 			Semester.init(),
+			ChatMessage.init(),
+			ChatReadState.init(),
 			Notification.init(),
 			ActivityLog.init()
 		]);

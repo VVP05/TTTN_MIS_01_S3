@@ -12,12 +12,47 @@ const { notifyUsers, notifyTopicStudents } = require('../services/notificationSe
 const { getLecturerQuotaStatus } = require('../services/lecturerQuota');
 const { getTopicMilestoneProgress } = require('../services/milestoneProgress');
 const { getAvailablePoolTopicSlot } = require('../services/poolTopicCapacity');
+const { getAvailableLecturerPoolTopics } = require('../services/lecturerPoolTopics');
 
 const activeTopicStatuses = ['PENDING', 'APPROVED', 'NEED_REVISION'];
 const codeRegex = value => new RegExp(
     `^${String(value || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
     'i'
 );
+
+async function addAcceptedMemberToTopic(topicId, memberCode) {
+    const normalizedCode = String(memberCode || '').trim().toUpperCase();
+    if (!normalizedCode) return false;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        const topic = await Topic.findById(topicId)
+            .select('_id status leader_code member2_code member3_code')
+            .lean();
+        if (!topic || !activeTopicStatuses.includes(topic.status)) return false;
+
+        const memberCodes = [topic.leader_code, topic.member2_code, topic.member3_code]
+            .map(code => String(code || '').trim().toUpperCase())
+            .filter(Boolean);
+        if (memberCodes.includes(normalizedCode)) return true;
+
+        const slot = !topic.member2_code ? 'member2_code'
+            : !topic.member3_code ? 'member3_code'
+                : null;
+        if (!slot) return false;
+
+        const result = await Topic.updateOne(
+            {
+                _id: topic._id,
+                status: { $in: activeTopicStatuses },
+                [slot]: { $in: [null, ''] }
+            },
+            { $set: { [slot]: normalizedCode } }
+        );
+        if (result.modifiedCount === 1) return true;
+    }
+
+    return false;
+}
 
 async function ensureLecturerHasCapacity(res, lecturerCode, excludeTopicId) {
     const quotaStatus = await getLecturerQuotaStatus(lecturerCode, excludeTopicId);
@@ -223,19 +258,16 @@ exports.registerTopic = async (req, res) => {
         }
 
         if (registrationRole === 'LEADER') {
-            const acceptedMembership = await GroupJoinRequest.findOne({
+            const existingMembershipRequest = await GroupJoinRequest.findOne({
                 member_code: codePattern(requesterCode),
-                status: 'ACCEPTED'
-            });
-            if (acceptedMembership) {
-                const acceptedLeaderTopic = await Topic.findOne({
-                    leader_code: codePattern(acceptedMembership.leader_code)
-                }).select('_id');
-                if (acceptedLeaderTopic) {
-                    return res.status(400).json({
-                        message: `Bạn đã được xác nhận vào nhóm của Trưởng nhóm ${acceptedMembership.leader_code}, không thể đăng ký làm Trưởng nhóm khác!`
-                    });
-                }
+                status: { $in: ['PENDING', 'ACCEPTED'] }
+            }).select('leader_code status').lean();
+            if (existingMembershipRequest) {
+                return res.status(409).json({
+                    message: existingMembershipRequest.status === 'ACCEPTED'
+                        ? `Bạn đã được xác nhận vào nhóm của Trưởng nhóm ${existingMembershipRequest.leader_code}, không thể đăng ký làm Trưởng nhóm khác!`
+                        : `Bạn đang chờ Trưởng nhóm ${existingMembershipRequest.leader_code} xác nhận. Không thể đăng ký làm Trưởng nhóm khác trong lúc này.`
+                });
             }
         }
 
@@ -356,9 +388,9 @@ exports.registerTopic = async (req, res) => {
                 });
             }
 
-            if (existingTopic) {
+            if (existingTopic && !activeTopicStatuses.includes(existingTopic.status)) {
                 return res.status(400).json({
-                    message: `Mã ${leader_code} hiện đang là Trưởng nhóm của một nhóm khác. Vui lòng chọn mã sinh viên khác!`
+                    message: 'Nhóm này hiện không nhận thêm thành viên.'
                 });
             }
 
@@ -373,14 +405,16 @@ exports.registerTopic = async (req, res) => {
                     : 'Bạn đã gửi yêu cầu tham gia nhóm này, đang chờ trưởng nhóm xác nhận!' });
             }
 
-            const pendingRequests = await GroupJoinRequest.countDocuments({
+            const activeMembershipRequests = await GroupJoinRequest.find({
                 leader_code: codePattern(leader_code),
                 status: { $in: ['PENDING', 'ACCEPTED'] }
-            });
-            const currentMemberCount = existingTopic
-                ? [existingTopic.member2_code, existingTopic.member3_code].filter(Boolean).length
-                : 0;
-            if (currentMemberCount + pendingRequests >= 2) {
+            }).select('member_code').lean();
+            const occupiedMemberCodes = new Set([
+                existingTopic?.member2_code,
+                existingTopic?.member3_code,
+                ...activeMembershipRequests.map(request => request.member_code)
+            ].map(normalizeCode).filter(Boolean));
+            if (occupiedMemberCodes.size >= 2) {
                 return res.status(400).json({ message: 'Nhóm đã đủ số lượng thành viên hoặc đã có đủ yêu cầu chờ xác nhận!' });
             }
 
@@ -582,8 +616,14 @@ exports.getMyTopic = async (req, res) => {
                         .filter(Boolean)
                         .map(code => String(code).toUpperCase());
                     if (!memberCodes.includes(userCode.toUpperCase())) {
-                        if (!topic.member2_code) topic.member2_code = userCode;
-                        else if (!topic.member3_code) topic.member3_code = userCode;
+                        const memberAdded = await addAcceptedMemberToTopic(topic._id, userCode);
+                        if (!memberAdded) {
+                            return res.status(409).json({
+                                success: false,
+                                message: 'Nhóm đã đủ thành viên hoặc đề tài không còn hoạt động. Vui lòng liên hệ Trưởng nhóm.'
+                            });
+                        }
+                        topic = await Topic.findById(topic._id).lean();
                     }
                 }
             }
@@ -1173,56 +1213,125 @@ exports.deleteMilestoneSubmission = async (req, res) => {
 // 6. Lấy danh sách đề tài gợi ý trong Kho (Cho SV & GV xem)
 exports.getLecturerPoolTopics = async (req, res) => {
     try {
-        const [pool, activeTopics, lecturers] = await Promise.all([
-            LecturerTopic.find({
-                status: { $ne: 'REJECTED' },
-                is_active: { $ne: false }
-            }).sort({ createdAt: -1 }).lean(),
-            Topic.find({ status: { $in: activeTopicStatuses } })
-                .select('active_pool_topic_id pool_topic_id lecturer_code leader_code')
-                .lean(),
-            User.find({ role: 'LECTURER' }).select('user_code max_quota').lean()
-        ]);
-        const quotaByLecturer = new Map(lecturers.map(lecturer => {
-            const quota = Number(lecturer.max_quota);
-            return [
-                String(lecturer.user_code || '').toUpperCase(),
-                Number.isInteger(quota) && quota >= 0 ? quota : 5
-            ];
-        }));
-        const registeredByPoolTopic = new Map();
-        const assignedByLecturer = new Map();
-        activeTopics.forEach(topic => {
-            const poolTopicId = String(topic.active_pool_topic_id || topic.pool_topic_id || '');
-            if (poolTopicId) {
-                registeredByPoolTopic.set(poolTopicId, (registeredByPoolTopic.get(poolTopicId) || 0) + 1);
-            }
-            const lecturerCode = String(topic.lecturer_code || '').toUpperCase();
-            if (lecturerCode && String(topic.leader_code || '').trim()) {
-                assignedByLecturer.set(lecturerCode, (assignedByLecturer.get(lecturerCode) || 0) + 1);
-            }
-        });
-        const availablePool = pool.map(topic => {
-            const registeredGroups = registeredByPoolTopic.get(String(topic._id)) || 0;
-            const lecturerQuota = quotaByLecturer.get(String(topic.lecturer_code || '').toUpperCase()) ?? 5;
-            const lecturerAssigned = assignedByLecturer.get(String(topic.lecturer_code || '').toUpperCase()) || 0;
-            const maxGroups = registeredGroups > 0 || lecturerAssigned < lecturerQuota ? 1 : 0;
-            const remainingGroups = Math.max(0, maxGroups - registeredGroups);
-            return {
-                ...topic,
-                max_groups: maxGroups,
-                registered_groups: registeredGroups,
-                remaining_groups: remainingGroups,
-                is_registered: remainingGroups === 0,
-                status: remainingGroups === 0
-                    ? 'REGISTERED'
-                    : topic.status === 'PENDING' ? 'PENDING' : 'OPEN'
-            };
-        });
+        const availablePool = await getAvailableLecturerPoolTopics();
         return res.status(200).json({ success: true, data: availablePool });
     } catch (error) {
         console.error("Lỗi lấy kho đề tài giảng viên:", error);
         return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getStudentTopicMarketplace = async (req, res) => {
+    try {
+        const studentCode = String(req.user?.user_code || '').trim().toUpperCase();
+        const activeTopicsFilter = { status: { $in: activeTopicStatuses } };
+        const [lecturerTopics, groupTopics, studentTopic, studentMembership] = await Promise.all([
+            getAvailableLecturerPoolTopics(),
+            Topic.find({
+                ...activeTopicsFilter,
+                leader_code: { $exists: true, $nin: ['', null] }
+            }).sort({ createdAt: -1 }).lean(),
+            Topic.findOne({
+                ...activeTopicsFilter,
+                $or: [
+                    { leader_code: codeRegex(studentCode) },
+                    { member2_code: codeRegex(studentCode) },
+                    { member3_code: codeRegex(studentCode) }
+                ]
+            }).select('_id').lean(),
+            GroupJoinRequest.findOne({
+                member_code: codeRegex(studentCode),
+                status: 'ACCEPTED'
+            }).select('_id').lean()
+        ]);
+
+        const leaderCodes = [...new Set(groupTopics.map(topic =>
+            String(topic.leader_code || '').trim().toUpperCase()
+        ).filter(Boolean))];
+        const joinRequests = await GroupJoinRequest.find({
+            status: { $in: ['PENDING', 'ACCEPTED'] },
+            $or: [
+                { leader_code: { $in: leaderCodes.map(codeRegex) } },
+                { member_code: codeRegex(studentCode) }
+            ]
+        }).lean();
+        const lecturerCodes = [...new Set([
+            ...lecturerTopics.map(topic => String(topic.lecturer_code || '').trim().toUpperCase()),
+            ...groupTopics.map(topic => String(topic.lecturer_code || '').trim().toUpperCase())
+        ].filter(Boolean))];
+        const users = await User.find({
+            user_code: { $in: [...leaderCodes, ...lecturerCodes].map(codeRegex) }
+        }).select('user_code full_name').lean();
+        const namesByCode = new Map(users.map(user => [
+            String(user.user_code || '').trim().toUpperCase(),
+            user.full_name || user.user_code
+        ]));
+        const requestsByLeader = new Map();
+        joinRequests.forEach(request => {
+            const leaderCode = String(request.leader_code || '').trim().toUpperCase();
+            if (!requestsByLeader.has(leaderCode)) requestsByLeader.set(leaderCode, []);
+            requestsByLeader.get(leaderCode).push(request);
+        });
+        const studentHasTopic = Boolean(studentTopic || studentMembership);
+        const ownRequests = joinRequests.filter(request =>
+            String(request.member_code || '').trim().toUpperCase() === studentCode
+        );
+        const hasPendingRequest = ownRequests.some(request => request.status === 'PENDING');
+
+        const openGroupTopics = groupTopics.map(topic => {
+            const leaderCode = String(topic.leader_code || '').trim().toUpperCase();
+            const members = [topic.member2_code, topic.member3_code]
+                .map(code => String(code || '').trim().toUpperCase())
+                .filter(Boolean);
+            const activeRequests = requestsByLeader.get(leaderCode) || [];
+            const occupiedMembers = new Set(members);
+            activeRequests.forEach(request => {
+                const memberCode = String(request.member_code || '').trim().toUpperCase();
+                if (memberCode) occupiedMembers.add(memberCode);
+            });
+            const openSlots = Math.max(0, 2 - occupiedMembers.size);
+            const ownRequest = ownRequests.find(request =>
+                String(request.leader_code || '').trim().toUpperCase() === leaderCode
+            );
+            return {
+                _id: topic._id,
+                title: topic.title,
+                description: topic.description,
+                category: topic.category,
+                requirements: topic.requirements || '',
+                status: topic.status,
+                lecturer_code: topic.lecturer_code,
+                lecturer_name: namesByCode.get(String(topic.lecturer_code || '').trim().toUpperCase()) ||
+                    topic.lecturer_code,
+                leader_code: topic.leader_code,
+                leader_name: namesByCode.get(leaderCode) || topic.leader_code,
+                member_count: occupiedMembers.size + 1,
+                open_slots: openSlots,
+                request_status: ownRequest?.status || null,
+                can_join: openSlots > 0 && !studentHasTopic && !hasPendingRequest && !ownRequest
+            };
+        }).filter(topic => topic.open_slots > 0);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                lecturerTopics: lecturerTopics
+                    .filter(topic => Number(topic.remaining_groups) > 0)
+                    .map(topic => ({
+                        ...topic,
+                        lecturer_name: namesByCode.get(String(topic.lecturer_code || '').trim().toUpperCase()) ||
+                            topic.lecturer_code,
+                        can_register_as_leader: !studentHasTopic && !hasPendingRequest
+                    })),
+                groupTopics: openGroupTopics
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi lấy sàn đề tài sinh viên:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Không thể tải danh sách đề tài. Vui lòng thử lại sau.'
+        });
     }
 };
 
@@ -1900,6 +2009,48 @@ exports.updateGroupJoinRequest = async (req, res) => {
             { $set: { status } }, { new: true }
         );
         if (!request) return res.status(404).json({ message: 'Không tìm thấy yêu cầu tham gia nhóm!' });
+
+        if (status === 'ACCEPTED') {
+            const activeTopic = await Topic.findOne({
+                leader_code: codeRegex(leaderCode),
+                status: { $in: activeTopicStatuses }
+            }).select('_id').lean();
+
+            if (activeTopic) {
+                const otherAcceptedMembership = await GroupJoinRequest.findOne({
+                    _id: { $ne: request._id },
+                    member_code: codeRegex(request.member_code),
+                    status: 'ACCEPTED'
+                }).select('leader_code').lean();
+                const otherTopic = await Topic.findOne({
+                    _id: { $ne: activeTopic._id },
+                    status: { $in: activeTopicStatuses },
+                    $or: [
+                        { leader_code: codeRegex(request.member_code) },
+                        { member2_code: codeRegex(request.member_code) },
+                        { member3_code: codeRegex(request.member_code) }
+                    ]
+                }).select('_id').lean();
+
+                if (otherAcceptedMembership || otherTopic ||
+                    !await addAcceptedMemberToTopic(activeTopic._id, request.member_code)) {
+                    const rollback = await GroupJoinRequest.updateOne(
+                        { _id: request._id, status: 'ACCEPTED' },
+                        { $set: { status: 'PENDING' } }
+                    );
+                    if (rollback.modifiedCount !== 1) {
+                        throw new Error('Không thể hoàn tác yêu cầu tham gia sau khi kiểm tra nhóm thất bại.');
+                    }
+                    return res.status(409).json({
+                        success: false,
+                        message: otherAcceptedMembership || otherTopic
+                            ? 'Sinh viên này đã thuộc một nhóm khác.'
+                            : 'Nhóm đã đủ thành viên hoặc đề tài không còn hoạt động.'
+                    });
+                }
+            }
+        }
+
         await notifyUsers([request.member_code], {
             title: status === 'ACCEPTED' ? 'Yêu cầu tham gia nhóm đã được chấp nhận' : 'Yêu cầu tham gia nhóm đã bị từ chối',
             content: status === 'ACCEPTED'
@@ -1910,6 +2061,7 @@ exports.updateGroupJoinRequest = async (req, res) => {
         });
         return res.json({ success: true, message: status === 'ACCEPTED' ? 'Đã xác nhận thành viên!' : 'Đã từ chối yêu cầu!' });
     } catch (error) {
+        console.error('Lỗi xác nhận yêu cầu tham gia nhóm:', error);
         return res.status(500).json({ message: 'Không thể xử lý yêu cầu tham gia nhóm!' });
     }
 };

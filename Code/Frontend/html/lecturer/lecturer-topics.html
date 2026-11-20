@@ -91,9 +91,14 @@
                         <h1>Duyệt & Quản Lý Đề Tài</h1>
                         <p>Quản lý các đề tài sinh viên đề xuất và đăng tải kho đề tài do giảng viên hướng dẫn.</p>
                     </div>
-                    <button id="openCreateModalBtn" class="btn-primary" hidden>
-                        <i class="fa-solid fa-plus"></i> Đề xuất đề tài mới
-                    </button>
+                    <div class="page-header-actions">
+                        <button id="openTopicImportBtn" class="btn-secondary" hidden>
+                            <i class="fa-solid fa-file-import"></i> Import Excel
+                        </button>
+                        <button id="openCreateModalBtn" class="btn-primary" hidden>
+                            <i class="fa-solid fa-plus"></i> Đề xuất đề tài mới
+                        </button>
+                    </div>
                 </div>
 
                 <!-- TABS & FILTERS BAR -->
@@ -245,6 +250,56 @@
         </div>
     </div>
 
+    <!-- MODAL IMPORT NHIỀU ĐỀ TÀI -->
+    <div id="topicImportModal" class="modal-overlay">
+        <div class="modal-box topic-import-modal-box">
+            <div class="modal-header">
+                <div>
+                    <h3>Import danh sách đề tài</h3>
+                    <p class="topic-import-subtitle">Tải mẫu Excel, chọn file và kiểm tra dữ liệu trước khi lưu.</p>
+                </div>
+                <button type="button" id="closeTopicImportBtn" class="btn-close-modal" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="topic-import-toolbar">
+                <p>File .xlsx tối đa 2 MB, không quá 100 đề tài. Cột tên và mô tả là bắt buộc; mã giảng viên lấy từ tài khoản hiện tại.</p>
+                <button type="button" id="downloadTopicTemplateBtn" class="btn-secondary">
+                    <i class="fa-solid fa-download"></i> Tải file mẫu
+                </button>
+            </div>
+            <div class="form-group">
+                <label for="topicImportFile">Chọn file Excel (.xlsx)</label>
+                <input type="file" id="topicImportFile" class="form-control" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            </div>
+            <div class="topic-import-controls">
+                <button type="button" id="previewTopicImportBtn" class="btn-primary">
+                    <i class="fa-solid fa-magnifying-glass"></i> Kiểm tra & xem trước
+                </button>
+                <span id="topicImportSummary" class="topic-import-summary" aria-live="polite"></span>
+            </div>
+            <div class="topic-import-table-wrap">
+                <table class="data-table topic-import-table">
+                    <thead>
+                        <tr>
+                            <th>Dòng</th>
+                            <th>Tên đề tài</th>
+                            <th>Mô tả</th>
+                            <th>Lĩnh vực</th>
+                            <th>Kiểm tra</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topicImportPreviewBody">
+                        <tr><td colspan="5" class="topic-import-empty">Chưa có dữ liệu xem trước.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="topicImportMessage" class="topic-import-message" role="status" aria-live="polite"></p>
+            <div class="modal-actions">
+                <button type="button" id="cancelTopicImportBtn" class="btn-cancel btn-close-modal">Đóng</button>
+                <button type="button" id="confirmTopicImportBtn" class="btn-submit" disabled>Import đề tài hợp lệ</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL 2: YÊU CẦU CHỈNH SỬA ĐỀ TÀI -->
     <div id="revisionModal" class="modal-overlay">
         <div class="modal-box">
@@ -307,6 +362,7 @@
     </div>
 
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/notif-badge.js"></script>
     <script src="../../js/lecturer/lecturer-pending-alert.js"></script>
     <script src="../../js/lecturer/lecturer-topics.js"></script>

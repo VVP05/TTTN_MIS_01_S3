@@ -45,6 +45,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     let allPoolTopics = [];
     let allLecturers = [];
     let registrationWindowOpen = false;
+    let marketplaceData = { lecturerTopics: [], groupTopics: [] };
+    let activeMarketplaceTab = "lecturer";
+    let marketplacePage = 1;
+    const marketplacePageSize = 12;
 
     // Header Info Elements
     const userNameEl = document.getElementById("userName");
@@ -81,6 +85,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const msgBox = document.getElementById("formMessage");
     const statusEl = document.getElementById("topicStatus");
     const registrationWindowNotice = document.getElementById("registrationWindowNotice");
+    const marketplaceCards = document.getElementById("marketplaceCards");
+    const marketplaceMessage = document.getElementById("marketplaceMessage");
+    const marketplacePagination = document.getElementById("marketplacePagination");
+    const marketplaceSearch = document.getElementById("marketplaceSearch");
+    const marketplaceCategory = document.getElementById("marketplaceCategory");
+    const lecturerTopicCount = document.getElementById("lecturerTopicCount");
+    const groupTopicCount = document.getElementById("groupTopicCount");
 
     // Modal Cancel Elements
     const cancelModal = document.getElementById("cancelModal");
@@ -253,28 +264,44 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!proposedSelect) return;
 
         if (!selectedLecturerCode) {
-            proposedSelect.innerHTML = `<option value="">-- Vui lòng chọn Giảng viên hướng dẫn trước --</option>`;
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "-- Vui lòng chọn Giảng viên hướng dẫn trước --";
+            proposedSelect.replaceChildren(option);
             return;
         }
 
         const filtered = allPoolTopics.filter(t => t.lecturer_code === selectedLecturerCode);
 
         if (filtered && filtered.length > 0) {
-            proposedSelect.innerHTML = `<option value="">-- Chọn đề tài gợi ý từ Kho (Hoặc tự nhập bên dưới) --</option>` +
-                filtered.map(t => {
-                    const codeTag = t.topic_code ? `[${t.topic_code}] ` : '';
-                    const registeredGroups = Number(t.registered_groups) || 0;
-                    const maxGroupsValue = Number(t.max_groups);
-                    const maxGroups = Number.isInteger(maxGroupsValue) && maxGroupsValue >= 0
-                        ? maxGroupsValue
-                        : 1;
-                    const remainingGroups = Number(t.remaining_groups ?? maxGroups - registeredGroups);
-                    const isFull = remainingGroups <= 0 || t.status === 'REGISTERED';
-                    const availability = registeredGroups > 0 ? " - Đã có nhóm đăng ký" : "";
-                    return `<option value="${t._id}" data-title="${t.title}" data-desc="${t.description || ''}" data-lecturer="${t.lecturer_code || ''}" ${isFull ? 'disabled' : ''}>${codeTag}${t.title}${availability}</option>`;
-                }).join('');
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "-- Chọn đề tài gợi ý từ Kho (Hoặc tự nhập bên dưới) --";
+            const options = filtered.map(topic => {
+                const option = document.createElement("option");
+                const registeredGroups = Number(topic.registered_groups) || 0;
+                const maxGroupsValue = Number(topic.max_groups);
+                const maxGroups = Number.isInteger(maxGroupsValue) && maxGroupsValue >= 0
+                    ? maxGroupsValue
+                    : 1;
+                const remainingGroups = Number(topic.remaining_groups ?? maxGroups - registeredGroups);
+                const isFull = remainingGroups <= 0 || topic.status === "REGISTERED";
+                const codeTag = topic.topic_code ? `[${topic.topic_code}] ` : "";
+                const availability = registeredGroups > 0 ? " - Đã có nhóm đăng ký" : "";
+                option.value = topic._id;
+                option.dataset.title = topic.title || "";
+                option.dataset.desc = topic.description || "";
+                option.dataset.lecturer = topic.lecturer_code || "";
+                option.disabled = isFull;
+                option.textContent = `${codeTag}${topic.title || "Đề tài chưa có tên"}${availability}`;
+                return option;
+            });
+            proposedSelect.replaceChildren(placeholder, ...options);
         } else {
-            proposedSelect.innerHTML = `<option value="">-- Giảng viên này hiện chưa có đề tài gợi ý --</option>`;
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "-- Giảng viên này hiện chưa có đề tài gợi ý --";
+            proposedSelect.replaceChildren(option);
         }
     };
 
@@ -492,6 +519,260 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    function createMarketplaceMeta(icon, text) {
+        const item = document.createElement("span");
+        const iconElement = document.createElement("i");
+        iconElement.className = `fa-solid ${icon}`;
+        iconElement.setAttribute("aria-hidden", "true");
+        item.append(iconElement, document.createTextNode(text));
+        return item;
+    }
+
+    function createMarketplaceCard(topic, isGroupTopic) {
+        const card = document.createElement("article");
+        card.className = "marketplace-card";
+
+        const title = document.createElement("h3");
+        title.textContent = topic.title || "Đề tài chưa có tên";
+        card.appendChild(title);
+
+        const description = document.createElement("p");
+        description.textContent = topic.description || "Chưa có mô tả cho đề tài này.";
+        card.appendChild(description);
+
+        const meta = document.createElement("div");
+        meta.className = "marketplace-card-meta";
+        if (topic.category) meta.appendChild(createMarketplaceMeta("fa-layer-group", topic.category));
+        if (isGroupTopic) {
+            meta.appendChild(createMarketplaceMeta("fa-user-tie", `Trưởng nhóm: ${topic.leader_name || topic.leader_code}`));
+            meta.appendChild(createMarketplaceMeta("fa-chalkboard-user", `GVHD: ${topic.lecturer_name || topic.lecturer_code || "Chưa phân công"}`));
+            if (topic.requirements) meta.appendChild(createMarketplaceMeta("fa-list-check", `Yêu cầu: ${topic.requirements}`));
+        } else {
+            meta.appendChild(createMarketplaceMeta("fa-chalkboard-user", topic.lecturer_name || topic.lecturer_code || "Giảng viên"));
+            if (topic.requirements) meta.appendChild(createMarketplaceMeta("fa-list-check", `Yêu cầu: ${topic.requirements}`));
+        }
+        card.appendChild(meta);
+
+        const footer = document.createElement("div");
+        footer.className = "marketplace-card-footer";
+        const status = document.createElement("span");
+        status.className = "marketplace-card-status";
+        const action = document.createElement("button");
+        action.type = "button";
+        action.className = "marketplace-card-action";
+
+        if (isGroupTopic) {
+            status.textContent = `Còn ${topic.open_slots} vị trí`;
+            const requestStatus = String(topic.request_status || "").toUpperCase();
+            if (requestStatus === "PENDING") {
+                action.textContent = "Đang chờ xác nhận";
+                action.disabled = true;
+            } else if (requestStatus === "ACCEPTED") {
+                action.textContent = "Đã được nhận vào nhóm";
+                action.disabled = true;
+            } else if (!topic.can_join) {
+                action.textContent = "Không thể đăng ký lúc này";
+                action.disabled = true;
+            } else if (!registrationWindowOpen) {
+                action.textContent = "Đang ngoài hạn đăng ký";
+                action.disabled = true;
+            } else {
+                action.textContent = "Xin tham gia nhóm";
+                action.addEventListener("click", () => requestToJoinGroup(topic, action));
+            }
+        } else {
+            status.textContent = "Đang mở đăng ký";
+            if (!topic.can_register_as_leader) {
+                action.textContent = "Bạn đã có đăng ký";
+                action.disabled = true;
+            } else if (!registrationWindowOpen) {
+                action.textContent = "Đang ngoài hạn đăng ký";
+                action.disabled = true;
+            } else {
+                action.textContent = "Chọn làm trưởng nhóm";
+                action.addEventListener("click", () => chooseLecturerTopic(topic));
+            }
+        }
+
+        footer.append(status, action);
+        card.appendChild(footer);
+        return card;
+    }
+
+    function renderMarketplace() {
+        if (!marketplaceCards) return;
+        const topics = activeMarketplaceTab === "lecturer"
+            ? marketplaceData.lecturerTopics
+            : marketplaceData.groupTopics;
+        const searchTerm = String(marketplaceSearch?.value || "").trim().toLocaleLowerCase("vi");
+        const selectedCategory = marketplaceCategory?.value || "";
+        const filteredTopics = topics.filter(topic => {
+            const searchableText = [
+                topic.title,
+                topic.description,
+                topic.category,
+                topic.lecturer_name,
+                topic.leader_name,
+                topic.leader_code
+            ].join(" ").toLocaleLowerCase("vi");
+            return (!searchTerm || searchableText.includes(searchTerm)) &&
+                (!selectedCategory || topic.category === selectedCategory);
+        });
+
+        const pageCount = Math.max(1, Math.ceil(filteredTopics.length / marketplacePageSize));
+        marketplacePage = Math.min(marketplacePage, pageCount);
+        const startIndex = (marketplacePage - 1) * marketplacePageSize;
+        const pageTopics = filteredTopics.slice(startIndex, startIndex + marketplacePageSize);
+
+        marketplaceCards.replaceChildren(...pageTopics.map(topic =>
+            createMarketplaceCard(topic, activeMarketplaceTab === "groups")
+        ));
+        renderMarketplacePagination(filteredTopics.length, pageCount);
+        if (marketplaceMessage) {
+            marketplaceMessage.textContent = filteredTopics.length
+                ? ""
+                : topics.length
+                    ? "Không tìm thấy đề tài phù hợp với bộ lọc."
+                    : activeMarketplaceTab === "lecturer"
+                        ? "Hiện chưa có đề tài giảng viên nào đang mở đăng ký."
+                        : "Hiện chưa có nhóm nào đang tìm thêm thành viên.";
+        }
+    }
+
+    function renderMarketplacePagination(total, pageCount) {
+        if (!marketplacePagination) return;
+        marketplacePagination.replaceChildren();
+        marketplacePagination.hidden = pageCount <= 1;
+        if (pageCount <= 1) return;
+
+        const previousButton = document.createElement("button");
+        previousButton.type = "button";
+        previousButton.className = "marketplace-page-button";
+        previousButton.textContent = "Trang trước";
+        previousButton.disabled = marketplacePage <= 1;
+        previousButton.addEventListener("click", () => {
+            marketplacePage -= 1;
+            renderMarketplace();
+        });
+
+        const pageStatus = document.createElement("span");
+        pageStatus.className = "marketplace-page-status";
+        pageStatus.textContent = `Trang ${marketplacePage} / ${pageCount} · ${total} đề tài`;
+
+        const nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.className = "marketplace-page-button";
+        nextButton.textContent = "Trang sau";
+        nextButton.disabled = marketplacePage >= pageCount;
+        nextButton.addEventListener("click", () => {
+            marketplacePage += 1;
+            renderMarketplace();
+        });
+
+        marketplacePagination.append(previousButton, pageStatus, nextButton);
+    }
+
+    async function loadMarketplace() {
+        if (!marketplaceCards) return;
+        if (marketplaceMessage) marketplaceMessage.textContent = "Đang tải danh sách đề tài...";
+
+        try {
+            const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/marketplace`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const result = await response.json();
+            if (!response.ok || result.success !== true) {
+                throw new Error(result.message || "Không thể tải danh sách đề tài.");
+            }
+
+            marketplaceData = {
+                lecturerTopics: Array.isArray(result.data?.lecturerTopics) ? result.data.lecturerTopics : [],
+                groupTopics: Array.isArray(result.data?.groupTopics) ? result.data.groupTopics : []
+            };
+            if (lecturerTopicCount) lecturerTopicCount.textContent = String(marketplaceData.lecturerTopics.length);
+            if (groupTopicCount) groupTopicCount.textContent = String(marketplaceData.groupTopics.length);
+            renderMarketplace();
+        } catch (error) {
+            console.error("Lỗi tải sàn đề tài:", error);
+            if (marketplaceMessage) marketplaceMessage.textContent =
+                error.message || "Không thể tải danh sách đề tài. Vui lòng thử lại.";
+            marketplaceCards.replaceChildren();
+        }
+    }
+
+    function chooseLecturerTopic(topic) {
+        const leaderRole = document.querySelector('input[name="userRole"][value="LEADER"]');
+        if (leaderRole) leaderRole.checked = true;
+        updateRoleUI("LEADER");
+        if (lecturerSelect) lecturerSelect.value = topic.lecturer_code || "";
+        renderProposedTopics(topic.lecturer_code || "");
+        if (proposedSelect) {
+            proposedSelect.value = String(topic._id || "");
+            proposedSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        form?.scrollIntoView({ behavior: "smooth", block: "start" });
+        topicTitleInput?.focus({ preventScroll: true });
+    }
+
+    async function requestToJoinGroup(topic, button) {
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = "Đang gửi yêu cầu...";
+        try {
+            const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/register`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    registration_role: "MEMBER",
+                    leader_code: topic.leader_code,
+                    member2_code: user.user_code,
+                    member3_code: null
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || "Không thể gửi yêu cầu tham gia nhóm.");
+            }
+            showMessage("success", result.message || "Đã gửi yêu cầu tham gia nhóm.");
+            await Promise.all([checkTopicStatus(), loadJoinRequests(), loadMarketplace()]);
+        } catch (error) {
+            showMessage("error", error.message || "Không thể gửi yêu cầu tham gia nhóm. Vui lòng thử lại.");
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
+
+    document.querySelectorAll("[data-marketplace-tab]").forEach(tab => {
+        tab.addEventListener("click", () => {
+            activeMarketplaceTab = tab.dataset.marketplaceTab === "groups" ? "groups" : "lecturer";
+            marketplacePage = 1;
+            document.querySelectorAll("[data-marketplace-tab]").forEach(item => {
+                const isActive = item === tab;
+                item.classList.toggle("active", isActive);
+                item.setAttribute("aria-selected", String(isActive));
+            });
+            renderMarketplace();
+        });
+    });
+    marketplaceSearch?.addEventListener("input", () => {
+        marketplacePage = 1;
+        renderMarketplace();
+    });
+    marketplaceCategory?.addEventListener("change", () => {
+        marketplacePage = 1;
+        renderMarketplace();
+    });
+    document.getElementById("proposeOwnTopicBtn")?.addEventListener("click", () => {
+        if (proposedSelect) proposedSelect.value = "";
+        if (topicTitleInput) topicTitleInput.value = "";
+        if (topicDescInput) topicDescInput.value = "";
+        form?.scrollIntoView({ behavior: "smooth", block: "start" });
+        topicTitleInput?.focus({ preventScroll: true });
+    });
+
     // =========================================================================
     // 6. KIỂM TRA TRẠNG THÁI ĐĂNG KÝ ĐỀ TÀI CỦA SINH VIÊN
     // =========================================================================
@@ -708,7 +989,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     });
                     const result = await response.json();
                     showMessage(response.ok ? "success" : "error", result.message || "Không thể xử lý yêu cầu!");
-                    await loadJoinRequests();
+                    await Promise.all([loadJoinRequests(), loadMarketplace()]);
                 });
             });
         } catch (error) {
@@ -719,6 +1000,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Khởi tạo tải dữ liệu danh sách
     await Promise.all([loadRegistrationWindow(), loadLecturers(), loadProposedTopics()]);
     await checkTopicStatus();
+    await loadMarketplace();
 
     // =========================================================================
     // 7. SỰ KIỆN NÚT "CHỈNH SỬA"
@@ -799,7 +1081,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (res.ok) {
                     showMessage("success", data.message || "Đã hủy đăng ký đề tài thành công!");
                     if (form) form.reset();
-                    await checkTopicStatus();
+                    await Promise.all([checkTopicStatus(), loadMarketplace()]);
                 } else {
                     showMessage("error", data.message || "Hủy đăng ký thất bại!");
                 }
@@ -915,7 +1197,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (res.ok) {
                     showMessage("success", data.message || "Lưu thông tin đăng ký đề tài thành công!");
                     hasEditedMemberCodes = false;
-                    await checkTopicStatus();
+                    await Promise.all([checkTopicStatus(), loadMarketplace()]);
                 } else {
                     showMessage("error", data.message || "Thao tác đăng ký thất bại!");
                 }

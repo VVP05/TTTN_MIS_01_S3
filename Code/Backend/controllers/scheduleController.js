@@ -17,6 +17,22 @@ const getTopicMemberCodes = topic => [
 ].filter(Boolean);
 const isGroupMember = (topic, userCode) => getTopicMemberCodes(topic)
     .some(code => String(code).trim().toUpperCase() === String(userCode).trim().toUpperCase());
+async function getApprovedTodoTopic(todo, studentCode) {
+    const membershipQuery = {
+        status: "APPROVED",
+        $or: [
+            { leader_code: userCodePattern(studentCode) },
+            { member2_code: userCodePattern(studentCode) },
+            { member3_code: userCodePattern(studentCode) }
+        ]
+    };
+    if (todo.topic_id) {
+        return Topic.findOne({ _id: todo.topic_id, ...membershipQuery });
+    }
+
+    const topic = await Topic.findOne(membershipQuery);
+    return topic && isGroupMember(topic, todo.student_code) ? topic : null;
+}
 
 // =========================================================
 // A. CÁC HÀM DÀNH CHO PHÍA SINH VIÊN (STUDENT)
@@ -99,6 +115,7 @@ exports.getScheduleData = async (req, res) => {
             success: true,
             topic: {
                 id: topic._id,
+                _id: topic._id,
                 title: topic.title,
                 status: topic.status,
                 lecturer_code: topic.lecturer_code,
@@ -423,6 +440,7 @@ exports.addTodo = async (req, res) => {
             assigned_to: assignedMember || "",
             title: cleanTitle,
             due_date: parsedDueDate,
+            status: "NOT_STARTED",
             is_completed: false
         });
         await newTodo.save();
@@ -445,38 +463,64 @@ exports.toggleTodo = async (req, res) => {
         const todo = await Todo.findById(todoId);
         if (!todo) return res.status(404).json({ message: "Không tìm thấy công việc!" });
 
-        let topic;
-        if (todo.topic_id) {
-            topic = await Topic.findOne({
-                _id: todo.topic_id,
-                status: 'APPROVED',
-                $or: [
-                    { leader_code: userCodePattern(studentCode) },
-                    { member2_code: userCodePattern(studentCode) },
-                    { member3_code: userCodePattern(studentCode) }
-                ]
-            });
-        } else {
-            topic = await Topic.findOne({
-                status: 'APPROVED',
-                $or: [
-                    { leader_code: userCodePattern(studentCode) },
-                    { member2_code: userCodePattern(studentCode) },
-                    { member3_code: userCodePattern(studentCode) }
-                ]
-            });
-            if (topic && !isGroupMember(topic, todo.student_code)) topic = null;
-        }
+        const topic = await getApprovedTodoTopic(todo, studentCode);
         if (!topic) {
             return res.status(403).json({ success: false, message: 'Bạn chỉ có thể cập nhật công việc của nhóm mình.' });
         }
 
-        todo.is_completed = todo.is_completed !== true;
+        const validStatuses = ["NOT_STARTED", "IN_PROGRESS", "COMPLETED"];
+        if (Object.prototype.hasOwnProperty.call(req.body || {}, "status")) {
+            const requestedStatus = String(req.body.status || "").trim().toUpperCase();
+            if (!validStatuses.includes(requestedStatus)) {
+                return res.status(400).json({ success: false, message: "Trạng thái công việc không hợp lệ." });
+            }
+            todo.status = requestedStatus;
+        } else {
+            const currentStatus = validStatuses.includes(todo.status)
+                ? todo.status
+                : todo.is_completed === true ? "COMPLETED" : "NOT_STARTED";
+            todo.status = currentStatus === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
+        }
+        todo.is_completed = todo.status === "COMPLETED";
         await todo.save();
 
-        res.status(200).json({ success: true, message: "Đã cập nhật trạng thái!", is_completed: todo.is_completed });
+        res.status(200).json({
+            success: true,
+            message: "Đã cập nhật trạng thái!",
+            status: todo.status,
+            is_completed: todo.is_completed
+        });
     } catch (error) {
         res.status(500).json({ message: "Lỗi cập nhật!", error: error.message });
+    }
+};
+
+exports.deleteTodo = async (req, res) => {
+    try {
+        const studentCode = String(req.user?.user_code || '').trim();
+        if (String(req.user?.role || '').toUpperCase() !== 'STUDENT' || !studentCode) {
+            return res.status(403).json({ success: false, message: 'Chỉ sinh viên mới được xóa công việc.' });
+        }
+
+        const todo = await Todo.findById(req.params.todoId);
+        if (!todo) return res.status(404).json({ success: false, message: 'Không tìm thấy công việc.' });
+
+        const topic = await getApprovedTodoTopic(todo, studentCode);
+        if (!topic) {
+            return res.status(403).json({ success: false, message: 'Bạn chỉ có thể xóa công việc của nhóm mình.' });
+        }
+
+        const requesterCode = studentCode.toUpperCase();
+        const creatorCode = String(todo.created_by || todo.student_code || '').trim().toUpperCase();
+        const leaderCode = String(topic.leader_code || '').trim().toUpperCase();
+        if (requesterCode !== creatorCode && requesterCode !== leaderCode) {
+            return res.status(403).json({ success: false, message: 'Chỉ người tạo việc hoặc trưởng nhóm mới được xóa.' });
+        }
+
+        await todo.deleteOne();
+        return res.status(200).json({ success: true, message: 'Đã xóa công việc.' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Không thể xóa công việc.', error: error.message });
     }
 };
 

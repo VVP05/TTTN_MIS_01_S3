@@ -31,6 +31,7 @@
 - Đăng ký đề tài và thành viên nhóm.
 - Theo dõi đề tài, giảng viên hướng dẫn và tiến độ thực hiện.
 - Xem lịch làm việc, lịch hẹn, thông báo và tài liệu hướng dẫn.
+- Hỏi trợ lý AI về hướng đề tài, cách đăng ký đề tài và quy trình nộp báo cáo.
 - Quản lý thông tin tài khoản và mật khẩu.
 
 ### Giảng viên
@@ -134,6 +135,19 @@ TTTN_MIS_01_S3/
 3. Mở `Code\Backend\.env`, dán kết quả vào `JWT_SECRET`. Khóa cần ít nhất 32 ký tự; backend sẽ không khởi động nếu khóa trống hoặc dùng giá trị mẫu. Nếu MongoDB của bạn không chạy cục bộ, cập nhật `MONGO_URI`.
 4. Nếu Live Server dùng địa chỉ hoặc cổng khác, thêm origin frontend đó vào `CORS_ORIGINS` (chỉ ghi địa chỉ website, không ghi đường dẫn trang).
 5. Để bật quên mật khẩu, điền cấu hình SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) và URL trang đặt lại (`FRONTEND_RESET_URL`). Với Gmail, dùng App Password thay cho mật khẩu đăng nhập. Không gửi hoặc commit các giá trị này.
+6. Để chạy trợ lý tư vấn đề tài miễn phí trên máy cục bộ, cài Ollama bằng PowerShell:
+
+   ```powershell
+   irm https://ollama.com/install.ps1 | iex
+   ```
+
+   Lệnh này tải và chạy script cài đặt từ Ollama. Nếu không muốn dùng script, tải Ollama từ [ollama.com/download](https://ollama.com/download). Sau khi cài xong, mở cửa sổ PowerShell mới và tải mô hình:
+
+   ```powershell
+   ollama pull qwen2.5:3b
+   ```
+
+   Mô hình này tải khoảng 2 GB và không dùng chế độ suy nghĩ của Qwen3. Backend mặc định kết nối tới `http://127.0.0.1:11434` và dùng `qwen2.5:3b`; có thể đổi `OLLAMA_BASE_URL` hoặc `OLLAMA_MODEL` trong `.env` nếu cần. Cấu hình `OLLAMA_MODEL=qwen3:4b` cũ sẽ tự chuyển sang `qwen2.5:3b`. Ollama phải chạy trên chính máy đang chạy backend. Để giảm thời gian nạp mô hình lại, Ollama giữ mô hình trong bộ nhớ 10 phút sau mỗi câu hỏi; trợ lý cũng chỉ gửi tối đa 8 đề tài phù hợp và 4 tin nhắn lịch sử vào prompt.
 
 Không cần chỉnh các thiết lập cookie để chạy cục bộ. Không gửi hoặc commit file `.env`; chỉ commit `.env.example`. Nếu đổi `FRONTEND_API_BASE_URL`, xem bước cập nhật cấu hình frontend ở mục 6.3.
 

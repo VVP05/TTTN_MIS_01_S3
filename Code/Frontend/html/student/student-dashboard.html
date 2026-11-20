@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý TTTN | Cổng Sinh Viên</title>
     <link rel="stylesheet" href="../../css/student/student.css">
+    <link rel="stylesheet" href="../../css/student/ai-advisor.css">
     
     <!-- THƯ VIỆN FONT AWESOME ICONS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -116,6 +117,68 @@
                 </div>
 
                 <div id="registrationWindowNotice" class="registration-window-notice" role="status" aria-live="polite" hidden></div>
+
+                <section id="topicMarketplace" class="topic-marketplace" aria-labelledby="topicMarketplaceTitle">
+                    <div class="marketplace-heading">
+                        <div>
+                            <h2 id="topicMarketplaceTitle"><i class="fa-solid fa-compass"></i> Khám phá đề tài</h2>
+                            <p>Chọn đề tài giảng viên đề xuất để đăng ký làm trưởng nhóm, hoặc xin tham gia nhóm đang tìm thành viên.</p>
+                        </div>
+                        <button type="button" id="proposeOwnTopicBtn" class="marketplace-own-topic">
+                            <i class="fa-solid fa-plus"></i> Tự đề xuất đề tài
+                        </button>
+                    </div>
+                    <div class="marketplace-toolbar">
+                        <div class="marketplace-tabs" role="tablist" aria-label="Loại đề tài">
+                            <button type="button" class="marketplace-tab active" id="lecturerTopicsTab" data-marketplace-tab="lecturer" role="tab" aria-selected="true">
+                                Đề tài từ giảng viên <span id="lecturerTopicCount">0</span>
+                            </button>
+                            <button type="button" class="marketplace-tab" id="groupTopicsTab" data-marketplace-tab="groups" role="tab" aria-selected="false">
+                                Nhóm đang tìm thành viên <span id="groupTopicCount">0</span>
+                            </button>
+                        </div>
+                        <div class="marketplace-filters">
+                            <label class="marketplace-search">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <input type="search" id="marketplaceSearch" placeholder="Tìm tên đề tài, giảng viên...">
+                            </label>
+                            <select id="marketplaceCategory" aria-label="Lọc theo lĩnh vực">
+                                <option value="">Tất cả lĩnh vực</option>
+                                <option value="Web / Ứng dụng">Web / Ứng dụng</option>
+                                <option value="AI / ML">AI / Machine Learning</option>
+                                <option value="Dữ liệu / Phân tích">Dữ liệu / Phân tích</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p id="marketplaceMessage" class="marketplace-message" role="status" aria-live="polite">Đang tải danh sách đề tài...</p>
+                    <div id="marketplaceCards" class="marketplace-cards"></div>
+                    <nav id="marketplacePagination" class="marketplace-pagination" aria-label="Điều hướng trang đề tài" hidden></nav>
+                </section>
+
+                <section class="student-ai-advisor" aria-labelledby="studentAiTitle">
+                    <div class="student-ai-heading">
+                        <span class="student-ai-icon">
+                            <svg class="student-ai-bot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                            <circle cx="16" cy="3.8" r="2" fill="#fff"/>
+                            <path d="M16 5.5V8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                            <rect x="1.8" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
+                            <rect x="27" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
+                            <rect x="5" y="8" width="22" height="18" rx="7.5" fill="#fff"/>
+                            <circle cx="11.8" cy="16" r="2.4" fill="#4f46e5"/>
+                            <circle cx="20.2" cy="16" r="2.4" fill="#4f46e5"/>
+                            <path d="M13 21c1 1.1 2 1.6 3 1.6s2-.5 3-1.6" stroke="#4f46e5" stroke-width="1.7" stroke-linecap="round"/>
+                        </svg>
+                        </span>
+                        <div>
+                            <h2 id="studentAiTitle">Chưa biết chọn đề tài nào?</h2>
+                            <p>Trợ lý AI có thể gợi ý theo ngành học, kỹ năng và đề tài đang mở trong kho.</p>
+                        </div>
+                    </div>
+                    <button type="button" id="openAiAdvisor" class="student-ai-open">
+                        <i class="fa-solid fa-comments"></i> Hỏi AI tư vấn
+                    </button>
+                </section>
 
                 <!-- FORM ĐĂNG KÝ CỦA SINH VIÊN -->
                 <div class="form-container">
@@ -272,9 +335,68 @@
         </div>
     </div>
 
+    <section id="studentAiPanel" class="student-ai-panel" role="dialog" aria-modal="false" aria-labelledby="studentAiPanelTitle" hidden>
+        <header class="student-ai-panel-header">
+            <div class="student-ai-panel-brand">
+                <span class="student-ai-icon">
+                    <svg class="student-ai-bot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <circle cx="16" cy="3.8" r="2" fill="#fff"/>
+                    <path d="M16 5.5V8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                    <rect x="1.8" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
+                    <rect x="27" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
+                    <rect x="5" y="8" width="22" height="18" rx="7.5" fill="#fff"/>
+                    <circle cx="11.8" cy="16" r="2.4" fill="#4f46e5"/>
+                    <circle cx="20.2" cy="16" r="2.4" fill="#4f46e5"/>
+                    <path d="M13 21c1 1.1 2 1.6 3 1.6s2-.5 3-1.6" stroke="#4f46e5" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+                </span>
+                <div>
+                    <h2 id="studentAiPanelTitle">Trợ lý tư vấn đề tài</h2>
+                </div>
+            </div>
+            <button type="button" id="closeAiAdvisor" class="student-ai-close" aria-label="Đóng trợ lý"><i class="fa-solid fa-xmark"></i></button>
+        </header>
+        <details class="student-ai-profile">
+            <summary><i class="fa-regular fa-user"></i> Thông tin để gợi ý sát hơn</summary>
+            <label for="aiMajor">Ngành học</label>
+            <input id="aiMajor" type="text" maxlength="100" placeholder="Ví dụ: Công nghệ thông tin">
+            <label for="aiSkills">Kỹ năng / công nghệ đã biết</label>
+            <input id="aiSkills" type="text" maxlength="300" placeholder="Ví dụ: Java, React, SQL">
+            <label for="aiInterests">Mảng bạn yêu thích</label>
+            <input id="aiInterests" type="text" maxlength="300" placeholder="Ví dụ: web, AI, dữ liệu">
+        </details>
+        <div id="studentAiMessages" class="student-ai-messages" role="log" aria-live="polite">
+            <div class="student-ai-message assistant">Chào bạn! Bạn đang học ngành gì và thích mảng nào? Mình sẽ gợi ý một số hướng đề tài phù hợp, đồng thời tham khảo kho đề tài đang mở.</div>
+            <div class="student-ai-prompts">
+                <button type="button" data-ai-prompt="Em muốn được gợi ý đề tài theo ngành học. Nếu chưa biết ngành của em, hãy hỏi em đang học ngành gì trước nhé.">Gợi ý theo ngành</button>
+                <button type="button" data-ai-prompt="Có đề tài nào trong kho phù hợp với kỹ năng và sở thích của em không?">Xem đề tài phù hợp</button>
+            </div>
+        </div>
+        <form id="studentAiForm" class="student-ai-compose">
+            <textarea id="studentAiInput" rows="2" maxlength="1200" placeholder="Nhập câu hỏi của bạn..." required></textarea>
+            <button id="studentAiSend" type="submit" aria-label="Gửi câu hỏi"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+        <p class="student-ai-disclaimer">Gợi ý chỉ mang tính tham khảo. Tình trạng và việc duyệt đề tài cần xác nhận với giảng viên.</p>
+    </section>
+    <button type="button" id="studentAiLauncher" class="student-ai-launcher" aria-label="Mở tư vấn đề tài" aria-controls="studentAiPanel" aria-expanded="false">
+                    <svg class="student-ai-bot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <circle cx="16" cy="3.8" r="2" fill="#fff"/>
+                <path d="M16 5.5V8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                <rect x="1.8" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
+                <rect x="27" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
+                <rect x="5" y="8" width="22" height="18" rx="7.5" fill="#fff"/>
+                <circle cx="11.8" cy="16" r="2.4" fill="#4f46e5"/>
+                <circle cx="20.2" cy="16" r="2.4" fill="#4f46e5"/>
+                <path d="M13 21c1 1.1 2 1.6 3 1.6s2-.5 3-1.6" stroke="#4f46e5" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+        <span>Tư vấn đề tài</span>
+    </button>
+
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/notif-badge.js"></script>
     <script src="../../js/student/student.js"></script>
+    <script src="../../js/student/ai-advisor.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
     <script src="../../js/common/sidebar-toggle.js"></script>
 </body>

@@ -7,8 +7,11 @@
     
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/student/work-schedule.css">
+    <link rel="stylesheet" href="../../css/common/chat-emoji-picker.css">
+    <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="../../css/common/chat-unread.css">
     <link rel="stylesheet" href="../../css/common/student-logout-modal.css">
     <link rel="stylesheet" href="../../css/responsive.css">
 </head>
@@ -32,7 +35,7 @@
                             <a href="my-topic.html"><span class="icon"><i class="fa-solid fa-users"></i></span> Đề tài của tôi</a>
                         </li>
                         <li class="menu-item active">
-                            <a href="work-schedule.html"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Lịch làm việc</a>
+                            <a href="work-schedule.html"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Lịch làm việc<span id="chatSidebarBadge" class="chat-unread-badge chat-sidebar-unread-badge" hidden></span></a>
                         </li>
                         <li class="menu-item">
                             <a href="../shared/notifications.html"><span class="icon"><i class="fa-solid fa-bell"></i></span> Thông báo<span id="sidebarNotificationBadge" class="sidebar-notification-badge" style="display: none;">0</span></a>
@@ -141,41 +144,38 @@
                             </div>
                         </div>
 
-                        <!-- 2. LỘ TRÌNH THỰC TẬP TỔNG THỂ -->
-                        <div class="card-box margin-top-20">
-                            <div class="card-header">
-                                <h3><i class="fa-solid fa-route text-blue"></i> Lộ trình thực tập tốt nghiệp (<span id="timelineTotalWeeks">--</span> Tuần)</h3>
-                            </div>
-                            <div class="timeline-container">
-                                <div class="timeline-item" data-phase="0">
-                                    <div class="t-dot"></div>
-                                    <div class="t-text">
-                                        <h5>Chọn đề tài & Viết đề cương</h5>
-                                        <p>Đăng ký đề tài, phân công nhóm và nộp đặc tả yêu cầu.</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item" data-phase="1">
-                                    <div class="t-dot"></div>
-                                    <div class="t-text">
-                                        <h5>Triển khai ứng dụng & Báo cáo giữa kỳ</h5>
-                                        <p>Xây dựng Database, Phát triển API, Giao diện frontend và họp đánh giá giữa kỳ.</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item" data-phase="2">
-                                    <div class="t-dot"></div>
-                                    <div class="t-text">
-                                        <h5>Hoàn thiện tính năng & Kiểm thử</h5>
-                                        <p>Căn chỉnh UI/UX, viết Unit Test, Fix bugs và đóng gói ứng dụng.</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item" data-phase="3">
-                                    <div class="t-dot"></div>
-                                    <div class="t-text">
-                                        <h5>Nộp quyển báo cáo & Bảo vệ TTTN</h5>
-                                        <p>Hoàn thiện báo cáo tổng kết, chuẩn bị slide trình bày và phản biện trước Hội đồng.</p>
+                        <!-- 2. CHAT NHÓM -->
+                        <div class="card-box chat-card margin-top-20">
+                            <div class="chat-header">
+                                <div class="chat-heading">
+                                    <span class="chat-heading-icon"><i class="fa-solid fa-comments"></i></span>
+                                    <div>
+                                        <h3>Chat nhóm</h3>
+                                        <p id="chatSubtitle">Trao đổi nhanh với thành viên trong nhóm</p>
                                     </div>
                                 </div>
                             </div>
+                            <div class="chat-tabs" role="tablist">
+                                <button type="button" class="chat-tab active" data-chat-room="INTERNAL">
+                                    <i class="fa-solid fa-users"></i> Thành viên<span id="internalChatBadge" class="chat-unread-badge" hidden></span>
+                                </button>
+                                <button type="button" id="lecturerChatTab" class="chat-tab" data-chat-room="LECTURER">
+                                    <i class="fa-solid fa-chalkboard-user"></i> Giảng viên<span id="lecturerChatBadge" class="chat-unread-badge" hidden></span>
+                                </button>
+                            </div>
+                            <div id="chatMessages" class="chat-messages">
+                                <p class="chat-empty">Đang tải tin nhắn...</p>
+                            </div>
+                            <form id="chatForm" class="chat-compose">
+                                <div class="chat-input-wrap">
+                                    <input type="text" id="chatInput" maxlength="2000" placeholder="Nhập tin nhắn..." autocomplete="off">
+                                    <button type="button" class="chat-emoji-toggle" data-chat-emoji="chatEmojiPicker" data-chat-emoji-input="chatInput" aria-label="Chọn biểu tượng cảm xúc" aria-expanded="false">
+                                        <i class="fa-regular fa-face-smile"></i>
+                                    </button>
+                                    <div id="chatEmojiPicker" class="chat-emoji-picker" hidden aria-label="Biểu tượng cảm xúc"></div>
+                                </div>
+                                <button type="submit" aria-label="Gửi tin nhắn"><i class="fa-solid fa-paper-plane"></i></button>
+                            </form>
                         </div>
 
                     </div>
@@ -290,7 +290,10 @@
     </div>
 
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/notif-badge.js"></script>
+    <script src="../../js/common/chat-emoji-picker.js"></script>
+    <script src="../../js/common/confirm-dialog.js"></script>
     <script src="../../js/student/work-schedule.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
     <script src="../../js/common/sidebar-toggle.js"></script>

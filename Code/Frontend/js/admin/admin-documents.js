@@ -17,6 +17,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, char => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
     })[char]);
+    const displayFilename = (value) => {
+        const filename = String(value || "");
+        if (!/[ÃÂ]/.test(filename)) return filename;
+
+        const characters = Array.from(filename);
+        if (characters.some(character => character.codePointAt(0) > 255)) return filename;
+
+        try {
+            const bytes = Uint8Array.from(characters, character => character.codePointAt(0));
+            return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+        } catch (error) {
+            console.warn("Không thể khôi phục tên file tiếng Việt:", error);
+            return filename;
+        }
+    };
     const fileIcon = (name) => {
         const ext = (name.split(".").pop() || "").toLowerCase();
         if (ext === "pdf") return "fa-file-pdf";
@@ -32,9 +47,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const filtered = documents.filter(doc => {
             const role = doc.uploader_role || (doc.uploader_code === "ADMIN" ? "ADMIN" : "LECTURER");
             const recipient = (doc.target || "").toLowerCase();
+            const originalName = displayFilename(doc.original_name);
             const lecturerSharedWithStudents = role === "LECTURER" && recipient !== "tất cả giảng viên";
-            const matchesQuery = `${doc.title} ${doc.original_name} ${doc.category} ${doc.uploader_name} ${doc.uploader_code} ${doc.target}`.toLowerCase().includes(query);
-            const matchesUploader = !selectedUploader || role === selectedUploader;
+            const matchesQuery = `${doc.title} ${originalName} ${doc.category} ${doc.uploader_name} ${doc.uploader_code} ${doc.target}`.toLowerCase().includes(query);
             const matchesTarget = !selectedTarget
                 || (selectedTarget === "students" && (lecturerSharedWithStudents || ["students", "tất cả sinh viên"].includes(recipient)))
                 || (selectedTarget === "lecturers" && recipient === "tất cả giảng viên");
@@ -46,9 +61,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         tableBody.innerHTML = filtered.map(doc => `
             <tr data-id="${doc._id}">
-                <td><div class="file-cell"><i class="fa-solid ${fileIcon(doc.original_name || "")}"></i><span>${escapeHtml(doc.title)}<small>${escapeHtml(doc.original_name)}</small></span></div></td>
+                <td><div class="file-cell"><i class="fa-solid ${fileIcon(doc.original_name || "")}"></i><span>${escapeHtml(doc.title)}<small>${escapeHtml(displayFilename(doc.original_name))}</small></span></div></td>
                 <td><span class="category-badge">${escapeHtml(doc.category || "Tài liệu")}</span></td>
-                <td>${escapeHtml(doc.uploader_name || doc.uploader_code)}<small>${(doc.uploader_role || (doc.uploader_code === "ADMIN" ? "ADMIN" : "LECTURER")) === "ADMIN" ? "Quản trị viên" : "Giảng viên"}</small></td>
+                <td><div class="uploader-cell"><span>${escapeHtml(doc.uploader_name || doc.uploader_code)}</span>${(doc.uploader_role || (doc.uploader_code === "ADMIN" ? "ADMIN" : "LECTURER")) === "ADMIN" ? "" : "<small>Giảng viên</small>"}</div></td>
                 <td>${escapeHtml(doc.target || "Tất cả sinh viên")}</td>
                 <td>${formatDate(doc.createdAt)}</td>
                 <td>${doc.download_count || 0}</td>
@@ -65,6 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             documents = response.ok && result.success ? result.documents || [] : [];
             renderDocuments();
         } catch (error) {
+            console.error("Lỗi tải danh sách tài liệu:", error);
             tableBody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:#ef4444">Không thể tải danh sách tài liệu.</td></tr>`;
         }
     }

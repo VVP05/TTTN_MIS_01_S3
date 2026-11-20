@@ -3,6 +3,7 @@
 const API_BASE_URL = window.APP_CONFIG.API_BASE_URL + '/api/topics';
 const NOTIFICATION_API_URL = window.APP_CONFIG.API_BASE_URL + '/api/notifications/lecturer';
 let allGroupsData = [];
+let lecturerUnreadByTopic = new Map();
 
 let notifyRecipients = [];
 let notifyMode = null; // 'GROUP' or 'BROADCAST'
@@ -362,6 +363,7 @@ function filterAndRenderGroups() {
         const topicTitle = group.topic?.title || group.title || "Đề tài chưa cập nhật tên";
         const topicCategory = group.topic?.category || group.category || "Web / Ứng dụng";
         const displayGroupCode = group.group_code || group.topic_code || 'N0' + (index + 1);
+        const chatTopicId = group.topic?._id || group.topic_id?._id || group.topic_id || group._id;
 
         // Thông tin Trưởng nhóm (Hoặc sinh viên thực hiện đề tài)
         const leaderCode = group.leader_code || group.leaderCode || group.student_code || "Chưa ĐK";
@@ -450,15 +452,17 @@ function filterAndRenderGroups() {
                     <i class="fa-solid fa-chart-line"></i> Xem tiến độ
                 </a>
                 <button class="btn-card-action btn-message-group" type="button">
-                    <i class="fa-solid fa-envelope"></i> Nhắc nhở
+                    <i class="fa-solid fa-comments"></i> Chat trưởng nhóm
+                    <span class="chat-unread-badge chat-button-unread" data-chat-unread-topic="${chatTopicId}" hidden></span>
                 </button>
             </div>
         `;
 
         container.appendChild(card);
+        updateLecturerGroupChatBadge(chatTopicId);
         const messageButton = card.querySelector('.btn-message-group');
         if (messageButton) {
-            messageButton.addEventListener('click', () => openRemindModal(group));
+            messageButton.addEventListener('click', () => openLecturerGroupChat(group));
         }
     });
 }
@@ -487,6 +491,150 @@ window.openRemindModal = function(group) {
 
     if (messageModal) messageModal.style.display = "flex";
 };
+
+let lecturerChatTopicId = null;
+let lecturerChatPollTimer = null;
+
+window.openLecturerGroupChat = function(group) {
+    const modal = document.getElementById("groupChatModal");
+    const title = document.getElementById("groupChatTitle");
+    const subtitle = document.getElementById("groupChatSubtitle");
+    const leaderCode = group.leader_code || group.leaderCode || group.student_code || "";
+    lecturerChatTopicId = group.topic?._id || group.topic_id?._id || group.topic_id || group._id || null;
+
+    if (title) title.textContent = `Chat với trưởng nhóm ${leaderCode || "chưa xác định"}`;
+    if (subtitle) subtitle.textContent = `Trao đổi riêng với trưởng nhóm · Nhóm ${group.group_code || group.topic_code || "thực tập"}`;
+    if (modal) modal.style.display = "flex";
+
+    if (lecturerChatPollTimer) clearInterval(lecturerChatPollTimer);
+    loadLecturerGroupChat();
+    lecturerChatPollTimer = setInterval(loadLecturerGroupChat, 5000);
+
+    const closeButton = document.getElementById("closeGroupChatBtn");
+    if (closeButton) {
+        closeButton.onclick = () => {
+            if (modal) modal.style.display = "none";
+            if (lecturerChatPollTimer) clearInterval(lecturerChatPollTimer);
+        };
+    }
+};
+
+async function loadLecturerGroupChat() {
+    const container = document.getElementById("groupChatMessages");
+    if (!container || !lecturerChatTopicId) return;
+    try {
+        const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+        const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/chat/topics/${encodeURIComponent(lecturerChatTopicId)}?room=LECTURER`, {
+            headers: { Authorization: `Bearer ${auth?.token || ""}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Không thể tải tin nhắn.");
+        if (window.refreshChatUnreadSidebar) await window.refreshChatUnreadSidebar();
+        if (!result.data?.length) {
+            container.innerHTML = '<p class="group-chat-empty">Chưa có tin nhắn nào với trưởng nhóm.</p>';
+            return;
+        }
+        const lecturerCode = String(auth?.user?.user_code || "").toUpperCase();
+        let previousDay = "";
+        container.innerHTML = result.data.map(message => {
+            const mine = String(message.sender_code || "").toUpperCase() === lecturerCode;
+            const createdAt = new Date(message.created_at);
+            const time = createdAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+            const dayKey = createdAt.toLocaleDateString("vi-VN");
+            const dayDivider = dayKey !== previousDay
+                ? `<div class="group-chat-day-separator"><span>${formatGroupChatDay(createdAt)}</span></div>`
+                : "";
+            previousDay = dayKey;
+            const senderName = mine ? "Bạn" : (message.sender_name || message.sender_code);
+            return `
+                ${dayDivider}
+                <div class="group-chat-message ${mine ? "mine" : ""}">
+                    <span class="group-chat-avatar"><i class="fa-solid fa-user"></i></span>
+                    <div class="group-chat-message-body">
+                        <div class="group-chat-meta"><span>${escapeLecturerChatText(senderName)}</span><span>${time}</span></div>
+                        <div class="group-chat-bubble">${escapeLecturerChatText(message.content)}</div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+        container.scrollTop = container.scrollHeight;
+    } catch (error) {
+        container.innerHTML = `<p class="group-chat-empty">${escapeLecturerChatText(error.message)}</p>`;
+    }
+}
+
+window.addEventListener("chat:unread-updated", event => {
+    lecturerUnreadByTopic = new Map((event.detail.rooms || []).map(room => [
+        String(room.topic_id),
+        Number(room.unread_count) || 0
+    ]));
+    document.querySelectorAll("[data-chat-unread-topic]").forEach(badge => {
+        updateLecturerGroupChatBadge(badge.dataset.chatUnreadTopic);
+    });
+});
+
+function updateLecturerGroupChatBadge(topicId) {
+    const key = String(topicId);
+    const unreadCount = lecturerUnreadByTopic.get(key) || 0;
+    document.querySelectorAll("[data-chat-unread-topic]").forEach(badge => {
+        if (badge.dataset.chatUnreadTopic === key) {
+            setLecturerChatUnreadBadgeElement(badge, unreadCount);
+        }
+    });
+}
+
+function setLecturerChatUnreadBadgeElement(badge, count) {
+    const unreadCount = Math.max(0, Number(count) || 0);
+    badge.hidden = unreadCount === 0;
+    badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+    badge.setAttribute("aria-label", `${unreadCount} tin nhắn chưa đọc`);
+}
+
+function formatGroupChatDay(date) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const formatDate = value => value.toLocaleDateString("vi-VN");
+    if (formatDate(date) === formatDate(today)) return `Hôm nay, ${formatDate(date)}`;
+    if (formatDate(date) === formatDate(yesterday)) return `Hôm qua, ${formatDate(date)}`;
+    return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function escapeLecturerChatText(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+const lecturerChatForm = document.getElementById("groupChatForm");
+if (lecturerChatForm) {
+    lecturerChatForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!lecturerChatTopicId) return;
+        const input = document.getElementById("groupChatInput");
+        const content = input?.value.trim();
+        if (!content) return;
+        try {
+            const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
+            const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/chat/topics/${encodeURIComponent(lecturerChatTopicId)}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${auth?.token || ""}`
+                },
+                body: JSON.stringify({ room_type: "LECTURER", content })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Không thể gửi tin nhắn.");
+            if (input) input.value = "";
+            await loadLecturerGroupChat();
+        } catch (error) {
+            showAppNotification(error.message);
+        }
+    });
+}
 
 /**
  * Tính năng xuất danh sách sang dạng dữ liệu giả lập (Export Excel)

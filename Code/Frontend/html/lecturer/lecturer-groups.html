@@ -8,8 +8,10 @@
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-groups.css">
+    <link rel="stylesheet" href="../../css/common/chat-emoji-picker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="../../css/common/chat-unread.css">
     <link rel="stylesheet" href="../../css/common/lecturer-logout-modal.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-pending-alert.css">
     <link rel="stylesheet" href="../../css/responsive.css">
@@ -34,7 +36,7 @@
                             <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
                         </li>
                         <li class="menu-item active">
-                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn<span id="chatSidebarBadge" class="chat-unread-badge chat-sidebar-unread-badge" hidden></span></a>
                         </li>
                         <li class="menu-item">
                             <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
@@ -174,6 +176,36 @@
         </div>
     </div>
 
+    <div id="groupChatModal" class="modal-overlay">
+        <div class="modal-box group-chat-modal">
+            <div class="group-chat-header">
+                <div class="group-chat-heading">
+                    <span class="group-chat-heading-icon"><i class="fa-solid fa-comments"></i></span>
+                    <div>
+                        <h3 id="groupChatTitle">Chat với trưởng nhóm</h3>
+                        <p id="groupChatSubtitle">Trao đổi riêng với trưởng nhóm</p>
+                    </div>
+                </div>
+                <div class="group-chat-tools">
+                    <button type="button" id="closeGroupChatBtn" class="btn-close-modal" aria-label="Đóng chat"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="groupChatMessages" class="group-chat-messages">
+                <p class="group-chat-empty">Đang tải tin nhắn...</p>
+            </div>
+            <form id="groupChatForm" class="group-chat-compose">
+                <div class="group-chat-input-wrap">
+                    <input type="text" id="groupChatInput" maxlength="2000" placeholder="Nhắn tin cho trưởng nhóm..." autocomplete="off">
+                    <button type="button" class="group-chat-emoji-toggle" data-chat-emoji="groupChatEmojiPicker" data-chat-emoji-input="groupChatInput" aria-label="Chọn biểu tượng cảm xúc" aria-expanded="false">
+                        <i class="fa-regular fa-face-smile"></i>
+                    </button>
+                    <div id="groupChatEmojiPicker" class="chat-emoji-picker" hidden aria-label="Biểu tượng cảm xúc"></div>
+                </div>
+                <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
+
     <div id="logoutModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
@@ -187,8 +219,10 @@
     </div>
 
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/notif-badge.js"></script>
     <script src="../../js/lecturer/lecturer-pending-alert.js"></script>
+    <script src="../../js/common/chat-emoji-picker.js"></script>
     <script src="../../js/lecturer/lecturer-groups.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
     <script src="../../js/common/sidebar-toggle.js"></script>

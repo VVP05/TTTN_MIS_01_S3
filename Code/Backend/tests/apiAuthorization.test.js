@@ -7,13 +7,19 @@ process.env.JWT_SECRET = 'test-only-jwt-secret-for-api-authorization-suite';
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const ExcelJS = require('exceljs');
 const User = require('../models/User');
 const Document = require('../models/Document');
 const Topic = require('../models/Topic');
 const Milestone = require('../models/Milestone');
 const Submission = require('../models/Submission');
 const Notification = require('../models/Notification');
+const ChatMessage = require('../models/ChatMessage');
+const ChatReadState = require('../models/ChatReadState');
 const { AvailabilitySlot, Meeting, Todo } = require('../models/Schedule');
+const LecturerTopic = require('../models/LecturerTopic');
+const GroupJoinRequest = require('../models/GroupJoinRequest');
+const Semester = require('../models/Semester');
 const {
     submitMilestoneDraft,
     withdrawMilestoneSubmission,
@@ -32,9 +38,13 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const authRoutes = require('../routes/authRoutes');
 const scheduleRoutes = require('../routes/scheduleRoutes');
 const topicRoutes = require('../routes/topicRoutes');
+const chatRoutes = require('../routes/chatRoutes');
+const aiRoutes = require('../routes/aiRoutes');
 const getJwtSecret = require('../utils/jwtSecret');
 const { assertCollectionsEmpty, assertDevelopmentSeedEnvironment } = require('../seed');
 const passwordResetEmail = require('../services/passwordResetEmail');
+const { decodeLegacyFilename } = require('../utils/documentFilename');
+const { extractOllamaAnswer, getOllamaConfig } = require('../services/ollamaChat');
 
 const secretKey = process.env.JWT_SECRET;
 const app = express();
@@ -43,6 +53,8 @@ app.use(createCorsMiddleware(['https://frontend.example']));
 app.use('/api/auth', authRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/topics', topicRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/ai', aiRoutes);
 app.get('/test/session', authMiddleware, (req, res) => res.json({ role: req.user.role }));
 app.post('/test/session', authMiddleware, (req, res) => res.json({ role: req.user.role }));
 app.get('/test/identity', authMiddleware, (req, res) => res.json({
@@ -323,6 +335,85 @@ test('authentication middleware blocks forced-password accounts from other prote
     assert.equal((await response.json()).code, 'PASSWORD_CHANGE_REQUIRED');
 });
 
+test('chat unread summary is limited to each role’s accessible rooms', async t => {
+    const topic = { _id: 'topic-1', leader_code: 'SV01' };
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => [topic]
+    }));
+    t.mock.method(ChatReadState, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(ChatMessage, 'aggregate', async () => [
+        { _id: { topic_id: topic._id, room_type: 'INTERNAL' }, count: 2 },
+        { _id: { topic_id: topic._id, room_type: 'LECTURER' }, count: 1 }
+    ]);
+
+    const studentResponse = await request('/api/chat/unread', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const studentResult = await studentResponse.json();
+    assert.equal(studentResponse.status, 200);
+    assert.equal(studentResult.data.total_unread, 3);
+    assert.deepEqual(studentResult.data.rooms.map(room => room.room_type), ['INTERNAL', 'LECTURER']);
+
+    const lecturerResponse = await request('/api/chat/unread', {
+        role: 'LECTURER',
+        userCode: 'GV01'
+    });
+    const lecturerResult = await lecturerResponse.json();
+    assert.equal(lecturerResponse.status, 200);
+    assert.equal(lecturerResult.data.total_unread, 1);
+    assert.deepEqual(lecturerResult.data.rooms.map(room => room.room_type), ['LECTURER']);
+});
+
+test('opening a chat room marks its latest message as read', async t => {
+    const latestMessageAt = new Date();
+    const topic = { _id: 'topic-1', leader_code: 'SV01', member2_code: 'SV02', member3_code: '' };
+    t.mock.method(Topic, 'findById', () => ({
+        lean: async () => topic
+    }));
+    t.mock.method(ChatMessage, 'find', () => ({
+        sort() { return this; },
+        limit() { return this; },
+        lean: async () => [
+            { sender_code: 'SV01', created_at: latestMessageAt },
+            { sender_code: 'SV02', created_at: new Date(latestMessageAt.getTime() - 1000) }
+        ]
+    }));
+    let readStateUpdate;
+    t.mock.method(ChatReadState, 'updateOne', async (...args) => {
+        readStateUpdate = args;
+    });
+
+    const response = await request('/api/chat/topics/topic-1?room=INTERNAL', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    assert.equal(response.status, 200);
+    assert.equal(readStateUpdate[0].user_code, 'SV01');
+    assert.equal(readStateUpdate[1].$max.last_read_at, latestMessageAt);
+    assert.equal(readStateUpdate[2].upsert, true);
+});
+
+test('non-leader students cannot read the lecturer chat room', async t => {
+    t.mock.method(Topic, 'findById', () => ({
+        lean: async () => ({ _id: 'topic-1', leader_code: 'SV01', member2_code: 'SV02' })
+    }));
+    const findMessages = t.mock.method(ChatMessage, 'find', async () => {
+        throw new Error('Chat messages must not be queried for a denied room.');
+    });
+
+    const response = await request('/api/chat/topics/topic-1?room=LECTURER', {
+        role: 'STUDENT',
+        userCode: 'SV02'
+    });
+    assert.equal(response.status, 403);
+    assert.equal(findMessages.mock.callCount(), 0);
+});
+
 before(async () => {
     server = app.listen(0, '127.0.0.1');
     await new Promise((resolve, reject) => {
@@ -352,6 +443,16 @@ async function request(path, { method = 'GET', role, userCode, body } = {}) {
         headers,
         body: body ? JSON.stringify(body) : undefined
     });
+}
+
+async function requestExcelUpload(path, { role, userCode, fileName, fileBuffer }) {
+    const formData = new FormData();
+    formData.append('file', new Blob([fileBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }), fileName);
+    const headers = {};
+    if (role && userCode) headers.Authorization = `Bearer ${tokenFor(role, userCode)}`;
+    return fetch(`${baseUrl}${path}`, { method: 'POST', headers, body: formData });
 }
 
 test('lecturer quota counts only active assigned groups and blocks at the limit', async t => {
@@ -780,9 +881,93 @@ test('admin topic endpoints reject non-admin callers', async () => {
     assert.equal(student.status, 403);
 });
 
+test('student topic marketplace is restricted to authenticated students', async () => {
+    const unauthenticated = await request('/api/topics/marketplace');
+    const lecturer = await request('/api/topics/marketplace', { role: 'LECTURER', userCode: 'GV01' });
+    assert.equal(unauthenticated.status, 401);
+    assert.equal(lecturer.status, 403);
+});
+
 test('lecturer topic reads are restricted to the signed-in lecturer', async () => {
     const lecturer = await request('/api/topics/lecturer/GV02', { role: 'LECTURER', userCode: 'GV01' });
     assert.equal(lecturer.status, 403);
+});
+
+test('lecturers can preview and import valid Excel pool topics without choosing another lecturer identity', async t => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Danh sách đề tài');
+    worksheet.addRow(['Tên đề tài', 'Mô tả', 'Lĩnh vực', 'Yêu cầu đầu vào', 'Mã giảng viên']);
+    worksheet.addRow(['Thiết kế website', 'Xây dựng website quản lý.', 'AI / ML', 'JavaScript', 'GV99']);
+    worksheet.addRow(['thiết kế WEBSITE', 'Dòng này trùng trong file.', 'Web / Ứng dụng', '', 'GV99']);
+    worksheet.addRow(['Đề tài hiện có', 'Đã được thêm trước đó.', 'Khác', '', 'GV99']);
+    worksheet.addRow(['Thiếu mô tả', '', 'Web / Ứng dụng', '', 'GV99']);
+    const fileBuffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+    t.mock.method(LecturerTopic, 'find', filter => {
+        assert.equal(filter.lecturer_code.test('GV01'), true);
+        return {
+            select() { return this; },
+            lean: async () => [{ title: 'Đề tài hiện có' }]
+        };
+    });
+    t.mock.method(User, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => ({ user_code: 'GV01', max_quota: 3 })
+    }));
+    t.mock.method(Topic, 'countDocuments', async () => 0);
+    let insertedTopics;
+    t.mock.method(LecturerTopic, 'insertMany', async topics => {
+        insertedTopics = topics;
+        return topics.map((topic, index) => ({ ...topic, _id: `imported-${index}` }));
+    });
+
+    const templateResponse = await request('/api/topics/lecturer-pool/import/template', {
+        role: 'LECTURER',
+        userCode: 'GV01'
+    });
+    assert.equal(templateResponse.status, 200);
+    const templateWorkbook = new ExcelJS.Workbook();
+    await templateWorkbook.xlsx.load(Buffer.from(await templateResponse.arrayBuffer()));
+    assert.deepEqual(templateWorkbook.worksheets[0].getRow(1).values.slice(1), [
+        'Tên đề tài', 'Mô tả', 'Lĩnh vực', 'Yêu cầu đầu vào'
+    ]);
+
+    const studentPreviewResponse = await requestExcelUpload('/api/topics/lecturer-pool/import/preview', {
+        role: 'STUDENT',
+        userCode: 'SV01',
+        fileName: 'topics.xlsx',
+        fileBuffer
+    });
+    assert.equal(studentPreviewResponse.status, 403);
+
+    const previewResponse = await requestExcelUpload('/api/topics/lecturer-pool/import/preview', {
+        role: 'LECTURER',
+        userCode: 'GV01',
+        fileName: 'topics.xlsx',
+        fileBuffer
+    });
+    assert.equal(previewResponse.status, 200);
+    const preview = (await previewResponse.json()).data;
+    assert.equal(preview.total_rows, 4);
+    assert.equal(preview.valid_count, 1);
+    assert.equal(preview.error_count, 3);
+    assert.equal(preview.rows[0].category, 'AI / ML');
+    assert.match(preview.rows[1].errors.join(' '), /trùng trong file/);
+    assert.match(preview.rows[2].errors.join(' '), /đã có trong kho/);
+    assert.match(preview.rows[3].errors.join(' '), /Thiếu mô tả/);
+
+    const importResponse = await requestExcelUpload('/api/topics/lecturer-pool/import', {
+        role: 'LECTURER',
+        userCode: 'GV01',
+        fileName: 'topics.xlsx',
+        fileBuffer
+    });
+    assert.equal(importResponse.status, 201);
+    assert.equal((await importResponse.json()).data.imported_count, 1);
+    assert.equal(insertedTopics.length, 1);
+    assert.equal(insertedTopics[0].lecturer_code, 'GV01');
+    assert.equal(insertedTopics[0].title, 'Thiết kế website');
+    assert.equal(insertedTopics[0].status, 'APPROVED');
 });
 
 test('direct pool registration rejects students who already have an active topic', async t => {
@@ -803,6 +988,151 @@ test('direct pool registration rejects students who already have an active topic
 
     assert.equal(response.status, 409);
     assert.match(result.message, /đã có đề tài đang hoạt động/);
+});
+
+test('students can request to join an active registered group', async t => {
+    const now = new Date();
+    const group = {
+        _id: 'topic-sv02',
+        status: 'PENDING',
+        leader_code: 'SV02',
+        member2_code: null,
+        member3_code: null
+    };
+    let createdRequest;
+    t.mock.method(User, 'find', () => ({
+        select: async () => [{ user_code: 'SV01' }, { user_code: 'SV02' }]
+    }));
+    t.mock.method(Topic, 'findOne', filter => filter.leader_code ? group : null);
+    t.mock.method(Semester, 'findOne', () => ({
+        lean: async () => ({
+            is_active: true,
+            registration_start_date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+            registration_end_date: new Date(now.getTime() + 24 * 60 * 60 * 1000)
+        })
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', async () => null);
+    t.mock.method(GroupJoinRequest, 'find', () => ({
+        select: () => ({ lean: async () => [] })
+    }));
+    t.mock.method(GroupJoinRequest, 'create', async request => {
+        createdRequest = request;
+        return { ...request, _id: 'join-request-1' };
+    });
+    t.mock.method(Notification, 'findOneAndUpdate', async () => ({}));
+
+    const response = await request('/api/topics/register', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            registration_role: 'MEMBER',
+            leader_code: 'SV02',
+            member2_code: 'SV01',
+            member3_code: null
+        }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.pending, true);
+    assert.deepEqual(createdRequest, { leader_code: 'SV02', member_code: 'SV01' });
+});
+
+test('accepting a join request adds the student to an already registered topic', async t => {
+    const topic = {
+        _id: 'topic-sv03',
+        status: 'APPROVED',
+        leader_code: 'SV03',
+        member2_code: null,
+        member3_code: null
+    };
+    let updatedMember;
+    t.mock.method(GroupJoinRequest, 'findOneAndUpdate', async () => ({
+        _id: 'join-request-2',
+        leader_code: 'SV03',
+        member_code: 'SV04'
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', () => ({
+        select: () => ({ lean: async () => null })
+    }));
+    t.mock.method(Topic, 'findOne', filter => ({
+        select: () => ({
+            lean: async () => filter.leader_code ? { _id: topic._id } : null
+        })
+    }));
+    t.mock.method(Topic, 'findById', () => ({
+        select: () => ({ lean: async () => topic })
+    }));
+    t.mock.method(Topic, 'updateOne', async (filter, update) => {
+        updatedMember = update.$set.member2_code;
+        return { modifiedCount: 1 };
+    });
+    t.mock.method(Notification, 'findOneAndUpdate', async () => ({}));
+
+    const response = await request('/api/topics/join-requests/SV03/join-request-2', {
+        method: 'PATCH',
+        role: 'STUDENT',
+        userCode: 'SV03',
+        body: { status: 'ACCEPTED' }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.success, true);
+    assert.equal(updatedMember, 'SV04');
+});
+
+test('accepted members are synchronized to an existing topic when loading their topic page', async t => {
+    const topic = {
+        _id: 'topic-sv03',
+        status: 'APPROVED',
+        leader_code: 'SV03',
+        member2_code: null,
+        member3_code: null
+    };
+    let topicByIdCalls = 0;
+    let updatedMember;
+    t.mock.method(Topic, 'findOne', filter => ({
+        sort: () => ({
+            lean: async () => filter.leader_code ? topic : null
+        })
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', () => ({
+        sort: () => ({
+            lean: async () => ({
+                _id: 'join-request-3',
+                leader_code: 'SV03',
+                member_code: 'SV04',
+                status: 'ACCEPTED'
+            })
+        })
+    }));
+    t.mock.method(Topic, 'findById', () => {
+        topicByIdCalls += 1;
+        return {
+            select: () => ({ lean: async () => topic }),
+            lean: async () => ({ ...topic, member2_code: 'SV04' })
+        };
+    });
+    t.mock.method(Topic, 'updateOne', async (filter, update) => {
+        updatedMember = update.$set.member2_code;
+        return { modifiedCount: 1 };
+    });
+    t.mock.method(Submission, 'find', () => ({
+        sort: () => ({ lean: async () => [] })
+    }));
+
+    const response = await request('/api/topics/student/SV04', {
+        role: 'STUDENT',
+        userCode: 'SV04'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.member2_code, 'SV04');
+    assert.equal(updatedMember, 'SV04');
+    assert.equal(topicByIdCalls, 2);
 });
 
 test('session endpoint returns the authenticated user profile', async t => {
@@ -875,7 +1205,317 @@ test('student schedule is scoped to the signed-in student while group members sh
     assert.deepEqual(body.todos, todos);
 });
 
-test('group members can add and toggle shared todos; supplied identity is ignored', async t => {
+test('student AI advisor uses local Ollama and only sends available pool topics as context', async t => {
+    const configKeys = ['OLLAMA_BASE_URL', 'OLLAMA_MODEL'];
+    const previousConfig = Object.fromEntries(configKeys.map(key => [key, process.env[key]]));
+    t.after(() => {
+        configKeys.forEach(key => {
+            if (previousConfig[key] === undefined) delete process.env[key];
+            else process.env[key] = previousConfig[key];
+        });
+    });
+    process.env.OLLAMA_BASE_URL = 'http://127.0.0.1:11434';
+    process.env.OLLAMA_MODEL = 'qwen2.5:3b';
+
+    t.mock.method(LecturerTopic, 'find', () => ({
+        sort() { return this; },
+        lean: async () => Array.from({ length: 10 }, (_, index) => ({
+            _id: `pool-${index}`,
+            title: index === 0 ? 'Ứng dụng quản lý thực tập' : `Đề tài mẫu ${index}`,
+            description: index === 0
+                ? 'Xây dựng nền tảng web quản lý tiến độ.'
+                : `Mô tả chủ đề mẫu ${index}.`,
+            requirements: index === 0 ? 'JavaScript, cơ sở dữ liệu' : '',
+            category: 'Web / Ứng dụng',
+            lecturer_code: 'GV01',
+            status: 'APPROVED'
+        }))
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => [{ user_code: 'GV01', max_quota: 5 }]
+    }));
+
+    const originalFetch = globalThis.fetch;
+    let ollamaRequest;
+    t.mock.method(globalThis, 'fetch', async (input, init) => {
+        if (String(input).startsWith('http://127.0.0.1:11434/api/chat')) {
+            ollamaRequest = { url: String(input), init };
+            return new Response(JSON.stringify({
+                message: {
+                    role: 'assistant',
+                    content: 'Okay, the user wants a suggestion. Let me think through the options.\n</think>\n\nBạn có thể cân nhắc đề tài quản lý thực tập.'
+                },
+                done: true
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return originalFetch(input, init);
+    });
+
+    const response = await request('/api/ai/student-advisor/chat', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            message: 'Em học Công nghệ thông tin, nên chọn đề tài gì?',
+            profile: { major: 'Công nghệ thông tin', skills: 'JavaScript', interests: 'Web' },
+            history: Array.from({ length: 6 }, (_, index) => ({
+                role: index % 2 ? 'assistant' : 'user',
+                content: `Lịch sử hội thoại ${index}: `.repeat(100)
+            }))
+        }
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+        success: true,
+        reply: 'Bạn có thể cân nhắc đề tài quản lý thực tập.'
+    });
+    assert.equal(ollamaRequest.url, 'http://127.0.0.1:11434/api/chat');
+    const ollamaBody = JSON.parse(ollamaRequest.init.body);
+    assert.equal(ollamaBody.model, 'qwen2.5:3b');
+    assert.equal(ollamaBody.stream, false);
+    assert.equal(ollamaBody.think, false);
+    assert.equal(ollamaBody.keep_alive, '10m');
+    assert.equal(ollamaBody.options.num_predict, 192);
+    assert.equal(ollamaBody.messages.length, 6);
+    assert.ok(ollamaBody.messages.slice(1, -1).every(item => item.content.length <= 600));
+    const prompt = ollamaBody.messages;
+    assert.match(prompt[0].content, /Công nghệ thông tin/);
+    assert.match(prompt[0].content, /Ứng dụng quản lý thực tập/);
+    const topicContext = prompt[0].content.split('Dữ liệu đề tài hiện tại: ').at(-1);
+    assert.equal(JSON.parse(topicContext).length, 8);
+    assert.match(prompt[0].content, /không bắt sinh viên phải viết đúng cụm "ngành học"/);
+    assert.match(prompt[0].content, /Tuyệt đối không trình bày suy luận/);
+    assert.match(prompt[0].content, /ưu tiên điều sinh viên đang hỏi và không lặp gợi ý cũ/);
+    assert.match(prompt[0].content, /đối chiếu tên\/mô tả\/yêu cầu của kho/);
+    assert.match(prompt[0].content, /Nếu kho trống hoặc không có đề tài nào phù hợp, vẫn chủ động tự đề xuất tối đa 2 ý tưởng mới/);
+    assert.match(prompt[0].content, /chưa có trong kho và chưa được giảng viên xác nhận\/duyệt/);
+    assert.match(prompt[0].content, /Không lặp lại câu hỏi, không lặp ý/);
+});
+
+test('student AI advisor responds naturally to a simple thank-you without calling Ollama', async t => {
+    const originalFetch = globalThis.fetch;
+    let ollamaCalled = false;
+    t.mock.method(globalThis, 'fetch', async (input, init) => {
+        if (String(input).startsWith('http://127.0.0.1:11434/api/chat')) {
+            ollamaCalled = true;
+        }
+        return originalFetch(input, init);
+    });
+
+    const messages = [
+        ['À oke cảm ơn bạn', 'Không có gì nha! Nếu cần, bạn cứ hỏi mình thêm về các đề tài nhé.'],
+        ['oke thanks k iu bạn nhé', 'Không có gì nha! Nếu cần, bạn cứ hỏi mình thêm về các đề tài nhé.'],
+        ['ok', 'Ừ, khi nào cần tư vấn đề tài hay hướng dẫn dùng hệ thống thì cứ nhắn mình nhé.'],
+        ['chào bạn', 'Chào bạn! Mình có thể giúp bạn tìm hiểu đề tài hoặc cách dùng hệ thống.']
+    ];
+    for (const [message, reply] of messages) {
+        const response = await request('/api/ai/student-advisor/chat', {
+            method: 'POST',
+            role: 'STUDENT',
+            userCode: 'SV01',
+            body: { message }
+        });
+
+        assert.equal(response.status, 200);
+        assert.deepEqual(await response.json(), { success: true, reply });
+    }
+    assert.equal(ollamaCalled, false);
+});
+
+test('student AI advisor includes verified topic-registration and report-submission steps', async t => {
+    const configKeys = ['OLLAMA_BASE_URL', 'OLLAMA_MODEL'];
+    const previousConfig = Object.fromEntries(configKeys.map(key => [key, process.env[key]]));
+    t.after(() => {
+        configKeys.forEach(key => {
+            if (previousConfig[key] === undefined) delete process.env[key];
+            else process.env[key] = previousConfig[key];
+        });
+    });
+    process.env.OLLAMA_BASE_URL = 'http://127.0.0.1:11434';
+    process.env.OLLAMA_MODEL = 'qwen2.5:3b';
+
+    let poolQueryCount = 0;
+    t.mock.method(LecturerTopic, 'find', () => {
+        poolQueryCount += 1;
+        return {
+            sort() { return this; },
+            lean: async () => []
+        };
+    });
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+
+    const originalFetch = globalThis.fetch;
+    let ollamaMessages;
+    t.mock.method(globalThis, 'fetch', async (input, init) => {
+        if (String(input).startsWith('http://127.0.0.1:11434/api/chat')) {
+            ollamaMessages = JSON.parse(init.body).messages;
+            return new Response(JSON.stringify({
+                message: { role: 'assistant', content: 'Vào Đề tài của tôi, chọn mốc đang mở để nộp báo cáo.' },
+                done: true
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return originalFetch(input, init);
+    });
+
+    const response = await request('/api/ai/student-advisor/chat', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: { message: 'Nộp bài ở chỗ nào vậy?' }
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(ollamaMessages.at(-1).content, 'Nộp bài ở chỗ nào vậy?');
+    assert.match(ollamaMessages[0].content, /Mở mục "Đăng ký đề tài"/);
+    assert.match(ollamaMessages[0].content, /Mở mục "Đề tài của tôi"/);
+    assert.match(ollamaMessages[0].content, /Lưu thay đổi.*sau đó nhấn "Nộp bài"/);
+    assert.match(ollamaMessages[0].content, /Không bịa tên trang\/nút/);
+    assert.equal(poolQueryCount, 0);
+});
+
+test('Ollama advisor strips complete Qwen thinking and rejects incomplete reasoning', () => {
+    assert.equal(
+        extractOllamaAnswer('Okay, let me think.\n</think>\n\nGợi ý: Xây dựng dashboard phân tích dữ liệu bán hàng.'),
+        'Gợi ý: Xây dựng dashboard phân tích dữ liệu bán hàng.'
+    );
+    assert.equal(
+        extractOllamaAnswer('Dừng客, nếu bạn cần thêm gợi ý, hãy cho mình biết.'),
+        'Dừng, nếu bạn cần thêm gợi ý, hãy cho mình biết.'
+    );
+    assert.throws(
+        () => extractOllamaAnswer('Okay, the user is studying Management Information Systems. Let me think through this.'),
+        /chưa có câu trả lời cuối cùng/
+    );
+});
+
+test('Ollama defaults away from the legacy reasoning model and keeps custom model settings', t => {
+    const previousModel = process.env.OLLAMA_MODEL;
+    t.after(() => {
+        if (previousModel === undefined) delete process.env.OLLAMA_MODEL;
+        else process.env.OLLAMA_MODEL = previousModel;
+    });
+
+    delete process.env.OLLAMA_MODEL;
+    assert.equal(getOllamaConfig().model, 'qwen2.5:3b');
+    process.env.OLLAMA_MODEL = 'qwen3:4b';
+    assert.equal(getOllamaConfig().model, 'qwen2.5:3b');
+    process.env.OLLAMA_MODEL = 'custom:1b';
+    assert.equal(getOllamaConfig().model, 'custom:1b');
+});
+
+test('student AI advisor lets Ollama interpret informal major messages without a profile', async t => {
+    t.mock.method(LecturerTopic, 'find', () => ({
+        sort() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+
+    const originalFetch = globalThis.fetch;
+    let ollamaCalled = false;
+    t.mock.method(globalThis, 'fetch', async (input, init) => {
+        if (String(input).startsWith('http://127.0.0.1:11434/api/chat')) {
+            ollamaCalled = true;
+            const body = JSON.parse(init.body);
+            assert.match(body.messages[0].content, /không bắt sinh viên phải viết đúng cụm "ngành học"/);
+            assert.equal(body.messages[body.messages.length - 1].content, 'Mình bên IT á, nên chọn đề tài gì?');
+            return new Response(JSON.stringify({
+                message: { role: 'assistant', content: 'Em có thể tham khảo các đề tài về phát triển phần mềm hoặc dữ liệu.' },
+                done: true
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return originalFetch(input, init);
+    });
+
+    const response = await request('/api/ai/student-advisor/chat', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            message: 'Mình bên IT á, nên chọn đề tài gì?',
+            profile: {},
+            history: [
+                { role: 'assistant', content: 'Bạn chưa cho mình biết ngành đang học. Bạn học ngành gì vậy? Gửi tên ngành, mình sẽ gợi ý hướng đề tài phù hợp nhé.' }
+            ]
+        }
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.match(body.reply, /phát triển phần mềm hoặc dữ liệu/);
+    assert.equal(ollamaCalled, true);
+});
+
+test('student AI advisor validates student access and explains when Ollama is unavailable', async t => {
+    const configKeys = ['OLLAMA_BASE_URL', 'OLLAMA_MODEL'];
+    const previousConfig = Object.fromEntries(configKeys.map(key => [key, process.env[key]]));
+    t.after(() => {
+        configKeys.forEach(key => {
+            if (previousConfig[key] === undefined) delete process.env[key];
+            else process.env[key] = previousConfig[key];
+        });
+    });
+    process.env.OLLAMA_BASE_URL = 'http://127.0.0.1:11434';
+    process.env.OLLAMA_MODEL = 'qwen2.5:3b';
+
+    const lecturerResponse = await request('/api/ai/student-advisor/chat', {
+        method: 'POST',
+        role: 'LECTURER',
+        userCode: 'GV01',
+        body: { message: 'Xin tư vấn đề tài' }
+    });
+    assert.equal(lecturerResponse.status, 403);
+
+    t.mock.method(LecturerTopic, 'find', () => ({
+        sort() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+
+    const originalFetch = globalThis.fetch;
+    t.mock.method(globalThis, 'fetch', async (input, init) => {
+        if (String(input).startsWith('http://127.0.0.1:11434/api/chat')) {
+            throw new TypeError('fetch failed');
+        }
+        return originalFetch(input, init);
+    });
+    const unavailableResponse = await request('/api/ai/student-advisor/chat', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: { message: 'Em học ngành Công nghệ thông tin, nên chọn đề tài gì?' }
+    });
+    assert.equal(unavailableResponse.status, 503);
+    assert.match((await unavailableResponse.json()).message, /Không kết nối được Ollama/);
+});
+
+test('group members can add and set all shared todo statuses; supplied identity is ignored', async t => {
     const topic = {
         _id: 'topic-1',
         status: 'APPROVED',
@@ -885,17 +1525,19 @@ test('group members can add and toggle shared todos; supplied identity is ignore
         member3_code: null
     };
     let createdTodo;
+    const storedTodo = {
+        topic_id: 'topic-1',
+        student_code: 'SV01',
+        status: 'NOT_STARTED',
+        is_completed: false,
+        save: async function () { return this; }
+    };
     t.mock.method(Topic, 'findOne', async () => topic);
     t.mock.method(Todo.prototype, 'save', async function () {
         createdTodo = this;
         return this;
     });
-    t.mock.method(Todo, 'findById', async () => ({
-        topic_id: 'topic-1',
-        student_code: 'SV01',
-        is_completed: false,
-        save: async function () { return this; }
-    }));
+    t.mock.method(Todo, 'findById', async () => storedTodo);
 
     const addResponse = await request('/api/schedule/todos/add', {
         method: 'POST',
@@ -912,23 +1554,55 @@ test('group members can add and toggle shared todos; supplied identity is ignore
     assert.equal(createdTodo.student_code, 'SV01');
     assert.equal(createdTodo.created_by, 'SV01');
     assert.equal(createdTodo.assigned_to, 'SV02');
+    assert.equal(createdTodo.status, 'NOT_STARTED');
 
-    const toggleResponse = await request('/api/schedule/todos/toggle/todo-1', {
+    const inProgressResponse = await request('/api/schedule/todos/toggle/todo-1', {
+        method: 'PATCH',
+        role: 'STUDENT',
+        userCode: 'SV02',
+        body: { status: 'IN_PROGRESS' }
+    });
+    assert.equal(inProgressResponse.status, 200);
+    assert.equal((await inProgressResponse.json()).status, 'IN_PROGRESS');
+    assert.equal(storedTodo.is_completed, false);
+
+    const completedResponse = await request('/api/schedule/todos/toggle/todo-1', {
+        method: 'PATCH',
+        role: 'STUDENT',
+        userCode: 'SV02',
+        body: { status: 'COMPLETED' }
+    });
+    assert.equal(completedResponse.status, 200);
+    assert.equal((await completedResponse.json()).status, 'COMPLETED');
+    assert.equal(storedTodo.is_completed, true);
+
+    const invalidStatusResponse = await request('/api/schedule/todos/toggle/todo-1', {
+        method: 'PATCH',
+        role: 'STUDENT',
+        userCode: 'SV02',
+        body: { status: 'BLOCKED' }
+    });
+    assert.equal(invalidStatusResponse.status, 400);
+    assert.equal(storedTodo.status, 'COMPLETED');
+
+    const legacyToggleResponse = await request('/api/schedule/todos/toggle/todo-1', {
         method: 'PATCH',
         role: 'STUDENT',
         userCode: 'SV02'
     });
-    assert.equal(toggleResponse.status, 200);
-    assert.equal((await toggleResponse.json()).is_completed, true);
+    assert.equal(legacyToggleResponse.status, 200);
+    assert.equal((await legacyToggleResponse.json()).status, 'NOT_STARTED');
 });
 
-test('students outside the group cannot add or toggle its todos', async t => {
+test('students outside the group cannot add, update, or delete its todos', async t => {
+    let deleteCalled = false;
     t.mock.method(Topic, 'findOne', async () => null);
     t.mock.method(Todo, 'findById', async () => ({
         topic_id: 'topic-1',
         student_code: 'SV01',
         is_completed: false,
-        save: async function () { return this; }
+        save: async function () { return this; },
+        deleteOne: async function () { deleteCalled = true; }
     }));
 
     const addResponse = await request('/api/schedule/todos/add', {
@@ -945,6 +1619,65 @@ test('students outside the group cannot add or toggle its todos', async t => {
         userCode: 'SV99'
     });
     assert.equal(toggleResponse.status, 403);
+
+    const deleteResponse = await request('/api/schedule/todos/todo-1', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV99'
+    });
+    assert.equal(deleteResponse.status, 403);
+    assert.equal(deleteCalled, false);
+});
+
+test('only a todo creator or group leader can delete shared todos', async t => {
+    const topic = {
+        _id: 'topic-1',
+        status: 'APPROVED',
+        leader_code: 'SV01',
+        member2_code: 'SV02',
+        member3_code: 'SV03'
+    };
+    const deletionCalls = [];
+    const todos = {
+        'creator-todo': {
+            _id: 'creator-todo',
+            topic_id: 'topic-1',
+            student_code: 'SV02',
+            created_by: '',
+            deleteOne: async function () { deletionCalls.push(this._id); }
+        },
+        'other-todo': {
+            _id: 'other-todo',
+            topic_id: 'topic-1',
+            student_code: 'SV02',
+            created_by: 'SV03',
+            deleteOne: async function () { deletionCalls.push(this._id); }
+        }
+    };
+    t.mock.method(Topic, 'findOne', async () => topic);
+    t.mock.method(Todo, 'findById', async todoId => todos[todoId] || null);
+
+    const creatorResponse = await request('/api/schedule/todos/creator-todo', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV02'
+    });
+    assert.equal(creatorResponse.status, 200);
+
+    const otherMemberResponse = await request('/api/schedule/todos/other-todo', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV02'
+    });
+    assert.equal(otherMemberResponse.status, 403);
+
+    const leaderResponse = await request('/api/schedule/todos/other-todo', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    assert.equal(leaderResponse.status, 200);
+    assert.deepEqual(deletionCalls, ['creator-todo', 'other-todo']);
 });
 
 test('lecturer schedule reads are limited to the signed-in lecturer', async t => {
@@ -1102,6 +1835,11 @@ test('admin document list includes administrator uploads but excludes lecturer u
     assert.equal(response.statusCode, 200);
     assert.deepEqual(response.body.documents.map(document => document._id), ['admin-doc', 'legacy-admin-doc']);
     assert.equal(response.body.documents[1].uploader_role, 'ADMIN');
+});
+
+test('document filenames decode legacy Vietnamese mojibake without changing valid names', () => {
+    assert.equal(decodeLegacyFilename('Tieu_luan_nhÃ³m 1.docx'), 'Tieu_luan_nhóm 1.docx');
+    assert.equal(decodeLegacyFilename('Tieu_luan_nhóm 1.docx'), 'Tieu_luan_nhóm 1.docx');
 });
 
 test('lecturers can view their own availability and students can view their supervisor slots', async t => {

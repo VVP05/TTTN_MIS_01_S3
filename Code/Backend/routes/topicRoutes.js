@@ -80,6 +80,7 @@ const {
     cancelTopic,
     uploadMilestone,
     getLecturerPoolTopics, 
+    getStudentTopicMarketplace,
     registerPoolTopic,
     getAllTopicsForAdmin,
     assignLecturerToTopic,
@@ -96,6 +97,28 @@ const {
     submitMilestoneDraft,
     withdrawMilestoneSubmission
 } = require('../controllers/topicController');
+const lecturerTopicImportController = require('../controllers/lecturerTopicImportController');
+const lecturerTopicUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: lecturerTopicImportController.MAX_LECTURER_TOPIC_IMPORT_FILE_SIZE },
+    fileFilter: (req, file, callback) => {
+        if (path.extname(file.originalname || '').toLowerCase() !== '.xlsx') {
+            return callback(new Error('Chỉ hỗ trợ file Excel .xlsx.'));
+        }
+        return callback(null, true);
+    }
+}).single('file');
+const handleLecturerTopicUpload = (req, res, next) => {
+    lecturerTopicUpload(req, res, error => {
+        if (error) {
+            const message = error.code === 'LIMIT_FILE_SIZE'
+                ? 'File Excel không được vượt quá 2 MB.'
+                : error.message || 'Không thể nhận file Excel.';
+            return res.status(400).json({ success: false, message });
+        }
+        return next();
+    });
+};
 
 
 // ==========================================
@@ -108,6 +131,7 @@ router.patch('/admin/assign-lecturer/:topic_id', authMiddleware, requireAdminRol
 
 router.get('/pool', authMiddleware, requireStudentRole, getLecturerPoolTopics);
 router.get('/available', authMiddleware, requireStudentRole, getLecturerPoolTopics);
+router.get('/marketplace', authMiddleware, requireStudentRole, getStudentTopicMarketplace);
 
 // Sinh viên chọn đăng ký 1 đề tài từ Kho
 router.post('/register-pool', authMiddleware, requireStudentRole, registerPoolTopic);
@@ -152,6 +176,9 @@ router.post('/lecturer/create', authMiddleware, requireLecturerRole, createLectu
 
 // Giảng viên thêm / lấy Kho đề tài gợi ý
 router.post('/lecturer-pool', authMiddleware, requireLecturerRole, createLecturerPoolTopic);
+router.get('/lecturer-pool/import/template', authMiddleware, requireLecturerRole, lecturerTopicImportController.downloadLecturerTopicTemplate);
+router.post('/lecturer-pool/import/preview', authMiddleware, requireLecturerRole, handleLecturerTopicUpload, lecturerTopicImportController.previewLecturerTopicImport);
+router.post('/lecturer-pool/import', authMiddleware, requireLecturerRole, handleLecturerTopicUpload, lecturerTopicImportController.importLecturerTopics);
 router.get('/lecturer-pool', authMiddleware, (req, res, next) => {
     const role = String(req.user?.role || '').toUpperCase();
     if (['STUDENT', 'LECTURER'].includes(role)) return next();

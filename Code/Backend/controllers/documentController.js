@@ -3,6 +3,7 @@ const Notification = require('../models/Notification');
 const Topic = require('../models/Topic');
 const Group = require('../models/Group');
 const User = require('../models/User');
+const { decodeLegacyFilename, normalizeDocumentFilename } = require('../utils/documentFilename');
 const fs = require('fs');
 
 // 1. Lấy danh sách tài liệu do 1 Giảng viên đã chia sẻ (trang "Quản lý tài liệu" của GVHD)
@@ -15,7 +16,7 @@ exports.getLecturerDocuments = async (req, res) => {
                 { target: 'Tất cả giảng viên' }
             ]
         }).sort({ createdAt: -1 });
-        res.status(200).json({ success: true, documents });
+        res.status(200).json({ success: true, documents: documents.map(normalizeDocumentFilename) });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách tài liệu!', error: error.message });
     }
@@ -31,7 +32,7 @@ exports.getStudentDocuments = async (req, res) => {
                 { recipient_codes: studentCode }
             ]
         }).sort({ createdAt: -1 });
-        res.status(200).json({ success: true, documents });
+        res.status(200).json({ success: true, documents: documents.map(normalizeDocumentFilename) });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách tài liệu!', error: error.message });
     }
@@ -48,6 +49,7 @@ exports.getAllDocuments = async (req, res) => {
             const uploader = uploaderMap.get(document.uploader_code);
             return {
                 ...document,
+                original_name: decodeLegacyFilename(document.original_name),
                 uploader_name: document.uploader_name || uploader?.full_name || document.uploader_code,
                 uploader_role: document.uploader_role || uploader?.role || (document.uploader_code === 'ADMIN' ? 'ADMIN' : 'LECTURER')
             };
@@ -128,6 +130,7 @@ exports.uploadDocument = async (req, res) => {
 
         const uploader = await User.findOne({ user_code: uploaderCode }).select('full_name').lean();
         const uploaderName = uploader?.full_name || '';
+        const originalName = decodeLegacyFilename(file.originalname);
 
         const document = new Document({
             title,
@@ -138,7 +141,7 @@ exports.uploadDocument = async (req, res) => {
             uploader_name: uploaderName,
             uploader_role: role,
             file_name: file.filename,
-            original_name: file.originalname,
+            original_name: originalName,
             file_path: `/uploads/documents/${file.filename}`,
             file_size: file.size
         });
@@ -151,7 +154,7 @@ exports.uploadDocument = async (req, res) => {
                     title: `Tài liệu mới: ${title}`,
                     content: `Tài liệu "${title}" đã được chia sẻ cho nhóm hướng dẫn của bạn. Vui lòng mở mục Tài liệu & Biểu mẫu để xem và tải về.`,
                     priority: 'info', status: 'published', sender_name: uploaderName, is_read: false,
-                    attachment: { name: file.originalname, url: `/uploads/documents/${file.filename}` }
+                    attachment: { name: originalName, url: `/uploads/documents/${file.filename}` }
                 };
                 if (role === 'LECTURER') {
                     await Notification.insertMany(recipientCodes.map(recipient_code => ({ ...notificationBase, recipient_code })));
@@ -214,7 +217,7 @@ exports.incrementDownload = async (req, res) => {
         res.status(200).json({
             success: true,
             file_path: document.file_path,
-            original_name: document.original_name
+            original_name: decodeLegacyFilename(document.original_name)
         });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ!', error: error.message });
