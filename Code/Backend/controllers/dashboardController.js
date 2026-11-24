@@ -8,6 +8,7 @@ const Semester = require('../models/Semester');
 const Milestone = require('../models/Milestone');
 const { getTopicMilestoneProgress, getMilestoneProgressSeries } = require('../services/milestoneProgress');
 const { getLecturerGroupCount } = require('../services/lecturerQuota');
+const getSemesterRegistrationRange = require('../utils/semesterRegistrationRange');
 
 // Kết nối linh hoạt vào Collection 'meetings'
 const MeetingModel = mongoose.models.Meeting || 
@@ -40,21 +41,6 @@ const matchesStatus = (value, patterns) => {
     });
 };
 
-const getRegistrationRange = semester => {
-    if (!semester?.registration_start_date || !semester?.registration_end_date) return null;
-
-    const startDate = new Date(semester.registration_start_date);
-    const endDate = new Date(semester.registration_end_date);
-    const start = semester.registration_window_has_time
-        ? startDate
-        : new Date(`${startDate.toISOString().slice(0, 10)}T00:00:00+07:00`);
-    const end = semester.registration_window_has_time
-        ? endDate
-        : new Date(`${endDate.toISOString().slice(0, 10)}T23:59:59.999+07:00`);
-
-    return start <= end ? { start, end } : null;
-};
-
 const getVietnamMonthParts = date => {
     const parts = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Ho_Chi_Minh',
@@ -84,7 +70,7 @@ exports.getAdminDashboardStats = async (req, res) => {
                 return res.status(404).json({ success: false, message: 'Không tìm thấy học kỳ được chọn.' });
             }
 
-            registrationRange = getRegistrationRange(selectedSemester);
+            registrationRange = getSemesterRegistrationRange(selectedSemester);
             if (!registrationRange) {
                 return res.status(400).json({
                     success: false,
@@ -138,7 +124,8 @@ exports.getAdminDashboardStats = async (req, res) => {
             matchesStatus(item.status, [approvedStatusRegex, 'approved', 'registered', 'da phe duyet', 'đã phê duyệt', 'đã duyệt']) || item.status === 'PENDING'
         ).length;
         const approvedTopicsBySource = source => allTopics.filter(item =>
-            item.source === source && matchesStatus(item.status, [approvedStatusRegex])
+            String(item.source || 'STUDENT').trim().toUpperCase() === source &&
+            matchesStatus(item.status, [approvedStatusRegex])
         ).length;
 
         const approvedTopics = totalApprovedFromTopic + totalApprovedFromPool;
@@ -150,18 +137,32 @@ exports.getAdminDashboardStats = async (req, res) => {
         const inProgressTopics = approvedTopics;
 
         // 2. Lấy danh sách đề tài nhóm đang chờ giảng viên xử lý.
-        const pendingList = (await Topic.find({
+        const pendingTopicsList = await Topic.find({
             ...topicFilter,
             status: { $regex: pendingStatusRegex }
         })
             .sort({ createdAt: -1 })
             .limit(5)
-            .lean())
-            .map(item => ({
+            .lean();
+        const pendingUserCodes = [...new Set(pendingTopicsList
+            .flatMap(item => [item.leader_code, item.lecturer_code])
+            .map(code => String(code || '').trim())
+            .filter(Boolean))];
+        const pendingUsers = pendingUserCodes.length
+            ? await User.find({ user_code: { $in: pendingUserCodes } }).select('user_code full_name').lean()
+            : [];
+        const pendingUserNames = new Map(pendingUsers.map(user => [
+            String(user.user_code || '').trim().toUpperCase(),
+            user.full_name
+        ]));
+        const getPendingUserName = code => pendingUserNames.get(String(code || '').trim().toUpperCase());
+
+        const pendingList = pendingTopicsList.map(item => ({
                 ...item,
                 topic_code: item.topic_code || (item._id ? `DT-${String(item._id).slice(-6).toUpperCase()}` : 'N/A'),
-                lecturer_name: item.lecturer_name || item.lecturer_code || 'Chưa xác định',
-                leader_code: item.leader_code || 'N/A'
+                leader_name: getPendingUserName(item.leader_code) || item.leader_name || '',
+                leader_code: item.leader_code || 'N/A',
+                lecturer_name: getPendingUserName(item.lecturer_code) || item.lecturer_name || item.lecturer_code || 'Chưa xác định'
             }))
             .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
@@ -219,8 +220,8 @@ exports.getAdminDashboardStats = async (req, res) => {
                 needRevisionTopics,
                 inProgressTopics,
                 approvedBySource: {
-                    lecturer: registrationRange ? approvedTopicsBySource('LECTURER') : approvedTopicsFromPool,
-                    student: registrationRange ? approvedTopicsBySource('STUDENT') : approvedTopicsFromTopic
+                    lecturer: approvedTopicsBySource('LECTURER'),
+                    student: approvedTopicsBySource('STUDENT')
                 },
                 pendingBySource: {
                     lecturer: 0,
@@ -456,7 +457,22 @@ exports.getLecturerDashboard = async (req, res) => {
             }));
         }
 
-        const recentRegistrations = (recentTopics || []).map(topic => {
+        const recentTopicList = recentTopics || [];
+        const recentLeaderCodes = [...new Set(recentTopicList
+            .map(topic => String(topic.leader_code || topic.student_code || '').trim())
+            .filter(Boolean))];
+        const recentLeaders = recentLeaderCodes.length
+            ? await User.find({
+                role: 'STUDENT',
+                user_code: { $in: recentLeaderCodes }
+            }).select('user_code full_name').lean()
+            : [];
+        const recentLeadersByCode = new Map(recentLeaders.map(student => [
+            String(student.user_code || '').trim().toUpperCase(),
+            student.full_name
+        ]));
+
+        const recentRegistrations = recentTopicList.map(topic => {
             let badgeClass = 'badge-warning';
             let statusText = 'Chờ phê duyệt';
 
@@ -469,11 +485,15 @@ exports.getLecturerDashboard = async (req, res) => {
                 statusText = 'Yêu cầu chỉnh sửa';
             }
 
+            const leaderCode = String(topic.leader_code || topic.student_code || '').trim();
             return {
                 id: topic._id,
                 groupCode: topic.topic_code || topic.group_code || topic.groupCode || "Chưa xếp",
                 topicTitle: topic.title || "Chưa có tiêu đề",
-                leaderInfo: topic.leader_code ? `SV: ${topic.leader_code}` : (topic.student_code ? `SV: ${topic.student_code}` : "Chưa đăng ký"),
+                leaderInfo: leaderCode
+                    ? recentLeadersByCode.get(leaderCode.toUpperCase()) || `SV: ${leaderCode}`
+                    : "Chưa đăng ký",
+                leaderCode,
                 createdDate: topic.createdAt ? new Date(topic.createdAt).toLocaleDateString('vi-VN') : "N/A",
                 statusText,
                 badgeClass

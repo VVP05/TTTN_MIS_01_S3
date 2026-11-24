@@ -3,6 +3,26 @@ let currentScheduleTopicInfo = null;
 let chatRoom = "INTERNAL";
 let chatPollTimer = null;
 
+const CHAT_AVATAR_PALETTE = [
+    { background: "#EAF1FF", color: "#48638E" },
+    { background: "#EAF5EE", color: "#4E7259" },
+    { background: "#FBF2E5", color: "#8A6A3F" },
+    { background: "#F1ECF8", color: "#6C5A8A" },
+    { background: "#F8ECEF", color: "#875C69" },
+    { background: "#E8F3F3", color: "#4C7070" },
+    { background: "#EEF1F4", color: "#536474" },
+    { background: "#E8F2F6", color: "#4A6978" }
+];
+
+function getChatAvatarColors(identifier) {
+    const key = String(identifier || "").trim().toUpperCase();
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return CHAT_AVATAR_PALETTE[Math.abs(hash) % CHAT_AVATAR_PALETTE.length];
+}
+
 function getAuthForRole(role) {
     const activeSession = sessionStorage.getItem("activeAuth");
     if (activeSession) {
@@ -36,6 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const userCodeEl = document.getElementById("userCode");
         if (userCodeEl) userCodeEl.textContent = user.user_code;
     }
+
     // 2. TẢI DỮ LIỆU TỪ BACKEND
     await loadScheduleData(user.user_code);
 
@@ -47,9 +68,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const bookingForm = document.getElementById("bookingForm");
     const availabilitySelect = document.getElementById("bookingAvailability");
     const availabilityHint = document.getElementById("availabilityHint");
+    const bookingDateInput = document.getElementById("bookingDate");
+    const bookingTimeStartInput = document.getElementById("bookingTimeStart");
+    const bookingTimeEndInput = document.getElementById("bookingTimeEnd");
 
     async function loadAvailabilitySlots() {
-        if (!availabilitySelect || !currentScheduleTopicInfo?.lecturer_code) return;
+        if (!availabilitySelect) return;
+        availabilitySelect.value = "";
+        bookingDateInput.value = "";
+        bookingTimeStartInput.value = "";
+        bookingTimeEndInput.value = "";
+        if (!currentScheduleTopicInfo?.lecturer_code) {
+            if (availabilityHint) availabilityHint.textContent = "Giảng viên chưa công khai khung giờ rảnh.";
+            return;
+        }
+
         try {
             const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/schedule/availability/${encodeURIComponent(currentScheduleTopicInfo.lecturer_code)}`, {
                 headers: { "Authorization": `Bearer ${token}` }
@@ -62,8 +95,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const mode = slot.type === "ONLINE" ? "Online" : "Offline";
                 return `<option value="${slot._id}" data-date="${slot.available_date}" data-start="${slot.time_start}" data-end="${slot.time_end}" data-type="${slot.type}" data-location="${slot.location || ""}">${date} | ${slot.time_start} - ${slot.time_end} | ${mode} | Còn ${Math.max(0, (slot.max_bookings || 3) - (slot.booked_count || 0))} chỗ</option>`;
             }).join("");
-            if (availabilityHint) availabilityHint.textContent = slots.length ? "Chọn một khung giờ để đặt lịch." : "Giảng viên chưa công khai khung giờ rảnh.";
+            if (availabilityHint) availabilityHint.textContent = slots.length
+                ? "Ngày và giờ sẽ tự cập nhật theo khung giờ đã chọn."
+                : "Giảng viên chưa công khai khung giờ rảnh.";
         } catch (error) {
+            console.error("Lỗi tải khung giờ GVHD:", error);
             if (availabilityHint) availabilityHint.textContent = "Không thể tải khung giờ rảnh.";
         }
     }
@@ -71,23 +107,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (availabilitySelect) {
         availabilitySelect.addEventListener("change", () => {
             const option = availabilitySelect.options[availabilitySelect.selectedIndex];
-            if (!option?.value) return;
-            const date = new Date(option.dataset.date);
-            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-            document.getElementById("bookingDate").value = localDate;
-            document.getElementById("bookingTimeStart").value = option.dataset.start;
-            document.getElementById("bookingTimeEnd").value = option.dataset.end;
+            if (!option?.value) {
+                bookingDateInput.value = "";
+                bookingTimeStartInput.value = "";
+                bookingTimeEndInput.value = "";
+                return;
+            }
+
+            const slotDate = option.dataset.date || "";
+            bookingDateInput.value = /^\d{4}-\d{2}-\d{2}/.test(slotDate) ? slotDate.slice(0, 10) : "";
+            bookingTimeStartInput.value = option.dataset.start || "";
+            bookingTimeEndInput.value = option.dataset.end || "";
             document.getElementById("bookingType").value = option.dataset.type;
             document.getElementById("bookingLocation").value = option.dataset.location;
         });
-    }
-
-    // Mặc định chọn ngày mai cho ô Input Date
-    const dateInput = document.getElementById("bookingDate");
-    if (dateInput) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        dateInput.valueAsDate = tomorrow;
     }
 
     const openModal = () => {
@@ -113,14 +146,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             const title = document.getElementById("bookingTitle") ? document.getElementById("bookingTitle").value.trim() : "";
-            const meetingDate = document.getElementById("bookingDate") ? document.getElementById("bookingDate").value : "";
-            const timeStart = document.getElementById("bookingTimeStart") ? document.getElementById("bookingTimeStart").value : "09:00";
-            const timeEnd = document.getElementById("bookingTimeEnd") ? document.getElementById("bookingTimeEnd").value : "10:00";
+            const availabilityId = availabilitySelect ? availabilitySelect.value : "";
+            const meetingDate = bookingDateInput ? bookingDateInput.value : "";
+            const timeStart = bookingTimeStartInput ? bookingTimeStartInput.value : "";
+            const timeEnd = bookingTimeEndInput ? bookingTimeEndInput.value : "";
             const type = document.getElementById("bookingType") ? document.getElementById("bookingType").value : "ONLINE";
             const location = document.getElementById("bookingLocation") ? document.getElementById("bookingLocation").value.trim() : "";
 
-            if (!title || !meetingDate) {
-                showAppNotification("Vui lòng điền đầy đủ tiêu đề và ngày họp!");
+            if (!title || !availabilityId || !meetingDate || !timeStart || !timeEnd) {
+                showAppNotification("Vui lòng điền tiêu đề và chọn khung giờ rảnh của giảng viên!");
                 return;
             }
 
@@ -133,7 +167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
                     body: JSON.stringify({
                         topic_id: currentScheduleTopicInfo.id,
-                        availability_id: availabilitySelect ? availabilitySelect.value : "",
+                        availability_id: availabilityId,
                         student_code: user.user_code,
                         lecturer_code: currentScheduleTopicInfo.lecturer_code,
                         title,
@@ -313,7 +347,7 @@ async function loadScheduleData(studentCode) {
             setupGroupChat(data.topic, studentCode);
 
             // Render các con số thống kê ở Top-bar
-            renderTopStats(data.stats);
+            renderTopStats(data.stats, data.meetings || []);
 
             // Render danh sách Cuộc họp / Báo cáo
             renderMeetingsList(data.meetings || []);
@@ -336,8 +370,8 @@ function renderScheduleLoadError(message) {
     const meetings = document.getElementById("meetingsListContainer");
     const todos = document.getElementById("todoList");
     const chatMessages = document.getElementById("chatMessages");
-    if (meetings) meetings.innerHTML = `<p style="text-align:center;color:#dc2626;padding:20px;">${escapeChatText(message)}</p>`;
-    if (todos) todos.innerHTML = `<p style="text-align:center;color:#dc2626;padding:15px 0;">${escapeChatText(message)}</p>`;
+    if (meetings) meetings.innerHTML = `<div class="empty-state-box"><div class="empty-state-icon muted"><i class="fa-solid fa-triangle-exclamation"></i></div><h4>Lỗi tải dữ liệu</h4><p style="color:#dc2626;">${escapeChatText(message)}</p></div>`;
+    if (todos) todos.innerHTML = `<p style="text-align:center;color:#dc2626;padding:15px 0;font-size:13px;">${escapeChatText(message)}</p>`;
     if (chatMessages) chatMessages.innerHTML = `<p class="chat-empty">${escapeChatText(message)}</p>`;
     const chatInput = document.getElementById("chatInput");
     const chatForm = document.getElementById("chatForm");
@@ -364,7 +398,7 @@ function unlockScheduleControls() {
     }
     if (newTodoInput) {
         newTodoInput.disabled = false;
-        newTodoInput.placeholder = "Nhập công việc cần làm...";
+        newTodoInput.placeholder = "Nhập tên công việc cần làm...";
     }
     if (btnAddTodo) {
         btnAddTodo.disabled = false;
@@ -432,7 +466,12 @@ async function loadChatMessages(topic) {
         if (window.refreshChatUnreadSidebar) await window.refreshChatUnreadSidebar();
         const messages = result.data || [];
         if (!messages.length) {
-            container.innerHTML = '<p class="chat-empty">Chưa có tin nhắn nào.</p>';
+            container.innerHTML = `
+                <div class="chat-empty">
+                    <i class="fa-regular fa-comments" style="font-size: 38px; color: #94A3B8; margin-bottom: 10px; display: block;"></i>
+                    Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên!
+                </div>
+            `;
             return;
         }
 
@@ -448,10 +487,16 @@ async function loadChatMessages(topic) {
                 : "";
             previousDay = dayKey;
             const senderName = mine ? "Bạn" : (message.sender_name || message.sender_code);
+            const avatarName = message.sender_name || message.sender_code;
+            const avatarNameParts = String(avatarName || "").trim().split(/\s+/).filter(Boolean);
+            const initialLetter = (avatarNameParts.length ? avatarNameParts[avatarNameParts.length - 1].charAt(0) : "U").toLocaleUpperCase("vi-VN");
+            const avatarColors = getChatAvatarColors(message.sender_code || avatarName);
+            const avatarStyle = mine ? "" : `background-color: ${avatarColors.background}; color: ${avatarColors.color};`;
+
             return `
                 ${dayDivider}
                 <div class="chat-message ${mine ? "mine" : ""}">
-                    <span class="chat-avatar"><i class="fa-solid fa-user"></i></span>
+                    <span class="chat-avatar" style="${avatarStyle}">${mine ? '<i class="fa-solid fa-user"></i>' : escapeChatText(initialLetter)}</span>
                     <div class="chat-message-body">
                         <div class="chat-meta"><span>${escapeChatText(senderName)}</span><span>${time}</span></div>
                         <div class="chat-bubble">${escapeChatText(message.content)}</div>
@@ -530,13 +575,21 @@ function renderTodoAssigneeOptions(topic, currentStudentCode) {
     const todoAssignee = document.getElementById("todoAssignee");
     if (!todoAssignee || !topic) return;
 
+    const members = Array.isArray(topic.members) ? topic.members : [];
     const memberCodes = [topic.leader_code, topic.member2_code, topic.member3_code]
         .filter(Boolean)
         .filter((code, index, codes) => codes.indexOf(code) === index);
 
-    todoAssignee.innerHTML = '<option value="">Cả nhóm</option>' + memberCodes
-        .map(code => `<option value="${code}" ${code === currentStudentCode ? "selected" : ""}>${code === currentStudentCode ? "Tôi" : code}</option>`)
-        .join("");
+    const options = ['<option value="">Cả nhóm</option>'];
+    memberCodes.forEach(code => {
+        const found = members.find(m => String(m.user_code).toUpperCase() === String(code).toUpperCase());
+        const isMe = String(code).toUpperCase() === String(currentStudentCode).toUpperCase();
+        const fullName = found?.full_name || code;
+        const label = isMe ? `${fullName} (Tôi)` : fullName;
+        options.push(`<option value="${code}" ${isMe ? "selected" : ""}>${escapeChatText(label)}</option>`);
+    });
+
+    todoAssignee.innerHTML = options.join("");
 }
 
 // =========================================================
@@ -549,7 +602,7 @@ function renderScheduleLockedState(reason) {
     const chatInput = document.getElementById("chatInput");
     const chatForm = document.getElementById("chatForm");
     const lecturerChatTab = document.getElementById("lecturerChatTab");
-    if (chatMessages) chatMessages.innerHTML = '<p class="chat-empty">Chat sẽ mở sau khi đề tài được duyệt.</p>';
+    if (chatMessages) chatMessages.innerHTML = '<div class="chat-empty"><i class="fa-solid fa-lock" style="font-size:32px;color:#94a3b8;margin-bottom:8px;display:block;"></i>Tính năng Chat sẽ mở sau khi đề tài được phê duyệt.</div>';
     if (chatInput) chatInput.disabled = true;
     if (chatForm) chatForm.querySelector("button").disabled = true;
     if (lecturerChatTab) lecturerChatTab.disabled = true;
@@ -586,39 +639,45 @@ function renderScheduleLockedState(reason) {
 
     if (reason === "PENDING") {
         messageHTML = `
-            <div style="text-align: center; padding: 40px 20px; background: #fff8e6; border: 1px dashed #ffe082; border-radius: 12px; margin: 20px 0;">
-                <i class="fa-solid fa-clock-rotate-left" style="font-size: 48px; color: #f59e0b; margin-bottom: 16px;"></i>
-                <h3 style="color: #b45309; margin-bottom: 8px;">Đề tài đang chờ phê duyệt</h3>
-                <p style="color: #78350f; max-width: 520px; margin: 0 auto 16px; font-size: 14px; line-height: 1.5;">
+            <div class="empty-state-box" style="background: #FFFBEB; border-color: #FDE68A;">
+                <div class="empty-state-icon" style="background: #FEF3C7; color: #D97706;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <h4 style="color: #92400E;">Đề tài đang chờ phê duyệt</h4>
+                <p style="color: #78350F;">
                     Đề tài của bạn hiện đang ở trạng thái <strong>Chờ duyệt</strong>. Tính năng Đặt lịch hẹn và Theo dõi lịch làm việc sẽ tự động kích hoạt sau khi Giảng viên hướng dẫn chấp nhận đề tài.
                 </p>
-                <a href="my-topic.html" style="display: inline-block; background-color: #f59e0b; color: #fff; padding: 9px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                <a href="my-topic.html" class="btn-primary" style="background: #D97706; text-decoration: none;">
                     <i class="fa-solid fa-eye"></i> Kiểm tra trạng thái đề tài
                 </a>
             </div>
         `;
     } else if (reason === "REJECTED") {
         messageHTML = `
-            <div style="text-align: center; padding: 40px 20px; background: #fef2f2; border: 1px dashed #fca5a5; border-radius: 12px; margin: 20px 0;">
-                <i class="fa-solid fa-circle-xmark" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                <h3 style="color: #991b1b; margin-bottom: 8px;">Đề tài đã bị từ chối</h3>
-                <p style="color: #7f1d1d; max-width: 520px; margin: 0 auto 16px; font-size: 14px; line-height: 1.5;">
+            <div class="empty-state-box" style="background: #FEF2F2; border-color: #FECACA;">
+                <div class="empty-state-icon" style="background: #FEE2E2; color: #DC2626;">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <h4 style="color: #991B1B;">Đề tài đã bị từ chối</h4>
+                <p style="color: #7F1D1D;">
                     Đăng ký đề tài của bạn không được chấp nhận. Vui lòng cập nhật lại đề tài hoặc liên hệ Giảng viên để biết thêm chi tiết.
                 </p>
-                <a href="student-dashboard.html" style="display: inline-block; background-color: #dc2626; color: #fff; padding: 9px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                <a href="student-dashboard.html" class="btn-primary" style="background: #DC2626; text-decoration: none;">
                     <i class="fa-solid fa-pen-to-square"></i> Cập nhật lại đề tài
                 </a>
             </div>
         `;
     } else { // CHUA_DANG_KY
         messageHTML = `
-            <div style="text-align: center; padding: 40px 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; margin: 20px 0;">
-                <i class="fa-solid fa-folder-plus" style="font-size: 48px; color: #94a3b8; margin-bottom: 16px;"></i>
-                <h3 style="color: #334155; margin-bottom: 8px;">Bạn chưa đăng ký đề tài</h3>
-                <p style="color: #64748b; max-width: 520px; margin: 0 auto 16px; font-size: 14px; line-height: 1.5;">
+            <div class="empty-state-box">
+                <div class="empty-state-icon muted">
+                    <i class="fa-solid fa-folder-plus"></i>
+                </div>
+                <h4>Bạn chưa đăng ký đề tài</h4>
+                <p>
                     Bạn cần hoàn tất đăng ký đề tài thực tập tốt nghiệp trước khi sử dụng tính năng quản lý lịch làm việc và trao đổi với Giảng viên.
                 </p>
-                <a href="student-dashboard.html" style="display: inline-block; background-color: #2563eb; color: #fff; padding: 9px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                <a href="student-dashboard.html" class="btn-primary" style="text-decoration: none;">
                     <i class="fa-solid fa-paper-plane"></i> Đăng ký đề tài ngay
                 </a>
             </div>
@@ -626,80 +685,90 @@ function renderScheduleLockedState(reason) {
     }
 
     if (meetingsContainer) meetingsContainer.innerHTML = messageHTML;
-    if (todoList) todoList.innerHTML = `<p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 15px 0;">Tính năng tạm khóa cho đến khi đề tài được duyệt.</p>`;
+    if (todoList) todoList.innerHTML = `<p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 20px 0;">Tính năng tạm khóa cho đến khi đề tài được duyệt.</p>`;
 }
 
 // =========================================================
-// RENDER KHỐI THỐNG KÊ TOP-BAR
+// RENDER KHỐI THỐNG KÊ TOP-BAR & 15 TUẦN LỘ TRÌNH
 // =========================================================
-function renderTopStats(stats) {
+function renderTopStats(stats, meetings = []) {
     if (!stats) return;
     const upcomingEl = document.getElementById("statUpcomingMeetings");
     const weekProgressEl = document.getElementById("statWeekProgress");
+    const weekPercentBadge = document.getElementById("statWeekPercentBadge");
+    const weekProgressBar = document.getElementById("statWeekProgressBar");
     const semesterLabel = document.getElementById("activeSemesterLabel");
-    const timelineTotalWeeks = document.getElementById("timelineTotalWeeks");
+    const upcomingDetailText = document.getElementById("statUpcomingDetailText");
 
     if (upcomingEl) {
         upcomingEl.textContent = `${String(stats.upcoming_meetings || 0).padStart(2, '0')} buổi`;
     }
+
+    // Cập nhật thông tin buổi họp tới gần nhất nếu có
+    if (upcomingDetailText) {
+        const upcomingList = (meetings || []).filter(m => m.status === "APPROVED" || m.status === "PENDING");
+        if (upcomingList.length > 0) {
+            const nextM = upcomingList[0];
+            const d = new Date(nextM.meeting_date);
+            const dateStr = d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+            upcomingDetailText.textContent = `Buổi tới: ${dateStr} (${nextM.time_start || ""})`;
+        } else {
+            upcomingDetailText.textContent = "Chưa có lịch họp sắp tới";
+        }
+    }
+
     const configuredWeeks = Number(stats.total_weeks);
-    const totalWeeks = Number.isInteger(configuredWeeks) && configuredWeeks > 0 ? configuredWeeks : 0;
+    const totalWeeks = Number.isInteger(configuredWeeks) && configuredWeeks > 0 ? configuredWeeks : 15;
     const configuredCurrentWeek = Number(stats.current_week);
     const currentWeek = totalWeeks
         ? Math.min(totalWeeks, Math.max(1, Number.isInteger(configuredCurrentWeek) ? configuredCurrentWeek : 1))
-        : 0;
+        : 1;
+
+    const weekPercent = Math.min(100, Math.round((currentWeek / totalWeeks) * 100));
+
     if (weekProgressEl) {
-        if (totalWeeks) {
-            const currentWeekLabel = document.createTextNode(`Tuần ${String(currentWeek).padStart(2, "0")} `);
-            const totalLabel = document.createElement("small");
-            totalLabel.style.cssText = "font-size: 14px; color: #64748b; font-weight: normal;";
-            totalLabel.textContent = `/ ${totalWeeks}`;
-            weekProgressEl.replaceChildren(currentWeekLabel, totalLabel);
-        } else {
-            weekProgressEl.textContent = "Chưa cấu hình";
-        }
+        weekProgressEl.innerHTML = `Tuần ${String(currentWeek).padStart(2, "0")} <small>/ ${totalWeeks}</small>`;
     }
+    if (weekPercentBadge) {
+        weekPercentBadge.textContent = `${weekPercent}%`;
+    }
+    if (weekProgressBar) {
+        weekProgressBar.style.width = `${weekPercent}%`;
+    }
+
     if (semesterLabel) {
-        semesterLabel.textContent = stats.semester_name || "Chưa có học kỳ áp dụng";
+        semesterLabel.innerHTML = `<i class="fa-regular fa-clock"></i> ${escapeChatText(stats.semester_name || "Học kỳ đang áp dụng")}`;
     }
-    if (timelineTotalWeeks) timelineTotalWeeks.textContent = totalWeeks || "--";
-    renderInternshipTimeline(currentWeek, totalWeeks);
+
+    // Render lưới 15 tuần thực tập
+    renderInternshipWeeks(currentWeek, totalWeeks);
 }
 
-function renderInternshipTimeline(currentWeek, totalWeeks) {
-    const timelineItems = [...document.querySelectorAll(".timeline-item[data-phase]")];
-    if (!totalWeeks) {
-        timelineItems.forEach(item => { item.hidden = true; });
-        return;
+function renderInternshipWeeks(currentWeek, totalWeeks) {
+    const grid = document.getElementById("weeksGridContainer");
+    if (!grid) return;
+
+    const weeksCount = totalWeeks || 15;
+    let html = "";
+    for (let w = 1; w <= weeksCount; w++) {
+        let stateClass = "upcoming";
+        let stateTitle = `Tuần ${w}: Chưa diễn ra`;
+        if (w < currentWeek) {
+            stateClass = "done";
+            stateTitle = `Tuần ${w}: Đã hoàn thành`;
+        } else if (w === currentWeek) {
+            stateClass = "active";
+            stateTitle = `Tuần ${w}: Đang thực hiện`;
+        }
+
+        html += `
+            <div class="week-cell ${stateClass}" title="${stateTitle}">
+                <span class="week-num">T${String(w).padStart(2, '0')}</span>
+                <span class="week-indicator"></span>
+            </div>
+        `;
     }
-
-    const phaseCount = Math.min(timelineItems.length, totalWeeks);
-    const endRatios = [0.2, 0.6, 13 / 15];
-    let previousEnd = 0;
-
-    timelineItems.forEach((item, index) => {
-        if (index >= phaseCount) {
-            item.hidden = true;
-            return;
-        }
-
-        item.hidden = false;
-        const endWeek = index < phaseCount - 1
-            ? Math.min(totalWeeks - (phaseCount - index - 1), Math.max(previousEnd + 1, Math.round(totalWeeks * endRatios[index])))
-            : totalWeeks;
-        const startWeek = previousEnd + 1;
-        const weekRange = startWeek === endWeek ? `Tuần ${startWeek}` : `Tuần ${startWeek} - Tuần ${endWeek}`;
-        const title = item.querySelector("h5");
-        if (title) {
-            const phaseTitle = title.dataset.phaseTitle || title.textContent.replace(/^Tuần \d+(?: - Tuần \d+)?:\s*/, "");
-            title.dataset.phaseTitle = phaseTitle;
-            title.textContent = `${weekRange}: ${phaseTitle}`;
-        }
-
-        item.classList.toggle("done", currentWeek > endWeek);
-        item.classList.toggle("active", currentWeek >= startWeek && currentWeek <= endWeek);
-        previousEnd = endWeek;
-    });
+    grid.innerHTML = html;
 }
 
 // =========================================================
@@ -709,18 +778,30 @@ function renderMeetingsList(meetings) {
     const container = document.getElementById("meetingsListContainer") || document.getElementById("meetingsContainer");
     if (!container) return;
 
-    if (meetings.length === 0) {
-        container.innerHTML = `<div style="text-align: center; padding: 30px; color: #64748b;">Chưa có lịch họp nào được ghi nhận.</div>`;
+    if (!meetings || meetings.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state-box">
+                <div class="empty-state-icon">
+                    <i class="fa-regular fa-calendar-xmark"></i>
+                </div>
+                <h4>Chưa có lịch họp nào</h4>
+                <p>Đặt lịch hẹn với giảng viên hướng dẫn để báo cáo tiến độ và nhận phản hồi định kỳ.</p>
+                <button type="button" class="btn-primary" onclick="document.getElementById('btnOpenBookingModal')?.click()">
+                    <i class="fa-solid fa-calendar-plus"></i> Đăng ký lịch hẹn ngay
+                </button>
+            </div>
+        `;
         return;
     }
 
     container.innerHTML = meetings.map(item => {
         const dateObj = new Date(item.meeting_date);
-        const formattedDate = dateObj.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+        const day = dateObj.getDate();
+        const monthYear = `Tháng ${dateObj.getMonth() + 1}, ${dateObj.getFullYear()}`;
 
         // Phân loại badge trạng thái
         let badgeClass = "badge-pending";
-        let badgeText = "Chờ GV duyệt";
+        let badgeText = "Chờ duyệt";
 
         if (item.status === "APPROVED") {
             badgeClass = "badge-approved";
@@ -738,29 +819,34 @@ function renderMeetingsList(meetings) {
         if (item.type === "ONLINE") {
             const isUrl = item.location && (item.location.startsWith("http://") || item.location.startsWith("https://"));
             locationHTML = isUrl 
-                ? `<p><i class="fa-solid fa-link" style="color: #2563eb;"></i> <a href="${item.location}" target="_blank" style="color: #2563eb; text-decoration: underline;">${item.location}</a></p>`
-                : `<p><i class="fa-solid fa-video" style="color: #2563eb;"></i> Hình thức: Online (${item.location})</p>`;
+                ? `<p><i class="fa-solid fa-video text-blue"></i> Online: <a href="${item.location}" target="_blank" rel="noopener noreferrer">${item.location}</a></p>`
+                : `<p><i class="fa-solid fa-video text-blue"></i> Hình thức: Online (${escapeChatText(item.location)})</p>`;
         } else {
-            locationHTML = `<p><i class="fa-solid fa-location-dot" style="color: #64748b;"></i> Hình thức: ${item.location.includes("Trực tiếp") ? item.location : 'Trực tiếp - ' + item.location}</p>`;
+            const locText = item.location.includes("Trực tiếp") ? item.location : `Trực tiếp (${item.location})`;
+            locationHTML = `<p><i class="fa-solid fa-location-dot" style="color: #64748b;"></i> ${escapeChatText(locText)}</p>`;
         }
 
         // Khối Ghi chú sau họp (nếu có)
         const notesHTML = item.notes ? `
-            <div class="meeting-notes" style="margin-top: 10px; padding: 10px 14px; background: #fffbeb; border-radius: 6px; border-left: 3px solid #f59e0b; font-size: 13px; color: #92400e;">
-                <strong>Ghi chú sau họp:</strong> ${item.notes}
+            <div class="meeting-notes">
+                <strong><i class="fa-regular fa-note-sticky"></i> Ghi chú sau họp:</strong> ${escapeChatText(item.notes)}
             </div>
         ` : "";
 
         return `
             <div class="meeting-card ${item.status.toLowerCase()}">
                 <div class="meeting-time-box">
-                    <span class="m-date">${formattedDate}</span>
-                    <span class="m-time">${item.time_start} - ${item.time_end}</span>
+                    <span class="m-day-large">${String(day).padStart(2, '0')}</span>
+                    <span class="m-month-year">${monthYear}</span>
+                    <span class="m-time-range"><i class="fa-regular fa-clock"></i> ${item.time_start} - ${item.time_end}</span>
                 </div>
                 <div class="meeting-details">
                     <div class="m-header">
-                        <h4 class="m-title">${item.title}</h4>
-                        <span class="m-status-badge ${badgeClass}">${badgeText}</span>
+                        <h4 class="m-title">${escapeChatText(item.title)}</h4>
+                        <span class="m-status-badge ${badgeClass}">
+                            <span class="badge-dot"></span>
+                            <span>${badgeText}</span>
+                        </span>
                     </div>
                     <div class="m-info">
                         ${locationHTML}
@@ -770,6 +856,17 @@ function renderMeetingsList(meetings) {
             </div>
         `;
     }).join("");
+}
+
+const TODO_AVATAR_PALETTE = ["#2563EB", "#059669", "#D97706", "#7C3AED", "#DB2777", "#0891B2", "#E11D48"];
+
+function getTodoAvatarColor(str = "", isGroup = false) {
+    if (isGroup) return "#64748B";
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return TODO_AVATAR_PALETTE[Math.abs(hash) % TODO_AVATAR_PALETTE.length];
 }
 
 // =========================================================
@@ -783,17 +880,35 @@ function renderTodoList(todos) {
 
     if (todoCounter) {
         const completedCount = todos.filter(todo => getTodoStatus(todo) === "COMPLETED").length;
-        todoCounter.textContent = `${completedCount}/${todos.length}`;
+        todoCounter.textContent = `${completedCount}/${todos.length} việc`;
     }
 
-    if (todos.length === 0) {
-        todoList.innerHTML = `<p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 10px 0;">Chưa có việc cần làm.</p>`;
+    if (!todos || todos.length === 0) {
+        todoList.innerHTML = `
+            <div class="empty-state-box" style="padding: 24px 16px;">
+                <div class="empty-state-icon muted" style="width: 44px; height: 44px; font-size: 20px; margin-bottom: 8px;">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h4 style="font-size: 14.5px;">Tuần này chưa có việc nào</h4>
+                <p style="font-size: 12.5px; margin-bottom: 0;">Thêm công việc đầu tiên ở form bên dưới để cùng nhau theo dõi.</p>
+            </div>
+        `;
         return;
     }
 
     const currentStudentCode = String(getAuthForRole("STUDENT")?.user?.user_code || "").trim().toUpperCase();
     const leaderCode = String(currentScheduleTopicInfo?.leader_code || "").trim().toUpperCase();
-    todoList.innerHTML = todos.map((item, index) => {
+
+    const memberNameMap = new Map();
+    if (Array.isArray(currentScheduleTopicInfo?.members)) {
+        currentScheduleTopicInfo.members.forEach(m => {
+            if (m.user_code && m.full_name) {
+                memberNameMap.set(String(m.user_code).trim().toUpperCase(), m.full_name);
+            }
+        });
+    }
+
+    todoList.innerHTML = todos.map((item) => {
         const status = getTodoStatus(item);
         const isCompleted = status === "COMPLETED";
         const creatorCode = String(item.created_by || item.student_code || "").trim().toUpperCase();
@@ -806,30 +921,61 @@ function renderTodoList(todos) {
         const isOverdue = !isCompleted && daysUntilDue !== null && daysUntilDue < 0;
         const isDueSoon = !isCompleted && daysUntilDue !== null && daysUntilDue >= 0 && daysUntilDue <= 2;
         const statusClass = status === "COMPLETED" ? "completed" : status === "IN_PROGRESS" ? "in-progress" : "pending";
-        const dueLabel = dueDay
-            ? isOverdue
-                ? `Quá hạn ${dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-                : `Hạn ${dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-            : 'Chưa đặt hạn';
+        
+        let dueLabel = "Chưa đặt hạn";
+        if (dueDay) {
+            const dateStr = dueDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            if (isCompleted) {
+                dueLabel = `Đã xong (${dateStr})`;
+            } else if (isOverdue) {
+                dueLabel = `Quá hạn: ${dateStr}`;
+            } else if (isDueSoon) {
+                dueLabel = `Sắp hạn: ${dateStr}`;
+            } else {
+                dueLabel = `Hạn: ${dateStr}`;
+            }
+        }
+
         const dueClass = !dueDay ? 'none' : isCompleted ? 'completed' : isOverdue ? 'overdue' : isDueSoon ? 'soon' : 'pending';
 
+        const assignedCode = String(item.assigned_to || "").trim().toUpperCase();
+        let assigneeDisplay = "Cả nhóm";
+        let isGroup = true;
+        if (assignedCode) {
+            isGroup = false;
+            assigneeDisplay = item.assigned_to_name || memberNameMap.get(assignedCode) || item.assigned_to;
+        }
+
+        const words = String(assigneeDisplay || "").trim().split(/\s+/).filter(Boolean);
+        const avatarInitials = isGroup
+            ? '<i class="fa-solid fa-users" style="font-size: 8px;"></i>'
+            : (words.length ? words.slice(-2).map(w => w.charAt(0).toLocaleUpperCase("vi-VN")).join("") : "U");
+        const avatarBg = getTodoAvatarColor(assigneeDisplay, isGroup);
+
         return `
-        <div class="todo-item todo-tone-${index % 4} ${isCompleted ? 'done' : ''} ${isOverdue ? 'todo-overdue' : ''}" data-id="${item._id}">
-            <div class="todo-content">
-                <div class="todo-title-row">
-                    <strong class="todo-title">${item.title}</strong>
-                    <select class="todo-status-select ${statusClass}" aria-label="Trạng thái công việc" onchange="updateTodoStatus('${item._id}', this.value)">
-                        <option value="NOT_STARTED" ${status === "NOT_STARTED" ? "selected" : ""}>Chưa hoàn thành</option>
-                        <option value="IN_PROGRESS" ${status === "IN_PROGRESS" ? "selected" : ""}>Đang thực hiện</option>
-                        <option value="COMPLETED" ${status === "COMPLETED" ? "selected" : ""}>Đã hoàn thành</option>
-                    </select>
+            <div class="todo-item ${isCompleted ? 'done' : ''}" data-id="${item._id}">
+                <div class="todo-content">
+                    <div class="todo-title-row">
+                        <strong class="todo-title" title="${escapeChatText(item.title)}">${escapeChatText(item.title)}</strong>
+                        <select class="todo-status-select ${statusClass}" aria-label="Trạng thái công việc" onchange="updateTodoStatus('${item._id}', this.value)">
+                            <option value="NOT_STARTED" ${status === "NOT_STARTED" ? "selected" : ""}>Chưa hoàn thành</option>
+                            <option value="IN_PROGRESS" ${status === "IN_PROGRESS" ? "selected" : ""}>Đang thực hiện</option>
+                            <option value="COMPLETED" ${status === "COMPLETED" ? "selected" : ""}>Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="todo-meta-row">
+                        <span class="todo-assignee-badge">
+                            <span class="todo-assignee-avatar" style="background-color: ${avatarBg};">${avatarInitials}</span>
+                            <span>${escapeChatText(assigneeDisplay)}</span>
+                        </span>
+                        <span class="todo-deadline ${dueClass}">
+                            <i class="fa-regular fa-calendar"></i> ${dueLabel}
+                        </span>
+                    </div>
                 </div>
-                <small class="todo-meta">${item.assigned_to ? `Phụ trách: ${item.assigned_to}` : "Phụ trách: Cả nhóm"}${item.created_by ? ` · Tạo bởi ${item.created_by}` : ""}</small>
-                <small class="todo-deadline ${dueClass}"><i class="fa-regular fa-calendar"></i> ${dueLabel}</small>
+                ${canDelete ? `<button type="button" class="todo-delete-btn" aria-label="Xóa công việc" title="Xóa công việc" onclick="deleteTodo('${item._id}')"><i class="fa-regular fa-trash-can"></i></button>` : ""}
             </div>
-            ${canDelete ? `<button type="button" class="todo-delete-btn" aria-label="Xóa công việc" title="Xóa công việc" onclick="deleteTodo('${item._id}')"><i class="fa-regular fa-trash-can"></i></button>` : ""}
-        </div>
-    `;
+        `;
     }).join("");
 }
 
@@ -915,8 +1061,24 @@ async function deleteTodo(todoId) {
 
 function renderTodoProgress(todos) {
     const progressEl = document.getElementById("statTodoProgress");
-    if (!progressEl) return;
+    const percentBadge = document.getElementById("statTodoPercentBadge");
+    const progressBar = document.getElementById("statTodoProgressBar");
+    const miniProgressBar = document.getElementById("todoMiniProgressBar");
 
+    const total = todos.length;
     const completedCount = todos.filter(todo => getTodoStatus(todo) === "COMPLETED").length;
-    progressEl.innerHTML = `${completedCount} <small>/ ${todos.length}</small>`;
+    const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+    if (progressEl) {
+        progressEl.innerHTML = `${completedCount} <small>/ ${total}</small>`;
+    }
+    if (percentBadge) {
+        percentBadge.textContent = `${percent}%`;
+    }
+    if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+    }
+    if (miniProgressBar) {
+        miniProgressBar.style.width = `${percent}%`;
+    }
 }

@@ -3,84 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tài liệu & Biểu mẫu - QUẢN LÝ TTTN</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Tài Liệu & Biểu Mẫu | Cổng Quản Trị Viên</title>
+
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/admin-documents.css">
     <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
-    <link rel="stylesheet" href="../../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="sidebar-brand"><i class="fa-solid fa-graduation-cap logo-icon"></i><span class="brand-name">QUẢN LÝ TTTN</span></div>
+
+    <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <span>CỔNG QUẢN TRỊ VIÊN</span>
+                </div>
+            </div>
+
             <div class="sidebar-menu-wrapper">
                 <ul class="menu-list">
-                    <li class="menu-item"><a href="admin-dashboard.html"><i class="fa-solid fa-layer-group"></i><span>Tổng quan</span></a></li>
+                    <li class="menu-item">
+                        <a href="admin-dashboard.html">
+                            <i class="fa-solid fa-border-all"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
                 </ul>
+
                 <div class="menu-heading">QUẢN LÝ NGƯỜI DÙNG</div>
                 <ul class="menu-list">
-                    <li class="menu-item"><a href="admin-students.html"><i class="fa-solid fa-user-graduate"></i><span>Quản lý sinh viên</span></a></li>
-                    <li class="menu-item"><a href="admin-lecturers.html"><i class="fa-solid fa-chalkboard-user"></i><span>Quản lý giảng viên</span></a></li>
+                    <li class="menu-item">
+                        <a href="admin-students.html">
+                            <i class="fa-solid fa-user-graduate"></i>
+                            <span>Quản lý sinh viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-lecturers.html">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <span>Quản lý giảng viên</span>
+                        </a>
+                    </li>
                 </ul>
+
                 <div class="menu-heading">QUẢN LÝ NGHIỆP VỤ</div>
                 <ul class="menu-list">
-                    <li class="menu-item"><a href="admin-semesters.html"><i class="fa-solid fa-calendar-days"></i><span>Học kỳ & đăng ký</span></a></li>
-                    <li class="menu-item"><a href="admin-teams.html"><i class="fa-solid fa-users-rectangle"></i><span>Nhóm & Phân công</span></a></li>
-                    <li class="menu-item active"><a href="admin-documents.html"><i class="fa-solid fa-file-lines"></i><span>Tài liệu & Biểu mẫu</span></a></li>
-                    <li class="menu-item"><a href="admin-notifications.html"><i class="fa-solid fa-bullhorn"></i><span>Thông báo hệ thống</span></a></li>
+                    <li class="menu-item">
+                        <a href="admin-semesters.html">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <span>Học kỳ &amp; đăng ký</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-teams.html">
+                            <i class="fa-solid fa-users-rectangle"></i>
+                            <span>Nhóm &amp; Phân công</span>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="admin-documents.html">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>Tài liệu &amp; Biểu mẫu</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="admin-notifications.html">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            <span>Thông báo hệ thống</span>
+                        </a>
+                    </li>
                 </ul>
+
                 <div class="menu-heading">HỆ THỐNG</div>
-                <ul class="menu-list"><li class="menu-item"><a href="admin-logs.html"><i class="fa-solid fa-newspaper"></i><span>Nhật ký hoạt động</span></a></li></ul>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="admin-logs.html">
+                            <i class="fa-solid fa-newspaper"></i>
+                            <span>Nhật ký hoạt động</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </aside>
 
-        <div class="main-content">
-            <header class="topbar">
-                <button class="btn-toggle-sidebar" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars"></i></button>
-                <div class="topbar-right">
-                    <div class="user-info"><i class="fa-solid fa-circle-user avatar"></i><span id="userName" class="user-name">Quản Trị Viên</span><span class="role-badge">ADMIN</span></div>
-                    <button class="btn-logout-top" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất</button>
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper" id="mainWrapper">
+
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle btn-toggle-sidebar" id="sidebarToggle" aria-label="Mở menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+                <div class="navbar-right">
+                    <div class="semester-filter">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <select id="semesterSelect" class="select-clean" aria-label="Lọc theo học kỳ">
+                            <option value="">Đang tải học kỳ...</option>
+                        </select>
+                    </div>
+
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Quản Trị Viên</span>
+                        <span class="user-badge">ADMIN</span>
+                    </div>
+
+                    <button class="btn-logout" id="logoutBtn" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Đăng xuất</span>
+                    </button>
                 </div>
             </header>
 
+            <!-- PAGE BODY -->
             <main class="page-body">
-                <div class="page-title-box">
-                    <div><h2>Tài liệu & Biểu mẫu</h2><p class="subtitle">Quản lý tài liệu do quản trị viên chia sẻ tại trang Tài liệu hướng dẫn.</p></div>
+
+                <!-- PAGE HEADER ROW -->
+                <div class="page-header-row">
+                    <div class="page-header-left">
+                        <h1 class="page-title">Tài liệu &amp; Biểu mẫu</h1>
+                        <p class="page-desc">Quản lý và chia sẻ biểu mẫu, quy định, hướng dẫn thực tập tốt nghiệp tới sinh viên và giảng viên.</p>
+                    </div>
                 </div>
 
-                <section class="card-panel upload-panel">
-                    <div class="panel-heading"><div class="summary-icon blue"><i class="fa-solid fa-cloud-arrow-up"></i></div><div><h3>Gửi tài liệu mới</h3><p class="subtitle">Tài liệu được gửi sẽ xuất hiện ngay trong trang sinh viên.</p></div></div>
-                    <form id="documentForm">
-                        <div class="form-row">
-                            <div class="form-group flex-1"><label class="form-label" for="docTitle">Tên tài liệu <span class="required">*</span></label><input class="form-control" id="docTitle" required placeholder="Ví dụ: Mẫu báo cáo thực tập 2026"></div>
-                            <div class="form-group flex-1"><label class="form-label" for="docCategory">Phân loại</label><select class="form-control" id="docCategory"><option>Biểu mẫu SV</option><option>Quy định / Hướng dẫn chung</option><option>Mẫu báo cáo</option><option>Mẫu Slide thuyết trình</option></select></div>
+                <!-- THỐNG KÊ NHANH -->
+                <div class="quick-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon-wrap stat-blue">
+                            <i class="fa-solid fa-folder-open"></i>
                         </div>
-                        <div class="form-row upload-fields">
-                            <div class="form-group flex-1"><label class="form-label" for="docTarget">Đối tượng nhận</label><select class="form-control" id="docTarget"><option value="Tất cả sinh viên">Tất cả sinh viên</option><option value="Tất cả giảng viên">Tất cả giảng viên</option></select></div>
-                            <div class="form-group flex-1"><label class="form-label" for="docFile">Chọn file (.pdf, .docx, .pptx, .zip) <span class="required">*</span></label><input class="form-control" type="file" id="docFile" required></div>
-                        </div>
-                        <div class="form-actions"><span id="formMessage" class="form-message"></span><button class="btn btn-primary" type="submit" id="uploadBtn"><i class="fa-solid fa-paper-plane"></i> Gửi tài liệu</button></div>
-                    </form>
-                </section>
-
-                <section class="card-panel margin-top-20">
-                    <div class="filter-bar">
-                        <div><h3>Danh sách tài liệu đã gửi</h3><p class="subtitle">Các tài liệu do quản trị viên chia sẻ.</p></div>
-                        <div class="document-filters">
-                            <div class="search-input-group"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="Tìm tài liệu..."></div>
-                            <select id="targetFilter" class="form-control"><option value="">Mọi đối tượng</option><option value="students">Sinh viên / Nhóm</option><option value="lecturers">Giảng viên</option></select>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statTotalDocs">—</div>
+                            <div class="stat-label">Tổng tài liệu</div>
                         </div>
                     </div>
-                    <div class="table-container"><table class="custom-table"><thead><tr><th>Tài liệu</th><th>Phân loại</th><th>Người chia sẻ</th><th>Đối tượng nhận</th><th>Ngày gửi</th><th>Lượt tải</th><th>Thao tác</th></tr></thead><tbody id="documentTableBody"><tr><td colspan="7" class="text-center">Đang tải dữ liệu...</td></tr></tbody></table></div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrap stat-green">
+                            <i class="fa-solid fa-download"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statTotalDownloads">—</div>
+                            <div class="stat-label">Tổng lượt tải</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrap stat-purple">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statRecentDocs">—</div>
+                            <div class="stat-label">Mới trong 7 ngày</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM GỬI TÀI LIỆU MỚI -->
+                <section class="content-card upload-card">
+                    <div class="card-head-collapsible" id="toggleFormBtn" role="button" tabindex="0" aria-expanded="true" aria-controls="uploadFormCollapse">
+                        <div class="card-head-left">
+                            <div class="card-head-icon">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <div>
+                                <h2 class="card-title">Gửi tài liệu mới</h2>
+                                <p class="card-subtitle">Tài liệu tải lên sẽ lập tức khả dụng cho đối tượng được chỉ định.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-collapse-toggle" aria-label="Thu gọn/Mở rộng form">
+                            <i class="fa-solid fa-chevron-up" id="collapseIcon"></i>
+                        </button>
+                    </div>
+
+                    <div class="card-collapse-body" id="uploadFormCollapse">
+                        <form id="documentForm" class="document-form">
+                            <div class="form-grid-2">
+                                <!-- Tên tài liệu -->
+                                <div class="form-group-item">
+                                    <label class="form-label-item" for="docTitle">
+                                        Tên tài liệu <span class="required-mark">*</span>
+                                    </label>
+                                    <input type="text" class="form-input-item" id="docTitle" required
+                                        placeholder="Ví dụ: Mẫu báo cáo thực tập tốt nghiệp 2026">
+                                    <span class="form-helper-text">Tên rõ ràng để sinh viên và giảng viên dễ tìm kiếm.</span>
+                                </div>
+
+                                <!-- Phân loại -->
+                                <div class="form-group-item">
+                                    <label class="form-label-item" for="docCategory">
+                                        Phân loại <span class="required-mark">*</span>
+                                    </label>
+                                    <select class="form-select-item" id="docCategory" required>
+                                        <option value="Biểu mẫu SV">Biểu mẫu SV</option>
+                                        <option value="Quy định / Hướng dẫn chung">Quy định / Hướng dẫn chung</option>
+                                        <option value="Mẫu báo cáo">Mẫu báo cáo</option>
+                                        <option value="Mẫu Slide thuyết trình">Mẫu Slide thuyết trình</option>
+                                    </select>
+                                    <span class="form-helper-text">Giúp phân nhóm khoa học trong trang tài liệu.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-grid-2" style="margin-top: 16px;">
+                                <!-- Đối tượng nhận -->
+                                <div class="form-group-item">
+                                    <label class="form-label-item" for="docTarget">
+                                        Đối tượng nhận <span class="required-mark">*</span>
+                                    </label>
+                                    <select class="form-select-item" id="docTarget" required>
+                                        <option value="Tất cả sinh viên">Tất cả sinh viên</option>
+                                        <option value="Tất cả giảng viên">Tất cả giảng viên</option>
+                                        <option value="Tất cả">Tất cả (Sinh viên &amp; Giảng viên)</option>
+                                    </select>
+                                    <span class="form-helper-text">Xác định ai có quyền nhìn thấy và tải tài liệu này.</span>
+                                </div>
+
+                                <!-- Vùng chọn file kéo thả -->
+                                <div class="form-group-item">
+                                    <label class="form-label-item">
+                                        File đính kèm <span class="required-mark">*</span>
+                                    </label>
+                                    <!-- Input file thật (ẩn) -->
+                                    <input type="file" id="docFile" style="display: none;"
+                                        accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.zip,.rar" required>
+
+                                    <!-- Vùng kéo thả giao diện -->
+                                    <div class="dropzone-area" id="dropzoneArea" tabindex="0" role="button" aria-label="Chọn hoặc kéo thả file đính kèm">
+                                        <div class="dropzone-content" id="dropzonePrompt">
+                                            <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                                            <div class="dropzone-text">
+                                                <strong>Kéo thả file vào đây</strong> hoặc <span class="text-primary-link">bấm để chọn</span>
+                                            </div>
+                                            <div class="dropzone-hint">Hỗ trợ: PDF, Word (.docx), PowerPoint (.pptx), ZIP, Excel (Tối đa 25MB)</div>
+                                        </div>
+
+                                        <!-- Preview sau khi chọn file -->
+                                        <div class="file-preview-card" id="filePreviewCard" style="display: none;">
+                                            <div class="file-preview-left">
+                                                <i class="fa-solid fa-file file-preview-icon" id="previewFileIcon"></i>
+                                                <div class="file-preview-info">
+                                                    <span class="file-preview-name" id="previewFileName">filename.pdf</span>
+                                                    <span class="file-preview-size" id="previewFileSize">0 KB</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn-remove-file" id="removeFileBtn" aria-label="Gỡ file đã chọn">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <span class="file-error-msg" id="fileErrorMsg" style="display: none;"></span>
+                                </div>
+                            </div>
+
+                            <!-- Footer Form -->
+                            <div class="form-footer-actions">
+                                <span id="formMessage" class="form-message"></span>
+                                <div class="actions-group">
+                                    <button type="button" class="btn-action btn-action-outline" id="resetFormBtn">
+                                        <i class="fa-solid fa-rotate-left"></i> Xóa form
+                                    </button>
+                                    <button type="submit" class="btn-action btn-action-primary" id="uploadBtn">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        <span id="uploadBtnText">Gửi tài liệu</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- CARD DANH SÁCH TÀI LIỆU -->
+                <section class="content-card table-card">
+                    <!-- FILTER BAR -->
+                    <div class="filter-bar">
+                        <div class="filter-bar-left">
+                            <div class="search-wrap">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="searchInput" class="search-input"
+                                    placeholder="Tìm theo tên tài liệu, người gửi..." aria-label="Tìm tài liệu">
+                            </div>
+
+                            <select id="targetFilter" class="filter-select" aria-label="Lọc theo đối tượng">
+                                <option value="">Mọi đối tượng nhận</option>
+                                <option value="students">Sinh viên / Nhóm</option>
+                                <option value="lecturers">Giảng viên</option>
+                            </select>
+
+                            <select id="categoryFilter" class="filter-select" aria-label="Lọc theo phân loại">
+                                <option value="">Tất cả phân loại</option>
+                                <option value="Biểu mẫu SV">Biểu mẫu SV</option>
+                                <option value="Quy định / Hướng dẫn chung">Quy định / Hướng dẫn</option>
+                                <option value="Mẫu báo cáo">Mẫu báo cáo</option>
+                                <option value="Mẫu Slide thuyết trình">Mẫu Slide</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-bar-right">
+                            <button id="resetFilterBtn" class="btn-reset" aria-label="Đặt lại bộ lọc">
+                                <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter chips -->
+                    <div class="active-filter-chips" id="activeFilterChips" style="display: none;"></div>
+
+                    <!-- BẢNG DỮ LIỆU -->
+                    <div class="table-scroll-wrap">
+                        <table class="data-table" id="documentTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-doc">TÀI LIỆU</th>
+                                    <th class="col-cat">PHÂN LOẠI</th>
+                                    <th class="col-uploader">NGƯỜI CHIA SẺ</th>
+                                    <th class="col-target">ĐỐI TƯỢNG NHẬN</th>
+                                    <th class="col-date">NGÀY GỬI</th>
+                                    <th class="col-downloads text-center">LƯỢT TẢI</th>
+                                    <th class="col-actions text-center">THAO TÁC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documentTableBody">
+                                <!-- Skeleton rows -->
+                                <tr class="skeleton-row">
+                                    <td>
+                                        <div class="skeleton-cell" style="width: 220px; height: 16px; margin-bottom: 6px;"></div>
+                                        <div class="skeleton-cell" style="width: 140px; height: 12px;"></div>
+                                    </td>
+                                    <td><div class="skeleton-cell" style="width: 100px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 120px; height: 16px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 110px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 90px; height: 14px;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 40px; height: 16px; margin: 0 auto;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 70px; height: 32px; border-radius: 8px; margin: 0 auto;"></div></td>
+                                </tr>
+                                <tr class="skeleton-row">
+                                    <td>
+                                        <div class="skeleton-cell" style="width: 190px; height: 16px; margin-bottom: 6px;"></div>
+                                        <div class="skeleton-cell" style="width: 120px; height: 12px;"></div>
+                                    </td>
+                                    <td><div class="skeleton-cell" style="width: 110px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 130px; height: 16px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 100px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 85px; height: 14px;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 40px; height: 16px; margin: 0 auto;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 70px; height: 32px; border-radius: 8px; margin: 0 auto;"></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- TABLE FOOTER PHÂN TRANG -->
+                    <div class="table-footer">
+                        <div class="footer-left">
+                            <span class="pagination-info" id="paginationInfo">Hiển thị...</span>
+                            <div class="page-size-wrap">
+                                <span>Hiển thị</span>
+                                <select id="pageSizeSelect" class="page-size-select" aria-label="Số dòng mỗi trang">
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span>/ trang</span>
+                            </div>
+                        </div>
+                        <div class="pagination-wrap" id="paginationControls" role="navigation" aria-label="Phân trang danh sách tài liệu"></div>
+                    </div>
                 </section>
             </main>
         </div>
     </div>
+
+    <!-- Scripts -->
     <script src="../../js/config.js"></script>
     <script src="../../js/common/confirm-dialog.js"></script>
+    <script src="../../js/common/admin-pagination.js"></script>
     <script src="../../js/admin/admin-documents.js"></script>
     <script src="../../js/admin/admin-sidebar.js"></script>
-    <script src="../../js/common/app-notifications.js?v=20260908e"></script>
+    <script src="../../js/common/app-notifications.js"></script>
 </body>
 </html>

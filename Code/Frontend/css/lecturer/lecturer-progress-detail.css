@@ -1,151 +1,1072 @@
-body {
-    background: #eef3f8;
-}
+/* =========================================================
+   HỆ THỐNG QUẢN LÝ TTTN - CHI TIẾT TIẾN ĐỘ NHÓM (GIẢNG VIÊN)
+   Giao diện Dashboard Hiện đại, Chuẩn WCAG AA, Card-Based UI
+   ========================================================= */
 
 .progress-detail-page {
-    min-height: 100vh;
-    padding: 30px clamp(20px, 4vw, 64px) 64px;
-    background: radial-gradient(circle at 90% 0%, #dbeafe 0, transparent 32%), #eef3f8;
+    flex: 1;
+    min-width: 0;
+    padding: 24px clamp(16px, 2.5vw, 32px) 48px;
+    background: #F4F7FE;
 }
 
-.back-link {
-    display: inline-flex;
+.progress-page-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+/* Breadcrumb */
+.progress-breadcrumb {
+    display: flex;
     align-items: center;
-    gap: 9px;
-    margin-bottom: 20px;
-    color: #1d4ed8;
+    gap: 8px;
+    color: #64748B;
     font-size: 13px;
-    font-weight: 700;
+}
+
+.progress-breadcrumb a {
+    color: #2563EB;
+    font-weight: 600;
     text-decoration: none;
 }
 
-.back-link:hover { color: #1e3a8a; }
+.progress-breadcrumb a:hover {
+    color: #1D4ED8;
+    text-decoration: underline;
+}
 
+.progress-breadcrumb i {
+    color: #94A3B8;
+    font-size: 11px;
+}
+
+.progress-breadcrumb span {
+    color: #334155;
+    font-weight: 600;
+}
+
+/* Page Heading */
+.progress-page-heading {
+    margin-bottom: 20px;
+}
+
+.progress-page-heading h1 {
+    color: #0F172A;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.progress-page-heading p {
+    margin-top: 4px;
+    color: #64748B;
+    font-size: 14px;
+}
+
+/* Common Card Box */
+.progress-header-card,
+.submissions-card {
+    width: 100%;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(30, 64, 175, 0.04);
+}
+
+/* =========================================================
+   1. KHỐI THÔNG TIN ĐỀ TÀI & THÀNH VIÊN NHÓM
+   ========================================================= */
 .progress-header-card {
     position: relative;
-    max-width: 1280px;
-    padding: 32px 38px;
-    margin: 0 auto 28px;
-    background: #fff;
-    border: 1px solid #dbe5ef;
-    border-radius: 14px;
-    box-shadow: 0 12px 30px rgba(30, 64, 95, .08);
+    overflow: hidden;
+    margin-bottom: 24px;
+    padding: 24px;
 }
 
 .progress-header-card::before {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, #2563EB, #60A5FA);
     content: "";
-    background: linear-gradient(90deg, #2563eb, #38bdf8);
-    border-radius: 14px 14px 0 0;
 }
 
-.topic-heading, .section-heading {
+.topic-heading {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-}
-
-.topic-kicker, .section-heading > span {
-    color: #7890a8;
-    font-size: 11px;
-    font-weight: 800;
+    justify-content: flex-start;
+    gap: 12px;
 }
 
 .status-pill {
     display: inline-flex;
-    padding: 6px 11px;
-    border-radius: 999px;
-    background: #dcfce7;
-    color: #15803d;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 4px 12px;
+    border-radius: 9999px;
     font-size: 12px;
-    font-weight: 800;
-}
-
-.progress-header-card h2 {
-    margin: 17px 0 8px;
-    color: #172b4d;
-    font-size: clamp(21px, 3vw, 28px);
+    font-weight: 600;
     line-height: 1.25;
 }
 
-.progress-header-card p { color: #6b7f93; font-size: 13px; }
-.members-heading { margin-top: 25px; color: #334e68; font-size: 13px; font-weight: 800; }
-.members-heading i { margin-right: 7px; color: #2563eb; }
+.status-pill.status-approved,
+.status-pill.pill-green {
+    background: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+}
 
+.status-pill.status-neutral,
+.status-pill.pill-gray {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+}
+
+.status-pill.pill-orange {
+    background: #FFFBEB;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+
+.status-pill.pill-red {
+    background: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+
+.progress-header-card h2 {
+    margin: 12px 0 10px;
+    color: #0F172A;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+#topicMeta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: #64748B;
+    font-size: 13px;
+}
+
+.topic-code-chip,
+.topic-category-chip,
+.topic-start-date {
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.topic-code-chip {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #DBEAFE;
+}
+
+.topic-category-chip {
+    background: #F3E8FF;
+    color: #7E22CE;
+    border: 1px solid #E9D5FF;
+}
+
+.topic-start-date {
+    background: #F8FAFC;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+}
+
+/* Tiêu đề thành viên & Nút Chat đặt cạnh nhau (Yêu cầu 7) */
+.members-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid #F1F5F9;
+}
+
+.members-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #0F172A;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.members-title-group span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.members-title-group span i {
+    color: #2563EB;
+}
+
+.member-chat-link {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.member-chat-link:hover {
+    background: #DBEAFE;
+    border-color: #93C5FD;
+}
+
+/* Thẻ thành viên: 2 cột cùng chiều rộng (Yêu cầu 7) */
 .member-list {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 12px;
-    max-width: 920px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 14px;
 }
 
 .member-item {
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 11px;
-    min-width: 0;
-    padding: 13px;
-    background: #f7fafc;
-    border: 1px solid #e5edf5;
-    border-radius: 10px;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    transition: all 0.2s ease;
+}
+
+.member-item:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.member-item.is-leader {
+    background: #FFFDF5;
+    border-color: #FDE68A;
+}
+
+.member-avatar-wrap {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
 }
 
 .member-avatar {
-    display: grid;
-    flex: 0 0 34px;
-    place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    background: #dbeafe;
-    color: #2563eb;
+    display: grid;
+    place-items: center;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: 13.5px;
+    font-weight: 700;
+    border: 2px solid #BFDBFE;
 }
 
-.member-item > span:last-child { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
-.member-item strong { color: #7890a8; font-size: 10px; text-transform: uppercase; }
-.member-item b { overflow: hidden; color: #243b53; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.member-item small { color: #829ab1; font-size: 11px; }
+.is-leader .member-avatar {
+    background: #FEF3C7;
+    color: #B45309;
+    border-color: #FCD34D;
+}
 
-.section-heading { max-width: 1280px; margin: 0 auto 12px; padding: 0 4px; }
-.section-heading h3 { color: #243b53; font-size: 18px; }
-.milestone-tracker { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; max-width: 1280px; margin: 0 auto 32px; }
-.milestone-box { min-height: 148px; padding: 17px; background: #fff; border: 1px solid #dbe5ef; border-top: 3px solid #2563eb; border-radius: 10px; box-shadow: 0 7px 18px rgba(30, 64, 95, .06); }
-.milestone-box h4 { min-height: 40px; margin: 10px 0 16px; color: #243b53; font-size: 13px; line-height: 1.45; }
-.milestone-box small { display: block; margin-top: 10px; color: #829ab1; font-size: 11px; }
-.progress-bar-bg { height: 7px; margin-top: 0; overflow: hidden; background: #e6edf3; border-radius: 99px; }
-.progress-bar-fill { height: 100%; border-radius: inherit; transition: width .4s ease; }
+.leader-crown-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #F59E0B;
+    color: #FFFFFF;
+    font-size: 9px;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.4);
+    border: 2px solid #FFFFFF;
+}
 
-.submissions-card { max-width: 1280px; margin: 0 auto; overflow: hidden; border: 1px solid #dbe5ef; box-shadow: 0 10px 24px rgba(30, 64, 95, .06); }
-.submissions-card .card-header { background: #fff; border-bottom: 1px solid #e5edf5; }
-.submissions-card .data-table { min-width: 1120px; }
-.submissions-card .data-table td, .submissions-card .data-table th { padding: 14px 16px; }
-.submission-review-status { display: inline-flex; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
-.submission-review-status.pending-review { background: #eff6ff; color: #1d4ed8; }
-.submission-review-status.approved { background: #dcfce7; color: #15803d; }
-.submission-review-status.revision-requested { background: #fff7ed; color: #c2410c; }
-.submission-review-status.withdrawn, .submission-review-status.superseded { background: #f1f5f9; color: #64748b; }
-.submission-review-actions { display: grid; min-width: 220px; gap: 8px; }
-.submission-review-feedback { width: 100%; min-height: 64px; padding: 8px; resize: vertical; border: 1px solid #cbd5e1; border-radius: 7px; color: #334155; font: inherit; font-size: 12px; }
-.submission-review-actions > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.review-submission-button { padding: 7px 9px; border: 0; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; }
-.review-submission-button.approve { background: #dcfce7; color: #15803d; }
-.review-submission-button.request-revision { background: #fff7ed; color: #c2410c; }
-.review-submission-button:disabled { cursor: wait; opacity: .6; }
+.member-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
 
+.member-role-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.is-leader .member-role-title {
+    color: #B45309;
+}
+
+.member-name {
+    overflow: hidden;
+    color: #0F172A;
+    font-size: 14px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.member-code {
+    color: #475569;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.member-email {
+    color: #64748B;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.member-empty {
+    grid-column: 1 / -1;
+    color: #64748B;
+    font-size: 13px;
+}
+
+/* =========================================================
+   2. KHỐI TIẾN ĐỘ CÁC GIAI ĐOẠN - TIMELINE NGANG (Yêu cầu 6)
+   ========================================================= */
+.progress-section {
+    margin-bottom: 28px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.section-heading h2 {
+    color: #0F172A;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.section-heading > span {
+    padding: 5px 12px;
+    border-radius: 9999px;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #DBEAFE;
+}
+
+.milestone-tracker {
+    display: flex;
+    overflow-x: auto;
+    gap: 14px;
+    padding: 4px 2px 14px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.milestone-tracker::-webkit-scrollbar {
+    height: 6px;
+}
+
+.milestone-tracker::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 999px;
+}
+
+.milestone-empty {
+    padding: 20px;
+    color: #64748B;
+    font-size: 13px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    width: 100%;
+}
+
+.milestone-box {
+    position: relative;
+    min-width: 220px;
+    flex: 1 0 220px;
+    scroll-snap-align: start;
+    padding: 16px;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.milestone-box:hover {
+    border-color: #BFDBFE;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+    transform: translateY(-2px);
+}
+
+.milestone-box.is-current {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12), 0 6px 16px rgba(37, 99, 235, 0.08);
+}
+
+.milestone-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.milestone-number {
+    color: #64748B;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Badge trạng thái rõ ràng (Yêu cầu 6) */
+.milestone-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.chip-approved {
+    background: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+}
+
+.chip-submitted {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+
+.chip-revision {
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FFEDD5;
+}
+
+.chip-overdue {
+    background: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+
+.chip-not-submitted {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+}
+
+.milestone-title {
+    color: #0F172A;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 4px 0 2px;
+}
+
+/* Hạn nộp hiển thị nổi bật (Yêu cầu 6) */
+.milestone-deadline-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #475569;
+}
+
+.milestone-deadline-pill i {
+    color: #2563EB;
+    font-size: 13px;
+}
+
+.milestone-deadline-pill strong {
+    color: #0F172A;
+    font-weight: 600;
+}
+
+.milestone-subinfo {
+    display: block;
+    color: #64748B;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   3. DANH SÁCH BÁO CÁO ĐÃ NỘP - CARD BASED UI (Yêu cầu 1)
+   ========================================================= */
+.submissions-card {
+    overflow: hidden;
+}
+
+.submissions-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid #F1F5F9;
+    background: #FFFFFF;
+}
+
+.submissions-card .card-header h2 {
+    color: #0F172A;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.submission-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+}
+
+.submission-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    padding: 20px 22px;
+    transition: all 0.2s ease;
+}
+
+.submission-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+}
+
+.submission-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.submission-card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.submission-card-title {
+    color: #0F172A;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.submission-card-date {
+    color: #64748B;
+    font-size: 12.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.submission-card-body {
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* File đính kèm: chip một dòng kèm nút tải 32px (Yêu cầu 2) */
+.submission-file-chip-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.submission-file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    max-width: 100%;
+    transition: all 0.2s ease;
+}
+
+.submission-file-chip:hover {
+    border-color: #CBD5E1;
+    background: #F1F5F9;
+}
+
+.file-chip-icon {
+    font-size: 20px;
+    color: #2563EB;
+    display: flex;
+    align-items: center;
+}
+
+.file-chip-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1E293B;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-chip-size {
+    font-size: 12px;
+    color: #64748B;
+    background: #FFFFFF;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid #E2E8F0;
+}
+
+.btn-download-file {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.btn-download-file:hover {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    border-color: #93C5FD;
+}
+
+/* =========================================================
+   4. BONG BÓNG NHẬN XÉT ĐÃ GỬI (Yêu cầu 5)
+   ========================================================= */
+.submission-feedback-bubble-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+}
+
+.feedback-bubble-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.feedback-bubble-content {
+    background: #EFF6FF;
+    border: 1px solid #DBEAFE;
+    border-radius: 14px;
+    border-top-left-radius: 3px;
+    padding: 12px 16px;
+    flex: 1;
+}
+
+.feedback-bubble-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.feedback-bubble-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.feedback-bubble-author strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1D4ED8;
+}
+
+.feedback-time {
+    font-size: 12px;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.feedback-bubble-text {
+    font-size: 13.5px;
+    color: #1E293B;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.btn-edit-feedback {
+    border: none;
+    background: #FFFFFF;
+    color: #2563EB;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #BFDBFE;
+    transition: all 0.2s ease;
+}
+
+.btn-edit-feedback:hover {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+/* =========================================================
+   5. KHỐI NHẬP NHẬN XÉT & HÀNG NÚT (Yêu cầu 3 & 4)
+   ========================================================= */
+.submission-review-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.feedback-textarea-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.feedback-input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.submission-review-feedback {
+    width: 100%;
+    min-height: 96px;
+    padding: 12px 14px;
+    resize: vertical;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    color: #0F172A;
+    font: inherit;
+    font-size: 13.5px;
+    line-height: 1.5;
+    background: #FFFFFF;
+    transition: all 0.2s ease;
+}
+
+.submission-review-feedback:focus {
+    border-color: #2563EB;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.submission-review-feedback.has-error {
+    border-color: #DC2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.feedback-textarea-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #64748B;
+}
+
+.feedback-helper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #64748B;
+}
+
+.char-counter {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+.feedback-inline-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #DC2626;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-top: 4px;
+    padding: 6px 10px;
+    background: #FEF2F2;
+    border-radius: 6px;
+    border: 1px solid #FECACA;
+}
+
+/* Hàng nút: cách nhau 12px, cùng cao 40px, căn phải (Yêu cầu 4) */
+.review-buttons-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.review-submission-button {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.2s ease;
+}
+
+/* "Yêu cầu nộp lại" (viền đỏ, chữ đỏ) */
+.review-submission-button.request-revision {
+    background: #FFFFFF;
+    color: #DC2626;
+    border: 1px solid #DC2626;
+}
+
+.review-submission-button.request-revision:hover:not(:disabled) {
+    background: #FEF2F2;
+    border-color: #B91C1C;
+    color: #B91C1C;
+}
+
+/* "Duyệt" (nền xanh lá) */
+.review-submission-button.approve {
+    background: #16A34A;
+    color: #FFFFFF;
+    border: 1px solid #16A34A;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.2);
+}
+
+.review-submission-button.approve:hover:not(:disabled) {
+    background: #15803D;
+    border-color: #15803D;
+    box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
+}
+
+.review-submission-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-cancel-edit-feedback {
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    background: #FFFFFF;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel-edit-feedback:hover {
+    background: #F8FAFC;
+    color: #1E293B;
+}
+
+/* Empty State Card */
+.empty-submissions-card {
+    padding: 48px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.empty-submissions-card .empty-icon {
+    font-size: 36px;
+    color: #94A3B8;
+    margin-bottom: 6px;
+}
+
+.empty-submissions-card .empty-icon.text-red {
+    color: #EF4444;
+}
+
+.empty-submissions-card strong {
+    color: #0F172A;
+    font-size: 15px;
+}
+
+.empty-submissions-card span {
+    color: #64748B;
+    font-size: 13px;
+}
+
+/* Focus Visibility */
+button:focus-visible, a:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.4);
+    outline-offset: 2px;
+}
+
+/* =========================================================
+   6. RESPONSIVE DESIGN (Yêu cầu 8: mobile 1 cột)
+   ========================================================= */
 @media (max-width: 900px) {
-    .milestone-tracker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .member-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-@media (max-width: 620px) {
-    .progress-detail-page { padding: 20px 14px 36px; }
-    .progress-header-card { padding: 25px 18px 21px; }
-    .topic-kicker { display: none; }
-    .member-list, .milestone-tracker { grid-template-columns: 1fr; }
-    .milestone-box { min-height: auto; }
+@media (max-width: 768px) {
+    .progress-detail-page {
+        padding: 16px 14px 32px;
+    }
+    .progress-page-heading h1 {
+        font-size: 21px;
+    }
+    .progress-header-card {
+        padding: 18px 16px;
+    }
+    .progress-header-card h2 {
+        font-size: 18px;
+    }
+
+    /* Thành viên 1 cột trên mobile */
+    .member-list {
+        grid-template-columns: 1fr;
+    }
+
+    /* Mốc báo cáo trên mobile */
+    .milestone-tracker {
+        flex-direction: column;
+        overflow-x: visible;
+        gap: 12px;
+    }
+    .milestone-box {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    /* Card bài nộp trên mobile */
+    .submissions-card .card-header {
+        padding: 14px 16px;
+    }
+    .submission-cards-container {
+        padding: 16px;
+        gap: 14px;
+    }
+    .submission-card {
+        padding: 16px;
+    }
+    .submission-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    /* File chip co giãn trên mobile */
+    .submission-file-chip {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Hàng nút full width trên mobile */
+    .review-buttons-row {
+        flex-direction: column-reverse;
+        width: 100%;
+        gap: 8px;
+    }
+    .review-submission-button,
+    .btn-cancel-edit-feedback {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .members-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topic-start-date {
+        flex-basis: 100%;
+    }
+    .submission-card-title {
+        font-size: 15px;
+    }
 }

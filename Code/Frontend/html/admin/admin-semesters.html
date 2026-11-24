@@ -3,28 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học kỳ & đăng ký | QUẢN LÝ TTTN</title>
+    <title>Học Kỳ & Thời Hạn Đăng Ký | Cổng Quản Trị Viên</title>
+    
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/admin-semesters.css">
     <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/responsive.css">
+
+    <!-- Config & Scripts -->
     <script src="../../js/config.js"></script>
     <script defer src="../../js/common/confirm-dialog.js"></script>
+    <script defer src="../../js/common/app-notifications.js"></script>
     <script defer src="../../js/admin/admin-semesters.js"></script>
-    <link rel="stylesheet" href="../../css/responsive.css">
+    <script defer src="../../js/admin/admin-sidebar.js"></script>
+    <script defer src="../../js/common/sidebar-toggle.js"></script>
 </head>
 <body>
     <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <i class="fa-solid fa-graduation-cap logo-icon"></i>
-                <span class="brand-name">QUẢN LÝ TTTN</span>
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <span>CỔNG QUẢN TRỊ VIÊN</span>
+                </div>
             </div>
+
             <div class="sidebar-menu-wrapper">
                 <ul class="menu-list">
                     <li class="menu-item">
-                        <a href="admin-dashboard.html"><i class="fa-solid fa-layer-group"></i><span>Tổng quan</span></a>
+                        <a href="admin-dashboard.html"><i class="fa-solid fa-border-all"></i><span>Tổng quan</span></a>
                     </li>
                 </ul>
 
@@ -63,31 +80,43 @@
             </div>
         </aside>
 
+        <!-- MAIN WRAPPER -->
         <div class="main-wrapper">
+            <!-- TOPBAR -->
             <header class="top-navbar">
                 <div class="navbar-left">
-                    <button class="btn-menu-toggle" type="button" aria-label="Thu nhỏ hoặc mở rộng menu" aria-expanded="true">
+                    <button class="btn-menu-toggle btn-toggle-sidebar" type="button" aria-label="Mở menu">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                 </div>
                 <div class="navbar-right">
+                    <div class="semester-filter">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <select id="semesterSelect" class="select-clean" aria-label="Lọc theo học kỳ">
+                            <option value="">Đang tải học kỳ...</option>
+                        </select>
+                    </div>
                     <div class="user-profile">
                         <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
                         <span id="userName" class="user-name">Quản trị viên</span>
                         <span class="user-badge">ADMIN</span>
                     </div>
-                    <button id="logoutBtn" class="btn-logout" type="button">
+                    <button id="logoutBtn" class="btn-logout" type="button" aria-label="Đăng xuất">
                         <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                     </button>
                 </div>
             </header>
 
+            <!-- NỘI DUNG CHÍNH -->
             <main class="content-body semester-page">
+                <!-- BANNER THU NHỎ GỌN GÀNG -->
                 <header class="page-header">
                     <nav class="breadcrumbs" aria-label="Điều hướng">
                         <a class="back-link" href="admin-dashboard.html"><i class="fa-solid fa-house"></i> Trang quản trị</a>
                         <i class="fa-solid fa-chevron-right breadcrumb-divider" aria-hidden="true"></i>
                         <span>Quản lý đào tạo</span>
+                        <i class="fa-solid fa-chevron-right breadcrumb-divider" aria-hidden="true"></i>
+                        <span>Học kỳ & đăng ký</span>
                     </nav>
                     <div class="hero-copy">
                         <span class="hero-icon"><i class="fa-solid fa-graduation-cap"></i></span>
@@ -96,107 +125,154 @@
                             <p class="intro">Thiết lập học kỳ áp dụng và khoảng thời gian sinh viên được đăng ký đề tài.</p>
                         </div>
                     </div>
-                    <span class="hero-underline" aria-hidden="true"></span>
                 </header>
 
-                <div id="pageMessage" class="page-message" role="status" aria-live="polite" hidden>
-                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <!-- THÔNG BÁO TRANG (PAGE MESSAGE TOAST) -->
+                <div id="pageMessage" class="page-message" role="status" aria-live="polite" style="display: none;" hidden>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                     <span id="pageMessageText"></span>
                     <button type="button" class="message-close" aria-label="Đóng thông báo"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
+                <!-- BỐ CỤC 2 CỘT (FORM TRÁI - DANH SÁCH PHẢI) -->
                 <section class="content-grid">
-                    <form id="semesterForm" class="panel semester-form">
-                        <div class="panel-banner">
-                            <span class="heading-icon"><i class="fa-regular fa-calendar-plus"></i></span>
+                    <!-- FORM TẠO / SỬA HỌC KỲ (STICKY) -->
+                    <form id="semesterForm" class="semester-form">
+                        <div class="panel-banner" id="formBanner">
+                            <span class="heading-icon"><i class="fa-regular fa-calendar-plus" id="formBannerIcon"></i></span>
                             <div class="panel-heading-copy">
                                 <h2 id="formTitle">Tạo học kỳ mới</h2>
-                                <p>Thêm học kỳ để bắt đầu quản lý thời hạn đăng ký.</p>
+                                <p id="formSubtitle">Thêm học kỳ để bắt đầu quản lý thời hạn đăng ký.</p>
                             </div>
                             <i class="fa-regular fa-calendar banner-decoration" aria-hidden="true"></i>
                         </div>
                         <input type="hidden" id="semesterId">
 
                         <div class="form-fields">
-                            <label for="semesterName">Tên học kỳ</label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
-                                <input id="semesterName" name="name" type="text" maxlength="100" placeholder="Ví dụ: Học kỳ 1 năm 2026–2027" required>
+                            <div class="form-group-heading">THÔNG TIN HỌC KỲ</div>
+                            
+                            <div class="field-block">
+                                <label for="semesterName">Tên học kỳ <span class="req-star">*</span></label>
+                                <div class="input-with-icon">
+                                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                                    <input id="semesterName" name="name" type="text" maxlength="100" placeholder="Ví dụ: Học kỳ 1 năm 2026–2027" required>
+                                </div>
+                                <span class="input-helper-text">Ví dụ: Học kỳ 1 năm 2026–2027</span>
                             </div>
 
-                            <label for="semesterStart">Ngày bắt đầu học kỳ</label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
-                                <input id="semesterStart" name="start_date" type="date" required>
+                            <div class="field-block">
+                                <label for="semesterStart">Ngày bắt đầu học kỳ <span class="req-star">*</span></label>
+                                <div class="input-with-icon">
+                                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                                    <input id="semesterStart" name="start_date" type="date" required>
+                                </div>
                             </div>
+
+                            <div class="field-block">
+                                <label for="totalWeeks">Số tuần học kỳ <span class="req-star">*</span></label>
+                                <div class="weeks-control-wrapper">
+                                    <div class="weeks-stepper">
+                                        <button type="button" class="btn-stepper" id="btnWeekMinus" aria-label="Giảm 1 tuần"><i class="fa-solid fa-minus"></i></button>
+                                        <input id="totalWeeks" name="total_weeks" type="number" min="1" max="52" value="15" required>
+                                        <button type="button" class="btn-stepper" id="btnWeekPlus" aria-label="Tăng 1 tuần"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">tuần (tiêu chuẩn: 15 tuần)</span>
+                                </div>
+                                <div id="semesterEndSummary" class="form-calc-summary" style="display: none;">
+                                    <i class="fa-regular fa-calendar-check"></i>
+                                    <span>Ngày kết thúc dự kiến: <strong id="semesterEndDateText">--</strong></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group-heading" style="margin-top: 6px;">THỜI HẠN ĐĂNG KÝ ĐỀ TÀI</div>
 
                             <div class="date-grid">
-                                <div>
-                                    <label for="registrationStart">Mở đăng ký</label>
+                                <div class="field-block">
+                                    <label for="registrationStart">Mở đăng ký <span class="req-star">*</span></label>
                                     <div class="input-with-icon">
                                         <i class="fa-regular fa-clock" aria-hidden="true"></i>
                                         <input id="registrationStart" name="registration_start_date" type="datetime-local" step="60" required>
                                     </div>
                                 </div>
-                                <div>
-                                    <label for="registrationEnd">Đóng đăng ký</label>
+                                <div class="field-block">
+                                    <label for="registrationEnd">Đóng đăng ký <span class="req-star">*</span></label>
                                     <div class="input-with-icon">
                                         <i class="fa-regular fa-clock" aria-hidden="true"></i>
                                         <input id="registrationEnd" name="registration_end_date" type="datetime-local" step="60" required>
                                     </div>
                                 </div>
                             </div>
+                            <div id="regDurationSummary" class="form-calc-summary" style="display: none;">
+                                <i class="fa-solid fa-stopwatch"></i>
+                                <span>Thời gian đăng ký: <strong id="regDurationText">--</strong></span>
+                            </div>
 
-                            <label for="totalWeeks">Số tuần học kỳ</label>
-                            <input id="totalWeeks" name="total_weeks" type="number" min="1" max="52" value="15" required>
-
-                            <label class="checkbox-row" for="activateSemester">
+                            <div class="toggle-switch-wrapper">
                                 <input id="activateSemester" type="checkbox">
-                                <span>Kích hoạt học kỳ này sau khi lưu</span>
-                            </label>
+                                <label class="toggle-switch-row" for="activateSemester">
+                                    <div class="toggle-switch-text">
+                                        <strong>Kích hoạt học kỳ này sau khi lưu</strong>
+                                        <span>Áp dụng thời hạn đăng ký đề tài ngay sau khi lưu</span>
+                                    </div>
+                                    <div class="toggle-pill" aria-hidden="true"></div>
+                                </label>
+                                <div id="activateWarningText" class="activate-warning-note" style="display: none;">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <span>Học kỳ đang áp dụng hiện tại sẽ chuyển sang không hoạt động.</span>
+                                </div>
+                            </div>
 
                             <div class="form-actions">
-                                <button class="primary-button" type="submit" id="saveSemesterBtn"><i class="fa-solid fa-plus"></i> Lưu học kỳ</button>
-                                <button class="secondary-button" type="button" id="resetFormBtn"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
-                                <button class="secondary-button" type="button" id="cancelEditBtn" hidden>Hủy sửa</button>
+                                <button class="btn-form-action primary" type="submit" id="saveSemesterBtn"><i class="fa-solid fa-check"></i> Lưu học kỳ</button>
+                                <button class="btn-form-action outline" type="button" id="resetFormBtn"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                                <button class="btn-form-action ghost" type="button" id="cancelEditBtn" hidden><i class="fa-solid fa-xmark"></i> Hủy sửa</button>
                             </div>
                         </div>
                     </form>
 
-                    <section class="panel semester-list-panel">
+                    <!-- DANH SÁCH HỌC KỲ (CỘT PHẢI) -->
+                    <section class="semester-list-panel">
                         <div class="list-heading">
-                            <div class="panel-heading">
-                                <span class="heading-icon"><i class="fa-solid fa-file-lines"></i></span>
-                                <div class="panel-heading-copy">
-                                    <h2>Danh sách học kỳ</h2>
+                            <div class="list-heading-left">
+                                <span class="heading-icon-circle"><i class="fa-solid fa-calendar-days"></i></span>
+                                <div class="list-title-text">
+                                    <h2>Danh sách học kỳ <span class="badge-count-pill" id="semesterCountBadge">0</span></h2>
                                     <p>Chỉ một học kỳ được kích hoạt tại một thời điểm.</p>
                                 </div>
                             </div>
-                            <button type="button" id="showAllSemestersBtn" class="view-all-button">Xem tất cả <i class="fa-solid fa-arrow-right"></i></button>
+                            <div class="list-heading-right">
+                                <div class="semester-search-box" id="semesterSearchWrapper" style="display: none;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="semesterSearchInput" placeholder="Tìm tên học kỳ...">
+                                </div>
+                                <button type="button" id="showAllSemestersBtn" class="view-all-button" style="display: none;">Xem tất cả <i class="fa-solid fa-arrow-down"></i></button>
+                            </div>
                         </div>
                         <div id="semesterList" class="semester-list">
-                            <p class="empty-state">Đang tải danh sách học kỳ...</p>
+                            <div class="empty-state">
+                                <div class="empty-illustration"><i class="fa-solid fa-calendar-days"></i></div>
+                                <strong>Đang tải danh sách học kỳ...</strong>
+                            </div>
                         </div>
-                        <div class="panel-waves" aria-hidden="true"><span></span><span></span></div>
                     </section>
                 </section>
             </main>
         </div>
     </div>
 
-    <div id="logoutModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
-            <h3>Xác nhận đăng xuất</h3>
-            <p>Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên không?</p>
-            <div class="modal-actions">
-                <button id="cancelLogoutBtn" class="btn-cancel" type="button">Hủy bỏ</button>
-                <button id="confirmLogoutBtn" class="btn-confirm" type="button">Đăng xuất</button>
+    <!-- MODAL XÁC NHẬN ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+        <div class="modal-card modal-sm text-center">
+            <div class="modal-icon-red" style="font-size: 36px; color: var(--danger); margin-bottom: 12px;">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Xác nhận đăng xuất</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
+            <div class="modal-foot center" style="display: flex; gap: 10px; justify-content: center;">
+                <button id="cancelLogoutBtn" class="btn btn-outline" type="button">Hủy bỏ</button>
+                <button id="confirmLogoutBtn" class="btn btn-danger" type="button">Đăng xuất</button>
             </div>
         </div>
     </div>
-
-    <script src="../../js/admin/admin-sidebar.js"></script>
-    <script src="../../js/common/sidebar-toggle.js"></script>
 </body>
 </html>

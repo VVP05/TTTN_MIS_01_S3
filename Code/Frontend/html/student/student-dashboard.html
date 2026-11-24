@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý TTTN | Cổng Sinh Viên</title>
+    <!-- GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/student/student.css">
     <link rel="stylesheet" href="../../css/student/ai-advisor.css">
-    
+    <link rel="stylesheet" href="../../css/common/student-sidebar-brand.css">
     <!-- THƯ VIỆN FONT AWESOME ICONS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
@@ -21,7 +25,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ</h2>
+                        <span>THỰC TẬP TỐT NGHIỆP</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -49,17 +56,8 @@
             </div>
 
             <div class="sidebar-bottom">
-                <div class="sidebar-illustration">
-                    <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 110 Q 100 80 190 110 L 190 120 L 10 120 Z" fill="#2563eb" opacity="0.15"/>
-                        <rect x="60" y="50" width="80" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
-                        <polygon points="100,20 50,55 150,55" fill="#2563eb" opacity="0.5"/>
-                        <rect x="85" y="70" width="30" height="30" fill="#2563eb" opacity="0.4"/>
-                        <circle cx="100" cy="40" r="8" fill="#1d4ed8"/>
-                    </svg>
-                </div>
                 <div class="sidebar-footer">
-                    <p><br></p>
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
                 </div>
             </div>
         </aside>
@@ -70,7 +68,7 @@
             <!-- TOPBAR TRÊN CÙNG -->
             <header class="top-navbar">
                 <div class="navbar-left">
-                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                    <button class="btn-menu-toggle" aria-label="Toggle Navigation"><i class="fa-solid fa-bars"></i></button>
                 </div>
                 <div class="navbar-right">
                     <div class="user-profile">
@@ -84,49 +82,60 @@
                 </div>
             </header>
 
-            <!-- NỘI DUNG FORM ĐĂNG KÝ -->
+            <!-- NỘI DUNG TRANG -->
             <main class="content-body">
 
-                <section class="welcome-banner">
-                    <div class="welcome-copy">
-                        <span class="welcome-wave">👋</span>
+                <!-- HERO HEADER CARD (gộp chào + tiêu đề + trạng thái + hạn đăng ký) -->
+                <div class="hero-header-card">
+                    <div class="hero-header-left">
+                        <div class="hero-icon-wrap" aria-hidden="true">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
                         <div>
-                            <h2>Xin chào, <span id="welcomeUserName">bạn</span>!</h2>
-                            <p>Chúc bạn có một tuần học tập và làm việc hiệu quả!</p>
+                            <p class="hero-greeting">Xin chào, <span id="welcomeUserName">bạn</span>! 👋</p>
+                            <h1 class="hero-title">Đăng ký Đề tài Thực tập Tốt nghiệp</h1>
+                            <p class="hero-subtitle">Vui lòng điền thông tin nhóm thực hiện và nội dung đề tài dự kiến.</p>
+                            <!-- BANNER HẠN ĐĂNG KÝ GỘP VÀO HERO -->
+                            <div id="registrationWindowNotice" class="hero-deadline" role="status" aria-live="polite" hidden></div>
                         </div>
                     </div>
-                    <div class="welcome-art" aria-hidden="true">
-                        <i class=""></i>
-                        <i class=""></i>
-                    </div>
-                    <p class="welcome-quote"> <i class=""></i></p>
-                </section>
-                
-                <!-- HEADER TRANG & TRẠNG THÁI -->
-                <div class="page-title-card">
-                    <div class="title-left">
-                        <h1>Đăng ký Đề tài Thực tập Tốt nghiệp</h1>
-                        <p>Vui lòng điền thông tin nhóm thực hiện và nội dung đề tài dự kiến.</p>
-                    </div>
-                    <div class="title-right">
+                    <div class="hero-header-right">
                         <div class="status-pill">
                             <span>Trạng thái:</span>
                             <strong id="topicStatus" class="status-text"><i class="fa-solid fa-circle"></i> Chưa đăng ký</strong>
                         </div>
+                        <a href="my-topic.html" class="hero-shortcut-link" id="heroSemesterLink">
+                            <i class="fa-solid fa-graduation-cap"></i> <span id="heroSemesterText">Học kỳ 2026-2028</span>
+                        </a>
                     </div>
                 </div>
 
-                <div id="registrationWindowNotice" class="registration-window-notice" role="status" aria-live="polite" hidden></div>
+                <!-- BANNER XANH NHẠT KHI ĐÃ CÓ ĐĂNG KÝ (THAY NÚT XÁM LẶP LẠI) -->
+                <div id="registeredTopicBanner" class="registered-topic-banner" hidden role="status" aria-live="polite">
+                    <div class="banner-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="banner-text">
+                        Bạn đã đăng ký đề tài: <strong id="registeredTopicCode">--</strong>
+                    </div>
+                    <a href="my-topic.html" class="banner-link">
+                        Xem đề tài của tôi <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
 
+                <!-- KHÁM PHÁ ĐỀ TÀI -->
                 <section id="topicMarketplace" class="topic-marketplace" aria-labelledby="topicMarketplaceTitle">
                     <div class="marketplace-heading">
                         <div>
                             <h2 id="topicMarketplaceTitle"><i class="fa-solid fa-compass"></i> Khám phá đề tài</h2>
-                            <p>Chọn đề tài giảng viên đề xuất để đăng ký làm trưởng nhóm, hoặc xin tham gia nhóm đang tìm thành viên.</p>
+                            <p>Chọn đề tài giảng viên đề xuất, xin vào nhóm đang tuyển, hoặc công khai nhóm trước khi đăng ký đề tài.</p>
                         </div>
-                        <button type="button" id="proposeOwnTopicBtn" class="marketplace-own-topic">
-                            <i class="fa-solid fa-plus"></i> Tự đề xuất đề tài
-                        </button>
+                        <div class="marketplace-heading-actions">
+                            <button type="button" id="groupRecruitmentBtn" class="marketplace-recruitment-toggle" disabled title="Bạn cần đăng ký đề tài trước để công khai tuyển thành viên">
+                                <i class="fa-solid fa-bullhorn"></i> Công khai nhóm
+                            </button>
+                            <button type="button" id="proposeOwnTopicBtn" class="marketplace-own-topic">
+                                <i class="fa-solid fa-plus"></i> Tự đề xuất đề tài
+                            </button>
+                        </div>
                     </div>
                     <div class="marketplace-toolbar">
                         <div class="marketplace-tabs" role="tablist" aria-label="Loại đề tài">
@@ -140,7 +149,7 @@
                         <div class="marketplace-filters">
                             <label class="marketplace-search">
                                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                                <input type="search" id="marketplaceSearch" placeholder="Tìm tên đề tài, giảng viên...">
+                                <input type="search" id="marketplaceSearch" placeholder="Tìm đề tài hoặc trưởng nhóm...">
                             </label>
                             <select id="marketplaceCategory" aria-label="Lọc theo lĩnh vực">
                                 <option value="">Tất cả lĩnh vực</option>
@@ -156,19 +165,30 @@
                     <nav id="marketplacePagination" class="marketplace-pagination" aria-label="Điều hướng trang đề tài" hidden></nav>
                 </section>
 
+                <!-- AI ADVISOR CARD -->
                 <section class="student-ai-advisor" aria-labelledby="studentAiTitle">
                     <div class="student-ai-heading">
                         <span class="student-ai-icon">
-                            <svg class="student-ai-bot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                            <circle cx="16" cy="3.8" r="2" fill="#fff"/>
-                            <path d="M16 5.5V8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-                            <rect x="1.8" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
-                            <rect x="27" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
-                            <rect x="5" y="8" width="22" height="18" rx="7.5" fill="#fff"/>
-                            <circle cx="11.8" cy="16" r="2.4" fill="#4f46e5"/>
-                            <circle cx="20.2" cy="16" r="2.4" fill="#4f46e5"/>
-                            <path d="M13 21c1 1.1 2 1.6 3 1.6s2-.5 3-1.6" stroke="#4f46e5" stroke-width="1.7" stroke-linecap="round"/>
-                        </svg>
+                            <svg class="student-ai-bot-mark student-ai-mascot" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                                <g class="mascot-antenna">
+                                    <line x1="20" y1="8.5" x2="20" y2="4.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+                                    <circle cx="20" cy="3.5" r="2.5" fill="#FBBF24"/>
+                                </g>
+                                <rect x="4.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+                                <rect x="32.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+                                <rect x="7" y="8.5" width="26" height="23" rx="10" fill="#FFFFFF"/>
+                                <ellipse cx="11.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+                                <ellipse cx="28.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+                                <g class="mascot-eye mascot-eye-left">
+                                    <circle cx="14" cy="18" r="3.2" fill="#1E3A8A"/>
+                                    <circle cx="15.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+                                </g>
+                                <g class="mascot-eye mascot-eye-right">
+                                    <circle cx="26" cy="18" r="3.2" fill="#1E3A8A"/>
+                                    <circle cx="27.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+                                </g>
+                                <path class="mascot-mouth" d="M17.5 22.5 Q 20 25 22.5 22.5" stroke="#1E3A8A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                            </svg>
                         </span>
                         <div>
                             <h2 id="studentAiTitle">Chưa biết chọn đề tài nào?</h2>
@@ -186,24 +206,45 @@
                         
                         <!-- SECTION 1: THÀNH VIÊN NHÓM THỰC HIỆN -->
                         <div class="form-card">
-                            <h3 class="section-heading">
-                                <span class="heading-icon"><i class="fa-solid fa-users"></i></span> 1. Thành viên Nhóm thực hiện
-                            </h3>
-
-                            <div class="form-group margin-bottom-15">
-                                <label>Vai trò của bạn trong đề tài: <span class="required" style="color: red;">*</span></label>
-                                <div class="radio-group" style="display: flex; gap: 20px; margin-top: 8px;">
-                                    <label style="cursor: pointer;"><input type="radio" name="userRole" value="LEADER" checked /> <strong>Trưởng nhóm</strong> (Người đại diện)</label>
-                                    <label style="cursor: pointer;"><input type="radio" name="userRole" value="MEMBER" /> <strong>Thành viên</strong></label>
+                            <div class="form-card-header">
+                                <div class="form-card-num">1</div>
+                                <div>
+                                    <h3 class="section-heading"><i class="fa-solid fa-users"></i> Thành viên Nhóm thực hiện</h3>
+                                    <p class="section-subheading">Điền thông tin các thành viên tham gia đề tài</p>
                                 </div>
-                                <div id="memberRoleNote" class="message-box message-info" style="display: none; margin-top: 12px; color: #9a3412; background-color: #fff7ed; border: 1px solid #fdba74;">
-                                    <i class="fa-solid fa-circle-info" style="color: #ea580c;"></i>
-                                    “Với vai trò Thành viên, bạn chỉ cần nhập mã Trưởng nhóm để tham gia nhóm. Thông tin Giảng viên hướng dẫn và đề tài sẽ do Trưởng nhóm đăng ký.”
+                            </div>
+
+                            <!-- VAI TRÒ: 2 thẻ chọn lớn -->
+                            <div class="form-group">
+                                <label class="form-label">Vai trò của bạn trong đề tài: <span class="required">*</span></label>
+                                <div class="role-card-group">
+                                    <label class="role-card selected" id="roleCardLeader">
+                                        <input type="radio" name="userRole" value="LEADER" checked class="role-radio-hidden">
+                                        <div class="role-card-icon"><i class="fa-solid fa-crown"></i></div>
+                                        <div class="role-card-body">
+                                            <strong>Trưởng nhóm</strong>
+                                            <span>Người đại diện đăng ký và quản lý nhóm</span>
+                                        </div>
+                                        <div class="role-card-check"><i class="fa-solid fa-circle-check"></i></div>
+                                    </label>
+                                    <label class="role-card" id="roleCardMember">
+                                        <input type="radio" name="userRole" value="MEMBER" class="role-radio-hidden">
+                                        <div class="role-card-icon role-icon-blue"><i class="fa-solid fa-user-graduate"></i></div>
+                                        <div class="role-card-body">
+                                            <strong>Thành viên</strong>
+                                            <span>Tham gia nhóm theo lời mời của Trưởng nhóm</span>
+                                        </div>
+                                        <div class="role-card-check"><i class="fa-solid fa-circle-check"></i></div>
+                                    </label>
+                                </div>
+                                <div id="memberRoleNote" class="form-helper-box form-helper-warning" style="display: none;">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Với vai trò Thành viên, bạn chỉ cần nhập mã Trưởng nhóm để tham gia nhóm. Thông tin Giảng viên hướng dẫn và đề tài sẽ do Trưởng nhóm đăng ký.
                                 </div>
                             </div>
 
                             <div class="form-group" id="leaderField">
-                                <label id="leaderLabel" for="leaderName">Trưởng nhóm <span class="required" style="color: red;">*</span></label>
+                                <label class="form-label" id="leaderLabel" for="leaderName">Trưởng nhóm <span class="required">*</span></label>
                                 <div class="input-icon-wrapper">
                                     <span class="field-icon"><i class="fa-solid fa-user-shield"></i></span>
                                     <input type="text" id="leaderName" placeholder="Nhập MSSV Trưởng nhóm..." required />
@@ -212,7 +253,7 @@
 
                             <div class="grid-2">
                                 <div class="form-group" id="member2Field">
-                                    <label id="partnerCodeLabel" for="partnerCodeInput">Thành viên 2 (Không bắt buộc)</label>
+                                    <label class="form-label" id="partnerCodeLabel" for="partnerCodeInput">Thành viên 2 <span class="form-label-optional">(Không bắt buộc)</span></label>
                                     <div class="input-icon-wrapper">
                                         <span class="field-icon"><i class="fa-solid fa-user-plus"></i></span>
                                         <input type="text" id="partnerCodeInput" placeholder="Nhập MSSV Thành viên 2..." />
@@ -220,7 +261,7 @@
                                 </div>
 
                                 <div class="form-group" id="member3Field">
-                                    <label id="member3CodeLabel" for="member3CodeInput">Thành viên 3 (Không bắt buộc)</label>
+                                    <label class="form-label" id="member3CodeLabel" for="member3CodeInput">Thành viên 3 <span class="form-label-optional">(Không bắt buộc)</span></label>
                                     <div class="input-icon-wrapper">
                                         <span class="field-icon"><i class="fa-solid fa-user-plus"></i></span>
                                         <input type="text" id="member3CodeInput" placeholder="Nhập MSSV Thành viên 3..." />
@@ -228,21 +269,27 @@
                                 </div>
                             </div>
 
-                            <div id="joinRequestsSection" class="form-group margin-top-15" style="display: none;">
-                                <label class="join-requests-heading"><i class="fa-solid fa-user-clock"></i> Yêu cầu tham gia nhóm</label>
+                            <div id="joinRequestsSection" class="form-group join-requests-wrapper" style="display: none;">
+                                <div class="join-requests-heading-row">
+                                    <label class="join-requests-heading"><i class="fa-solid fa-user-clock"></i> Yêu cầu tham gia nhóm</label>
+                                </div>
                                 <div id="joinRequestsList" class="join-requests-list"></div>
                             </div>
                         </div>
 
                         <!-- SECTION 2: THÔNG TIN ĐỀ TÀI & GIẢNG VIÊN -->
                         <div class="form-card" id="topicDetailsSection">
-                            <h3 class="section-heading">
-                                <span class="heading-icon"><i class="fa-solid fa-file-signature"></i></span> 2. Thông tin Đề tài & Giảng viên
-                            </h3>
+                            <div class="form-card-header">
+                                <div class="form-card-num">2</div>
+                                <div>
+                                    <h3 class="section-heading"><i class="fa-solid fa-file-signature"></i> Thông tin Đề tài & Giảng viên</h3>
+                                    <p class="section-subheading">Điền tên đề tài, chọn giảng viên hướng dẫn và mô tả nội dung</p>
+                                </div>
+                            </div>
 
-                            <!-- HÀNG 1: GIẢNG VIÊN HƯỚNG DẪN (ĐƯA LÊN TRÊN CÙNG) -->
-                            <div class="form-group margin-bottom-15">
-                                <label for="lecturerCode">Giảng viên hướng dẫn <span class="required" style="color: red;">*</span></label>
+                            <!-- GIẢNG VIÊN HƯỚNG DẪN -->
+                            <div class="form-group">
+                                <label class="form-label" for="lecturerCode">Giảng viên hướng dẫn <span class="required">*</span></label>
                                 <div class="input-icon-wrapper">
                                     <span class="field-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
                                     <select id="lecturerCode" required>
@@ -251,33 +298,39 @@
                                 </div>
                             </div>
 
-                            <!-- HÀNG 2: ĐỀ TÀI ĐỀ XUẤT (BÊN TRÁI) & TÊN ĐỀ TÀI DỰ KIẾN (BÊN PHẢI) -->
+                            <!-- ĐỀ TÀI ĐỀ XUẤT & TÊN ĐỀ TÀI -->
                             <div class="grid-2">
                                 <div class="form-group">
-                                    <label for="proposedTopic">Đề tài đề xuất từ Giảng viên (Không bắt buộc)</label>
+                                    <label class="form-label" for="proposedTopic">Đề tài đề xuất từ Giảng viên <span class="form-label-optional">(Không bắt buộc)</span></label>
                                     <div class="input-icon-wrapper">
                                         <span class="field-icon"><i class="fa-solid fa-lightbulb"></i></span>
                                         <select id="proposedTopic">
-                                            <option value="">-- Vui lòng chọn Giảng viên hướng dẫn trước --</option>
+                                            <option value="">-- Chọn đề tài gợi ý từ GV (hoặc tự nhập bên dưới) --</option>
                                         </select>
                                     </div>
+                                    <span class="form-helper-text">Chọn đề tài đã được giảng viên đề xuất hoặc để trống để tự đề xuất</span>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="topicTitle">Tên đề tài dự kiến <span class="required" style="color: red;">*</span></label>
+                                    <label class="form-label" for="topicTitle">Tên đề tài dự kiến <span class="required">*</span></label>
                                     <div class="input-icon-wrapper">
                                         <span class="field-icon"><i class="fa-solid fa-book"></i></span>
                                         <input type="text" id="topicTitle" placeholder="Nhập tên đề tài thực tập tốt nghiệp..." required />
                                     </div>
+                                    <span class="form-helper-text">Tên đề tài sẽ được ghi vào hồ sơ chính thức</span>
                                 </div>
                             </div>
 
-                            <!-- HÀNG 3: MÔ TẢ ĐỀ TÀI -->
-                            <div class="form-group margin-top-15">
-                                <label for="topicDescription">Mô tả ngắn gọn mục tiêu / phạm vi đề tài <span class="required" style="color: red;">*</span></label>
-                                <div class="input-icon-wrapper textarea-wrapper">
-                                    <span class="field-icon"><i class="fa-solid fa-list-check"></i></span>
-                                    <textarea id="topicDescription" rows="3" placeholder="Nhập mô tả chi tiết mục tiêu, công nghệ sử dụng, và phạm vi ứng dụng..." required></textarea>
+                            <!-- MÔ TẢ ĐỀ TÀI -->
+                            <div class="form-group">
+                                <label class="form-label" for="topicDescription">Mô tả ngắn gọn mục tiêu / phạm vi đề tài <span class="required">*</span></label>
+                                <div class="textarea-wrapper input-icon-wrapper">
+                                    <span class="field-icon" style="top:14px;"><i class="fa-solid fa-list-check"></i></span>
+                                    <textarea id="topicDescription" rows="5" placeholder="Nhập mô tả chi tiết mục tiêu, công nghệ sử dụng, và phạm vi ứng dụng..." required maxlength="2000"></textarea>
+                                </div>
+                                <div class="textarea-footer">
+                                    <span class="form-helper-text">Mô tả rõ ràng sẽ giúp giảng viên phê duyệt nhanh hơn</span>
+                                    <span class="char-counter" id="descCharCounter">0 / 2000 ký tự</span>
                                 </div>
                             </div>
                         </div>
@@ -285,17 +338,17 @@
                         <!-- KHU VỰC THÔNG BÁO -->
                         <div id="formMessage" class="message-box" style="display: none;"></div>
 
-                        <!-- NÚT THAO TÁC -->
-                        <div class="form-actions-bar" style="display: flex; gap: 12px; justify-content: flex-end; align-items: center; margin-top: 20px;">
-                            <button type="button" id="cancelBtn" class="btn-danger" style="display: none; background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        <!-- THANH HÀNH ĐỘNG CUỐI FORM -->
+                        <div class="form-actions-bar">
+                            <button type="button" id="cancelBtn" class="btn-danger" style="display: none;">
                                 <i class="fa-solid fa-trash-can"></i> Hủy Đăng Ký
                             </button>
                             
-                            <button type="button" id="editBtn" class="btn-warning" style="display: none; background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            <button type="button" id="editBtn" class="btn-secondary-action" style="display: none;">
                                 <i class="fa-solid fa-pen-to-square"></i> Chỉnh Sửa Đề Tài
                             </button>
 
-                            <button type="submit" id="submitBtn" class="btn-primary-action" style="background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            <button type="submit" id="submitBtn" class="btn-primary-action">
                                 <span><i class="fa-solid fa-paper-plane"></i> Gửi Đăng Ký Đề Tài</span>
                             </button>
                         </div>
@@ -323,7 +376,7 @@
     <!-- MODAL XÁC NHẬN HỦY ĐỀ TÀI -->
     <div id="cancelModal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
-            <div class="modal-icon" style="background-color: #fee2e2; color: #ef4444;">
+            <div class="modal-icon" style="color: #ef4444;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
             <h3>Xác nhận Hủy Đăng Ký</h3>
@@ -339,22 +392,36 @@
         <header class="student-ai-panel-header">
             <div class="student-ai-panel-brand">
                 <span class="student-ai-icon">
-                    <svg class="student-ai-bot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                    <circle cx="16" cy="3.8" r="2" fill="#fff"/>
-                    <path d="M16 5.5V8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-                    <rect x="1.8" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
-                    <rect x="27" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
-                    <rect x="5" y="8" width="22" height="18" rx="7.5" fill="#fff"/>
-                    <circle cx="11.8" cy="16" r="2.4" fill="#4f46e5"/>
-                    <circle cx="20.2" cy="16" r="2.4" fill="#4f46e5"/>
-                    <path d="M13 21c1 1.1 2 1.6 3 1.6s2-.5 3-1.6" stroke="#4f46e5" stroke-width="1.7" stroke-linecap="round"/>
-                </svg>
+                    <svg class="student-ai-bot-mark student-ai-mascot" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                        <g class="mascot-antenna">
+                            <line x1="20" y1="8.5" x2="20" y2="4.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="20" cy="3.5" r="2.5" fill="#FBBF24"/>
+                        </g>
+                        <rect x="4.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+                        <rect x="32.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+                        <rect x="7" y="8.5" width="26" height="23" rx="10" fill="#FFFFFF"/>
+                        <ellipse cx="11.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+                        <ellipse cx="28.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+                        <g class="mascot-eye mascot-eye-left">
+                            <circle cx="14" cy="18" r="3.2" fill="#1E3A8A"/>
+                            <circle cx="15.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+                        </g>
+                        <g class="mascot-eye mascot-eye-right">
+                            <circle cx="26" cy="18" r="3.2" fill="#1E3A8A"/>
+                            <circle cx="27.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+                        </g>
+                        <path class="mascot-mouth" d="M17.5 22.8 Q20 25.2 22.5 22.8" stroke="#1E3A8A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                    </svg>
                 </span>
                 <div>
-                    <h2 id="studentAiPanelTitle">Trợ lý tư vấn đề tài</h2>
+                    <h2 id="studentAiPanelTitle">Peanuts - Trợ lý đề tài</h2>
+                    <p class="student-ai-panel-status">Luôn sẵn sàng giúp bạn</p>
                 </div>
             </div>
+            <div class="student-ai-header-actions">
+                <button type="button" id="resetAiAdvisor" class="student-ai-reset" aria-label="Làm mới cuộc trò chuyện" title="Làm mới cuộc trò chuyện"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
             <button type="button" id="closeAiAdvisor" class="student-ai-close" aria-label="Đóng trợ lý"><i class="fa-solid fa-xmark"></i></button>
+            </div>
         </header>
         <details class="student-ai-profile">
             <summary><i class="fa-regular fa-user"></i> Thông tin để gợi ý sát hơn</summary>
@@ -365,12 +432,11 @@
             <label for="aiInterests">Mảng bạn yêu thích</label>
             <input id="aiInterests" type="text" maxlength="300" placeholder="Ví dụ: web, AI, dữ liệu">
         </details>
-        <div id="studentAiMessages" class="student-ai-messages" role="log" aria-live="polite">
-            <div class="student-ai-message assistant">Chào bạn! Bạn đang học ngành gì và thích mảng nào? Mình sẽ gợi ý một số hướng đề tài phù hợp, đồng thời tham khảo kho đề tài đang mở.</div>
-            <div class="student-ai-prompts">
-                <button type="button" data-ai-prompt="Em muốn được gợi ý đề tài theo ngành học. Nếu chưa biết ngành của em, hãy hỏi em đang học ngành gì trước nhé.">Gợi ý theo ngành</button>
-                <button type="button" data-ai-prompt="Có đề tài nào trong kho phù hợp với kỹ năng và sở thích của em không?">Xem đề tài phù hợp</button>
-            </div>
+        <div id="studentAiMessages" class="student-ai-messages" role="log" aria-live="polite"></div>
+        <div class="student-ai-prompts" role="group" aria-label="Gợi ý câu hỏi nhanh">
+            <button type="button" data-ai-prompt="Em muốn được gợi ý đề tài theo ngành học. Nếu chưa biết ngành của em, hãy hỏi em đang học ngành gì trước nhé.">Gợi ý theo ngành</button>
+            <button type="button" data-ai-prompt="Có đề tài nào trong kho phù hợp với kỹ năng và sở thích của em không?">Xem đề tài phù hợp</button>
+            <button type="button" data-ai-prompt="Hướng dẫn em cách đăng ký đề tài thực tập trên hệ thống.">Cách đăng ký</button>
         </div>
         <form id="studentAiForm" class="student-ai-compose">
             <textarea id="studentAiInput" rows="2" maxlength="1200" placeholder="Nhập câu hỏi của bạn..." required></textarea>
@@ -378,18 +444,68 @@
         </form>
         <p class="student-ai-disclaimer">Gợi ý chỉ mang tính tham khảo. Tình trạng và việc duyệt đề tài cần xác nhận với giảng viên.</p>
     </section>
-    <button type="button" id="studentAiLauncher" class="student-ai-launcher" aria-label="Mở tư vấn đề tài" aria-controls="studentAiPanel" aria-expanded="false">
-                    <svg class="student-ai-bot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <circle cx="16" cy="3.8" r="2" fill="#fff"/>
-                <path d="M16 5.5V8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-                <rect x="1.8" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
-                <rect x="27" y="13" width="3.2" height="7" rx="1.6" fill="#fff" opacity=".7"/>
-                <rect x="5" y="8" width="22" height="18" rx="7.5" fill="#fff"/>
-                <circle cx="11.8" cy="16" r="2.4" fill="#4f46e5"/>
-                <circle cx="20.2" cy="16" r="2.4" fill="#4f46e5"/>
-                <path d="M13 21c1 1.1 2 1.6 3 1.6s2-.5 3-1.6" stroke="#4f46e5" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
-        <span>Tư vấn đề tài</span>
+
+    <!-- BONG BÓNG LỜI CHÀO PEANUTS (TEASER BUBBLE) -->
+    <div id="studentAiTeaser" class="student-ai-teaser" hidden aria-live="polite">
+        <button type="button" id="studentAiTeaserOpen" class="student-ai-teaser-open" aria-label="Mở trợ lý tư vấn đề tài">
+            <span class="student-ai-teaser-avatar" aria-hidden="true">
+                <svg class="student-ai-bot-mark student-ai-mascot" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                    <g class="mascot-antenna">
+                        <line x1="20" y1="8.5" x2="20" y2="4.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="20" cy="3.5" r="2.5" fill="#FBBF24"/>
+                    </g>
+                    <rect x="4.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+                    <rect x="32.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+                    <rect x="7" y="8.5" width="26" height="23" rx="10" fill="#FFFFFF"/>
+                    <ellipse cx="11.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+                    <ellipse cx="28.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+                    <g class="mascot-eye mascot-eye-left">
+                        <circle cx="14" cy="18" r="3.2" fill="#1E3A8A"/>
+                        <circle cx="15.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+                    </g>
+                    <g class="mascot-eye mascot-eye-right">
+                        <circle cx="26" cy="18" r="3.2" fill="#1E3A8A"/>
+                        <circle cx="27.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+                    </g>
+                    <path class="mascot-mouth" d="M17.5 22.5 Q 20 25 22.5 22.5" stroke="#1E3A8A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                </svg>
+            </span>
+            <span id="studentAiTeaserTyping" class="student-ai-teaser-typing" aria-hidden="true" hidden>
+                <i></i><i></i><i></i>
+            </span>
+            <span id="studentAiTeaserText" class="student-ai-teaser-text" aria-live="polite" aria-atomic="true"></span>
+        </button>
+        <button type="button" id="studentAiTeaserClose" class="student-ai-teaser-close" aria-label="Tắt lời chào"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+
+    <!-- NHÃN CHỮ DẠNG VIÊN THUỐC & NÚT AI LAUNCHER -->
+    <div id="studentAiPill" class="student-ai-pill" role="status" aria-label="Hỏi trợ lý AI">
+        <span>Hỏi trợ lý AI ✨</span>
+    </div>
+
+    <button type="button" id="studentAiLauncher" class="student-ai-launcher" aria-label="Mở trợ lý tư vấn đề tài" title="Mở trợ lý tư vấn đề tài" aria-controls="studentAiPanel" aria-expanded="false">
+        <span class="student-ai-online-dot" aria-hidden="true"></span>
+        <svg class="student-ai-bot-mark student-ai-mascot" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <g class="mascot-antenna">
+                <line x1="20" y1="8.5" x2="20" y2="4.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="20" cy="3.5" r="2.5" fill="#FBBF24"/>
+            </g>
+            <rect x="4.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+            <rect x="32.5" y="14.5" width="3" height="7" rx="1.5" fill="#FFFFFF" opacity="0.85"/>
+            <rect x="7" y="8.5" width="26" height="23" rx="10" fill="#FFFFFF"/>
+            <ellipse cx="11.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+            <ellipse cx="28.5" cy="22" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.8"/>
+            <g class="mascot-eye mascot-eye-left">
+                <circle cx="14" cy="18" r="3.2" fill="#1E3A8A"/>
+                <circle cx="15.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+            </g>
+            <g class="mascot-eye mascot-eye-right">
+                <circle cx="26" cy="18" r="3.2" fill="#1E3A8A"/>
+                <circle cx="27.2" cy="16.8" r="1.1" fill="#FFFFFF"/>
+            </g>
+            <path class="mascot-mouth mouth-normal" d="M17.5 22.8 Q20 25.2 22.5 22.8" stroke="#1E3A8A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            <path class="mascot-mouth mouth-hover" d="M16.5 22 Q20 27 23.5 22" stroke="#1E3A8A" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        </svg>
     </button>
 
     <script src="../../js/config.js"></script>
@@ -399,5 +515,25 @@
     <script src="../../js/student/ai-advisor.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
     <script src="../../js/common/sidebar-toggle.js"></script>
+
+    <script>
+        // Char counter cho textarea mô tả
+        const descTextarea = document.getElementById('topicDescription');
+        const descCounter = document.getElementById('descCharCounter');
+        if (descTextarea && descCounter) {
+            const updateCounter = () => {
+                descCounter.textContent = descTextarea.value.length + ' / 2000 ký tự';
+            };
+            descTextarea.addEventListener('input', updateCounter);
+        }
+
+        // Role card selection visual
+        document.querySelectorAll('.role-radio-hidden').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+                if (this.checked) this.closest('.role-card').classList.add('selected');
+            });
+        });
+    </script>
 </body>
 </html>

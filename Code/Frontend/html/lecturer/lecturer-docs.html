@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài Liệu & Biểu Mẫu | Cổng Giảng Viên</title>
     
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-docs.css?v=20260908c">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="../../css/common/chat-unread.css">
     <link rel="stylesheet" href="../../css/common/lecturer-logout-modal.css">
     <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-pending-alert.css">
@@ -23,7 +29,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                        <span>CỔNG GIẢNG VIÊN</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -35,7 +44,7 @@
                             <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn<span id="chatSidebarBadge" class="chat-unread-badge chat-sidebar-unread-badge" hidden></span></a>
                         </li>
                         <li class="menu-item">
                             <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
@@ -89,80 +98,88 @@
                 <!-- PAGE HEADER -->
                 <div class="page-header-container">
                     <div class="page-header-text">
-                        <h1>Tài Liệu & Biểu Mẫu</h1>
-                        <p>Quản lý biểu mẫu quy định của Khoa và chia sẻ tài liệu hướng dẫn cho nhóm sinh viên.</p>
+                        <h1>Tài liệu & biểu mẫu</h1>
+                        <p>Quản lý biểu mẫu quy định của Khoa và chia sẻ tài liệu hướng dẫn cho các nhóm sinh viên.</p>
                     </div>
                     <button id="openUploadModalBtn" class="btn-primary">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> + Tải tài liệu mới lên
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Tải tài liệu lên
                     </button>
                 </div>
 
-                <!-- SECTION 1: BIỂU MẪU CHUẨN CỦA KHOA (GIẢNG VIÊN TẢI VỀ DÙNG) -->
+                <!-- SECTION 1: BIỂU MẪU CHUẨN CỦA KHOA -->
                 <div class="docs-section">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-folder-open text-blue"></i> Biểu Mẫu Quy Định Từ Khoa / Bộ Môn</h2>
+                        <div class="section-title-wrap">
+                            <h2><i class="fa-solid fa-folder-open text-blue"></i> Biểu mẫu quy định từ Khoa / Bộ môn</h2>
+                            <span class="table-subtitle">Biểu mẫu chính thức do Khoa ban hành, dùng chung cho mọi nhóm</span>
+                        </div>
                     </div>
-                    <div class="docs-grid" id="facultyDocsGrid"></div>
+                    <div class="docs-grid" id="facultyDocsGrid">
+                        <!-- JS Render các thẻ biểu mẫu Khoa -->
+                    </div>
                 </div>
 
                 <!-- SECTION 2: TÀI LIỆU GV CHIA SẺ CHO SINH VIÊN -->
                 <div class="docs-section margin-top-24">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-share-nodes text-green"></i> Tài Liệu Tôi Chia Sẻ Cho Sinh Viên</h2>
-                        <span class="table-subtitle">Sinh viên thuộc nhóm hướng dẫn có thể nhìn thấy và tải về</span>
+                        <div class="section-title-wrap">
+                            <h2><i class="fa-solid fa-share-nodes text-green"></i> Tài liệu tôi chia sẻ cho sinh viên</h2>
+                            <span class="table-subtitle"><i class="fa-solid fa-users"></i> Sinh viên thuộc nhóm hướng dẫn có thể nhìn thấy và tải về</span>
+                        </div>
                     </div>
 
+                    <!-- THANH TÌM KIẾM & BỘ LỌC TÀI LIỆU -->
+                    <div class="docs-toolbar">
+                        <div class="docs-toolbar-left">
+                            <div class="docs-search-group">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchDocInput" placeholder="Tìm tên tài liệu, tên file...">
+                            </div>
+                            <div class="docs-select-wrapper">
+                                <select id="categoryFilter" class="docs-select">
+                                    <option value="">Tất cả phân loại</option>
+                                    <option value="Biểu mẫu SV">Biểu mẫu SV</option>
+                                    <option value="Tài liệu kỹ thuật">Tài liệu kỹ thuật</option>
+                                    <option value="Thông báo chung">Thông báo chung</option>
+                                </select>
+                            </div>
+                            <div class="docs-select-wrapper">
+                                <select id="targetFilter" class="docs-select">
+                                    <option value="">Tất cả đối tượng</option>
+                                    <option value="Tất cả nhóm hướng dẫn">Tất cả nhóm</option>
+                                </select>
+                            </div>
+                            <button type="button" id="btnResetDocFilters" class="btn-outline" style="display: none;">
+                                <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG DANH SÁCH TÀI LIỆU -->
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Tên Tài Liệu</th>
-                                    <th>Phân Loại</th>
-                                    <th>Chia Sẻ Cho</th>
-                                    <th>Ngày Đăng</th>
-                                    <th>Lượt Tải</th>
-                                    <th>Thao Tác</th>
+                                    <th>Tên tài liệu</th>
+                                    <th width="150">Phân loại</th>
+                                    <th width="190">Chia sẻ cho</th>
+                                    <th width="140">Ngày đăng</th>
+                                    <th width="110" class="text-center">Lượt tải</th>
+                                    <th width="100" class="text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="myDocsTableBody">
                                 <tr>
-                                    <td>
-                                        <div class="file-name-cell">
-                                            <i class="fa-solid fa-file-word text-blue"></i>
-                                            <strong>Mau_Bao_Cao_TTTN_Chuan_2026.docx</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-info">Biểu mẫu SV</span></td>
-                                    <td>Tất cả nhóm hướng dẫn</td>
-                                    <td>15/06/2026</td>
-                                    <td>18</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <a href="#" class="btn-icon" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
-                                            <button class="btn-icon text-red btn-delete-doc" title="Xóa"><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="file-name-cell">
-                                            <i class="fa-solid fa-file-pdf text-red"></i>
-                                            <strong>Huong_Dan_Viet_API_RESTful_Chuan.pdf</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-success">Tài liệu kỹ thuật</span></td>
-                                    <td>Nhóm N01, N05</td>
-                                    <td>18/06/2026</td>
-                                    <td>6</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <a href="#" class="btn-icon" title="Tải xuống"><i class="fa-solid fa-download"></i></a>
-                                            <button class="btn-icon text-red btn-delete-doc" title="Xóa"><i class="fa-solid fa-trash"></i></button>
-                                        </div>
+                                    <td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px;">
+                                        <i class="fa-solid fa-spinner fa-spin"></i> Đang tải danh sách tài liệu...
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="table-footer-bar" id="docTableFooter" style="display: none;">
+                        <span class="table-footer-info" id="docFooterInfo">Hiển thị 0 trên tổng số 0 tài liệu</span>
                     </div>
                 </div>
 
@@ -174,8 +191,8 @@
     <div id="uploadModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>Chia sẻ tài liệu mới cho Sinh viên</h3>
-                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+                <h3>Tải tài liệu & Chia sẻ cho sinh viên</h3>
+                <button class="btn-close-modal" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="uploadDocForm">
                 <div class="form-group">
@@ -185,7 +202,7 @@
                 <div class="form-group">
                     <label>Phân loại <span class="required">*</span></label>
                     <select class="form-control" id="docCategory">
-                        <option value="Biểu mẫu SV">Biểu mẫu cho Sinh viên</option>
+                        <option value="Biểu mẫu SV">Biểu mẫu cho sinh viên</option>
                         <option value="Tài liệu kỹ thuật">Tài liệu tham khảo / Kỹ thuật</option>
                         <option value="Thông báo chung">Quy định / Hướng dẫn chung</option>
                     </select>
@@ -193,22 +210,30 @@
                 <div class="form-group">
                     <label>Quyền xem <span class="required">*</span></label>
                     <select class="form-control" id="docTarget">
-                        <option value="Tất cả nhóm hướng dẫn">Đang tải danh sách nhóm...</option>
+                        <option value="Tất cả nhóm hướng dẫn">Tất cả nhóm tôi đang hướng dẫn</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Chọn file tải lên (.pdf, .docx, .zip) <span class="required">*</span></label>
-                    <input type="file" class="form-control" id="docFile" required>
+                    <label>File đính kèm <span class="required">*</span></label>
+                    <div class="file-dropzone" id="fileDropzone">
+                        <i class="fa-solid fa-cloud-arrow-up file-dropzone-icon"></i>
+                        <span class="file-dropzone-text" id="fileDropzoneText">Kéo thả file vào đây hoặc bấm để chọn</span>
+                        <span class="file-dropzone-hint">Hỗ trợ định dạng .pdf, .docx, .xlsx, .zip, .rar (Tối đa 25MB)</span>
+                        <input type="file" id="docFile" required accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.ppt,.pptx">
+                    </div>
                 </div>
                 <div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel btn-close-modal">Hủy</button>
-                    <button type="submit" class="btn-submit">Tải lên & Chia sẻ</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên & Chia sẻ
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- MODAL XÁC NHẬN ĐĂNG XUẤT -->
     <div id="logoutModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>

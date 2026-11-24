@@ -1,75 +1,231 @@
-/* LƯỚI BỐ CỤC TRANG CÀI ĐẶT */
-.content-body {
-    background: radial-gradient(circle at 100% 0, #e0f2fe 0, transparent 30%), #f4f8fb;
+/* =========================================================
+   GIAO DIỆN CÀI ĐẶT TÀI KHOẢN (GIẢNG VIÊN)
+   Design System: Giáo dục hiện đại, chuyên nghiệp, thoáng đãng
+   ========================================================= */
+
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
+    --primary-border: #bfdbfe;
+    
+    --success: #16a34a;
+    --success-light: #f0fdf4;
+    --success-border: #bbf7d0;
+    
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --warning-border: #fde68a;
+    
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+    --danger-border: #fecaca;
+    
+    --purple: #7c3aed;
+    --purple-light: #f5f3ff;
+    --purple-border: #ddd6fe;
+
+    --bg-page: #f4f7fe;
+    --card-bg: #ffffff;
+    --card-radius: 16px;
+    --card-shadow: 0 4px 20px rgba(30, 64, 175, 0.06);
+    --card-shadow-hover: 0 10px 25px rgba(30, 64, 175, 0.12);
+
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --border-color: #e2e8f0;
 }
 
+/* NỀN TẢNG BODY KHÔNG CO CỤM TRÊN MÀN HÌNH RỘNG */
+.content-body {
+    width: 100% !important;
+    max-width: none !important;
+    flex: 1;
+    padding: 24px 28px !important;
+    background-color: var(--bg-page);
+    box-sizing: border-box;
+    font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 1. HEADER TRANG */
 .page-header-container {
     margin-bottom: 24px;
 }
 
 .page-header-text h1 {
-    color: #16324f;
-    letter-spacing: 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    margin: 0 0 6px 0;
+    line-height: 1.25;
 }
 
 .page-header-text p {
-    color: #6b8195;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
 }
 
+/* 2. LƯỚI BỐ CỤC 2 CỘT (3:2) */
 .settings-grid {
     display: grid;
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: 1.6fr 1.1fr;
     gap: 24px;
     align-items: start;
 }
 
-@media (max-width: 1024px) {
-    .settings-grid {
-        grid-template-columns: 1fr;
-    }
+.settings-column-right {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
+/* 3. CARD CHUNG */
 .settings-card {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 24px 26px;
+    box-shadow: var(--card-shadow);
+    border: none;
     position: relative;
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid #dce8f1;
-    border-radius: 14px;
-    padding: 26px;
-    box-shadow: 0 12px 28px rgba(28, 66, 99, .07);
+    border-top: 3px solid var(--primary);
 }
 
-.settings-card::before {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    content: "";
-    background: linear-gradient(90deg, #2563eb, #14b8a6);
-}
-
-.settings-card:last-child::before {
-    background: linear-gradient(90deg, #ef4444, #f97316);
+.settings-card.card-danger-top {
+    border-top-color: var(--danger);
 }
 
 .settings-card .card-header {
-    border-bottom: 1px solid #e8f0f5;
-    padding-bottom: 17px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 16px;
     margin-bottom: 20px;
 }
 
 .settings-card h2 {
-    font-size: 16.5px;
-    font-weight: 700;
-    color: #16324f;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-main);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin: 0;
+    line-height: 1.3;
 }
 
-/* FORM STYLES */
+.card-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.card-header-icon.blue {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.card-header-icon.red {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* 4. CARD TỔNG QUAN TÀI KHOẢN (CỘT PHẢI) */
+.account-overview-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 20px;
+}
+
+.account-avatar-wrap {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.account-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+}
+
+.account-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 6px 0;
+}
+
+.account-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.account-code-badge {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: ui-monospace, monospace;
+}
+
+.account-role-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--primary-border);
+}
+
+.account-email {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 5. FORM HỒ SƠ GIẢNG VIÊN */
+.form-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 16px 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.form-section-title:first-of-type {
+    margin-top: 0;
+}
+
 .settings-form {
     display: flex;
     flex-direction: column;
@@ -82,207 +238,367 @@
     gap: 16px;
 }
 
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
 .form-group label {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 13px;
-    font-weight: 600;
-    color: #36526b;
+    font-weight: 500;
+    color: #475569;
     margin-bottom: 6px;
 }
 
-.required { color: #ef4444; }
+.required {
+    color: var(--danger);
+}
+
+.readonly-hint {
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-weight: normal;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
 
 .form-control {
     width: 100%;
-    padding: 10px 14px;
-    min-height: 43px;
-    border: 1px solid #c9d9e5;
-    border-radius: 8px;
-    font-size: 13.5px;
-    background: #fbfdff;
-    color: #193b56;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-main);
     box-sizing: border-box;
-    transition: all 0.2s;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+    background-color: #ffffff;
 }
 
 .form-control:focus {
-    border-color: #2563eb;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.form-control:disabled {
-    background: #f1f6fa;
-    color: #71879a;
+.form-control:disabled,
+.form-control.readonly-input {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
     cursor: not-allowed;
 }
 
-.password-input-wrapper {
+textarea.form-control {
+    height: auto;
+    min-height: 110px;
+    padding: 12px 14px;
+    resize: vertical;
+    line-height: 1.5;
+    font-family: inherit;
+}
+
+.textarea-wrap {
     position: relative;
 }
 
+.char-counter {
+    position: absolute;
+    right: 12px;
+    bottom: 8px;
+    font-size: 11.5px;
+    color: #94a3b8;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Khối tiến độ chỉ tiêu nhóm */
+.capacity-progress-wrap {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.capacity-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.capacity-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.capacity-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--success);
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.capacity-progress-bar.warning {
+    background: var(--warning);
+}
+
+.capacity-progress-bar.full {
+    background: var(--danger);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 18px;
+    gap: 12px;
+}
+
+.unsaved-warning {
+    font-size: 13px;
+    color: var(--warning);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.form-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.btn-cancel {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f1f5f9;
+    color: var(--text-main);
+}
+
+.btn-primary {
+    height: 42px;
+    padding: 0 22px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* 6. FORM ĐỔI MẬT KHẨU */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
 .password-input-wrapper .form-control {
-    padding-right: 42px;
+    padding-right: 44px;
 }
 
 .password-toggle {
     position: absolute;
     top: 50%;
-    right: 10px;
-    display: grid;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    place-items: center;
-    border: 0;
-    background: transparent;
-    color: #7890a3;
-    cursor: pointer;
+    right: 12px;
     transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    display: grid;
+    place-items: center;
+    transition: color 0.2s;
 }
 
-.password-toggle:hover,
-.password-toggle:focus-visible {
-    color: #2563eb;
-}
-
-.password-toggle:focus-visible {
-    outline: 2px solid #93c5fd;
-    outline-offset: 2px;
-    border-radius: 5px;
+.password-toggle:hover {
+    color: var(--primary);
 }
 
 .password-strength {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin-top: 8px;
 }
 
-.strength-track {
-    height: 6px;
+.strength-segments {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
     flex: 1;
-    overflow: hidden;
-    background: #e5e7eb;
-    border-radius: 999px;
+    height: 6px;
 }
 
-.strength-bar {
-    width: 0;
+.strength-segment {
     height: 100%;
-    border-radius: inherit;
-    transition: width .2s ease, background-color .2s ease;
+    background: #e2e8f0;
+    border-radius: 999px;
+    transition: background-color 0.2s ease;
 }
 
-.password-strength span {
+.strength-label {
     min-width: 72px;
-    color: #64748b;
-    font-size: 11.5px;
+    font-size: 12.5px;
+    font-weight: 600;
     text-align: right;
+    color: var(--text-muted);
 }
 
 .password-requirements {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 5px 12px;
-    margin: 9px 0 0;
+    gap: 6px 12px;
+    margin: 10px 0 0;
     padding: 0;
-    color: #64748b;
-    font-size: 11.5px;
     list-style: none;
+    font-size: 12.5px;
+    color: var(--text-muted);
 }
 
-.password-requirements li::before {
-    content: "○";
-    display: inline-block;
-    width: 16px;
+.password-requirements li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+}
+
+.password-requirements li i {
+    font-size: 13px;
     color: #94a3b8;
+    transition: color 0.2s;
 }
 
 .password-requirements li.valid {
-    color: #16a34a;
+    color: var(--success);
+    font-weight: 500;
 }
 
-.password-requirements li.valid::before {
-    content: "✓";
-    font-weight: 700;
-    color: #16a34a;
+.password-requirements li.valid i {
+    color: var(--success);
 }
 
-@media (max-width: 640px) {
-    .password-requirements {
+.password-match-status {
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+}
+
+.password-match-status.error {
+    color: var(--danger);
+    display: block;
+}
+
+.password-match-status.match {
+    color: var(--success);
+    display: block;
+}
+
+.btn-update-password {
+    height: 42px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    background: #ffffff;
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-update-password:hover:not(:disabled) {
+    background: var(--danger-light);
+    border-color: var(--danger);
+}
+
+.btn-update-password:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .settings-grid {
         grid-template-columns: 1fr;
+    }
+    .settings-column-right {
+        position: static;
     }
 }
 
-.form-hint {
-    display: block;
-    font-size: 11.5px;
-    color: #7890a3;
-    margin-top: 4px;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 10px;
-    border-top: 1px solid #e8f0f5;
-    padding-top: 16px;
-}
-
-.btn-submit-red {
-    background: #ef4444;
-    color: #ffffff;
-    border: none;
-    padding: 11px 20px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 6px 14px rgba(239, 68, 68, .18);
-    transition: background .2s, box-shadow .2s, transform .2s;
-}
-
-.btn-submit-red:hover {
-    background: #dc2626;
-    box-shadow: 0 8px 18px rgba(239, 68, 68, .25);
-    transform: translateY(-1px);
-}
-
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 11px 20px;
-    border: 0;
-    border-radius: 8px;
-    background: #2563eb;
-    color: #fff;
-    font-size: 13.5px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 6px 14px rgba(37, 99, 235, .18);
-    transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-
-.btn-primary:hover {
-    background: #1d4ed8;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, .25);
-    transform: translateY(-1px);
-}
-
-.btn-primary:active { transform: translateY(0); }
-.btn-primary:disabled { opacity: .7; cursor: wait; transform: none; }
-
-.text-blue { color: #2563eb; }
-.text-red { color: #ef4444; }
-
-@media (max-width: 640px) {
-    .settings-card { padding: 21px 18px; }
-    .form-row { grid-template-columns: 1fr; gap: 0; }
-    .top-navbar { padding: 0 14px; }
-    .navbar-right { gap: 9px; }
-    .user-name { display: none; }
+@media (max-width: 768px) {
+    .content-body {
+        padding: 16px !important;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .password-requirements {
+        grid-template-columns: 1fr;
+    }
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .form-actions-right {
+        margin-left: 0;
+        width: 100%;
+    }
+    .btn-cancel,
+    .btn-primary,
+    .btn-update-password {
+        flex: 1;
+        justify-content: center;
+    }
 }

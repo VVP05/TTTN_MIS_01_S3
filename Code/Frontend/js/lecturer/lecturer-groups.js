@@ -8,6 +8,33 @@ let lecturerUnreadByTopic = new Map();
 let notifyRecipients = [];
 let notifyMode = null; // 'GROUP' or 'BROADCAST'
 
+const CHAT_AVATAR_PALETTE = [
+    { background: "#EAF1FF", color: "#48638E" },
+    { background: "#EAF5EE", color: "#4E7259" },
+    { background: "#FBF2E5", color: "#8A6A3F" },
+    { background: "#F1ECF8", color: "#6C5A8A" },
+    { background: "#F8ECEF", color: "#875C69" },
+    { background: "#E8F3F3", color: "#4C7070" },
+    { background: "#EEF1F4", color: "#536474" },
+    { background: "#E8F2F6", color: "#4A6978" }
+];
+
+function getChatAvatarColors(identifier) {
+    const key = String(identifier || "").trim().toUpperCase();
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return CHAT_AVATAR_PALETTE[Math.abs(hash) % CHAT_AVATAR_PALETTE.length];
+}
+
+function getNameInitials(name, fallback) {
+    const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+    return words.length
+        ? words.slice(-2).map(word => word.charAt(0).toLocaleUpperCase("vi-VN")).join("")
+        : fallback;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA QUYỀN TRUY CẬP (LECTURER)
     const auth = JSON.parse(sessionStorage.getItem("activeAuth") || "null");
@@ -32,18 +59,47 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. EVENT TÌM KIẾM & LỌC TRẠNG THÁI
     const searchInput = document.getElementById("searchGroupInput");
     const statusFilter = document.getElementById("statusFilter");
+    const btnClearFilters = document.getElementById("btnClearGroupFilters");
 
     if (searchInput) {
-        searchInput.addEventListener("input", filterAndRenderGroups);
+        searchInput.addEventListener("input", () => {
+            toggleClearFilterBtn();
+            filterAndRenderGroups();
+        });
     }
     if (statusFilter) {
-        statusFilter.addEventListener("change", filterAndRenderGroups);
+        statusFilter.addEventListener("change", () => {
+            toggleClearFilterBtn();
+            filterAndRenderGroups();
+        });
     }
 
-    // 4. SỰ KIỆN NÚT XUẤT EXCEL
-    const exportExcelBtn = document.getElementById("exportExcelBtn");
-    if (exportExcelBtn) {
-        exportExcelBtn.addEventListener("click", exportGroupsToExcel);
+    if (btnClearFilters) {
+        btnClearFilters.addEventListener("click", () => {
+            if (searchInput) searchInput.value = "";
+            if (statusFilter) statusFilter.value = "ALL";
+            toggleClearFilterBtn();
+            filterAndRenderGroups();
+        });
+    }
+
+    // Click vào thẻ thống kê để lọc nhanh
+    document.querySelectorAll(".stat-box[data-filter]").forEach(statBox => {
+        statBox.addEventListener("click", () => {
+            const filterValue = statBox.getAttribute("data-filter");
+            if (statusFilter && filterValue) {
+                statusFilter.value = filterValue;
+                toggleClearFilterBtn();
+                filterAndRenderGroups();
+            }
+        });
+    });
+
+    function toggleClearFilterBtn() {
+        if (!btnClearFilters) return;
+        const hasKeyword = Boolean(searchInput?.value.trim());
+        const hasStatus = statusFilter?.value !== "ALL";
+        btnClearFilters.style.display = (hasKeyword || hasStatus) ? "inline-flex" : "none";
     }
 
     // 5. QUẢN LÝ MODAL THÔNG BÁO CHUNG / NHẮC NHỞ
@@ -156,7 +212,15 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadLecturedGroups(lecturerCode) {
     const container = document.getElementById("groupsGridContainer");
     if (container) {
-        container.innerHTML = `<p class="empty-msg">Đang tải danh sách nhóm hướng dẫn...</p>`;
+        container.innerHTML = `
+            <div class="empty-msg">
+                <div class="empty-state-card">
+                    <div class="empty-state-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                    <h3 class="empty-state-title">Đang tải danh sách nhóm hướng dẫn...</h3>
+                    <p class="empty-state-desc">Vui lòng chờ giây lát trong khi hệ thống đồng bộ dữ liệu.</p>
+                </div>
+            </div>
+        `;
     }
 
     try {
@@ -166,13 +230,12 @@ async function loadLecturedGroups(lecturerCode) {
         });
         const result = await response.json();
 
-        // Debug: Kiểm tra dữ liệu thô trả về từ máy chủ trong F12 -> Console
         console.log("=== [DEBUG] DỮ LIỆU THÔ TỪ BACKEND ===", result);
 
         if (response.ok && result.success) {
             let rawData = [];
 
-            // 1. Nhận diện linh hoạt cấu trúc trả về (Mảng trực tiếp hay nằm trong thuộc tính approved)
+            // Nhận diện linh hoạt cấu trúc trả về
             if (result.data && Array.isArray(result.data.approved)) {
                 rawData = result.data.approved;
             } else if (Array.isArray(result.data)) {
@@ -181,7 +244,7 @@ async function loadLecturedGroups(lecturerCode) {
                 rawData = result;
             }
 
-            // 2. Lọc chính xác các mục ĐÃ DUYỆT (Hỗ trợ nhiều kiểu ghi trạng thái từ MongoDB)
+            // Lọc các mục đã duyệt
             allGroupsData = rawData.filter(item => {
                 const status = (item.status || item.topic_status || "").toString().toUpperCase();
                 const isApprovedBool = item.is_approved === true || item.approved === true;
@@ -195,19 +258,35 @@ async function loadLecturedGroups(lecturerCode) {
         } else {
             console.error("Lỗi từ máy chủ:", result.message);
             if (container) {
-                container.innerHTML = `<p class="empty-msg">Không thể tải dữ liệu: ${result.message || "Lỗi máy chủ"}</p>`;
+                container.innerHTML = `
+                    <div class="empty-msg">
+                        <div class="empty-state-card">
+                            <div class="empty-state-icon" style="color: #ef4444; background: #fef2f2;"><i class="fa-solid fa-circle-exclamation"></i></div>
+                            <h3 class="empty-state-title">Không thể tải dữ liệu</h3>
+                            <p class="empty-state-desc">${result.message || "Lỗi kết nối máy chủ"}</p>
+                        </div>
+                    </div>
+                `;
             }
         }
     } catch (error) {
         console.error("Lỗi kết nối API:", error);
         if (container) {
-            container.innerHTML = `<p class="empty-msg">Lỗi kết nối máy chủ. Vui lòng thử lại sau.</p>`;
+            container.innerHTML = `
+                <div class="empty-msg">
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon" style="color: #ef4444; background: #fef2f2;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <h3 class="empty-state-title">Lỗi kết nối máy chủ</h3>
+                        <p class="empty-state-desc">Không thể kết nối đến hệ thống backend. Vui lòng kiểm tra lại mạng hoặc thử lại sau.</p>
+                    </div>
+                </div>
+            `;
         }
     }
 }
 
 /**
- * Cập nhật 4 ô thống kê tổng quan (ĐÃ CẬP NHẬT: Đếm thêm thành viên 3)
+ * Cache thông tin sinh viên hiển thị
  */
 async function getUserDisplayByCode(userCode) {
     if (!userCode) {
@@ -237,13 +316,13 @@ async function getUserDisplayByCode(userCode) {
         });
         const data = await response.json();
         const result = data && data.full_name
-            ? { full_name: data.full_name, user_code: data.user_code || userCode }
-            : { full_name: 'Sinh viên ' + userCode, user_code: userCode };
+            ? { full_name: data.full_name, user_code: data.user_code || userCode, email: data.email || '', phone: data.phone || '' }
+            : { full_name: 'Sinh viên ' + userCode, user_code: userCode, email: '', phone: '' };
 
         sessionStorage.setItem(cacheKey, JSON.stringify(result));
         return result;
     } catch (error) {
-        const fallback = { full_name: 'Sinh viên ' + userCode, user_code: userCode };
+        const fallback = { full_name: 'Sinh viên ' + userCode, user_code: userCode, email: '', phone: '' };
         sessionStorage.setItem(cacheKey, JSON.stringify(fallback));
         return fallback;
     }
@@ -267,16 +346,18 @@ async function getGroupMemberInfo(group) {
     };
 }
 
+/**
+ * Cập nhật 4 thẻ thống kê tổng quan
+ */
 function updateOverviewStats(groups) {
     let totalStudents = 0;
     let onTrackCount = 0;
     let warningCount = 0;
 
     groups.forEach(g => {
-        // Nếu có mã trưởng nhóm thì tính 1 sinh viên, ngược lại tính mặc định 1 cho đề tài
         totalStudents += (g.leader_code || g.student_code) ? 1 : 1;
         if (g.member2_code || g.member2Code) totalStudents += 1;
-        if (g.member3_code || g.member3Code) totalStudents += 1; // <--- Thêm đếm thành viên 3
+        if (g.member3_code || g.member3Code) totalStudents += 1;
 
         const progressState = getGroupProgressState(g);
         if (progressState === "ON_TRACK") onTrackCount++;
@@ -288,10 +369,45 @@ function updateOverviewStats(groups) {
     const onTrackEl = document.getElementById("stat-on-track");
     const warningEl = document.getElementById("stat-warning");
 
-    if (totalGroupsEl) totalGroupsEl.textContent = groups.length;
-    if (totalStudentsEl) totalStudentsEl.textContent = totalStudents;
-    if (onTrackEl) onTrackEl.textContent = onTrackCount;
-    if (warningEl) warningEl.textContent = warningCount;
+    if (totalGroupsEl) animateCount(totalGroupsEl, groups.length);
+    if (totalStudentsEl) animateCount(totalStudentsEl, totalStudents);
+    if (onTrackEl) animateCount(onTrackEl, onTrackCount);
+    if (warningEl) {
+        animateCount(warningEl, warningCount);
+        const warningCard = warningEl.closest(".stat-box");
+        if (warningCard) {
+            if (warningCount > 0) {
+                warningCard.classList.add("has-warning");
+            } else {
+                warningCard.classList.remove("has-warning");
+            }
+        }
+    }
+}
+
+function animateCount(element, target) {
+    const start = parseInt(element.textContent, 10) || 0;
+    if (start === target) {
+        element.textContent = target;
+        return;
+    }
+    const duration = 400;
+    const stepTime = 30;
+    const steps = Math.ceil(duration / stepTime);
+    const increment = (target - start) / steps;
+    let current = start;
+    let stepCount = 0;
+
+    const timer = setInterval(() => {
+        stepCount++;
+        current += increment;
+        if (stepCount >= steps) {
+            clearInterval(timer);
+            element.textContent = target;
+        } else {
+            element.textContent = Math.round(current);
+        }
+    }, stepTime);
 }
 
 function getGroupProgressState(group) {
@@ -305,7 +421,7 @@ function getGroupProgressState(group) {
 }
 
 /**
- * Lọc từ khóa + tình trạng tiến độ và vẽ lại giao diện (ĐÃ CẬP NHẬT: Render thành viên 3)
+ * Lọc từ khóa + tình trạng tiến độ và vẽ lại giao diện
  */
 function filterAndRenderGroups() {
     const keyword = (document.getElementById("searchGroupInput")?.value || "").toLowerCase().trim();
@@ -314,17 +430,15 @@ function filterAndRenderGroups() {
     if (!container) return;
 
     const filtered = allGroupsData.filter(group => {
-        // Hỗ trợ đọc an toàn cả snake_case lẫn camelCase
         const title = (group.topic?.title || group.title || "").toLowerCase();
         const groupCode = (group.group_code || group.topic_code || group.code || "").toLowerCase();
         const leader = (group.leader_code || group.leaderCode || group.student_code || "").toLowerCase();
         const member2 = (group.member2_code || group.member2Code || "").toLowerCase();
-        const member3 = (group.member3_code || group.member3Code || "").toLowerCase(); // <--- Đọc mã TV3
+        const member3 = (group.member3_code || group.member3Code || "").toLowerCase();
 
-        const matchesKeyword = title.includes(keyword) || groupCode.includes(keyword) || 
+        const matchesKeyword = !keyword || title.includes(keyword) || groupCode.includes(keyword) || 
                              leader.includes(keyword) || member2.includes(keyword) || member3.includes(keyword);
 
-        // Đọc % tiến độ chuẩn xác
         const groupStatus = getGroupProgressState(group);
         const matchesStatus = (status === "ALL") || (groupStatus === status);
 
@@ -334,94 +448,119 @@ function filterAndRenderGroups() {
     container.innerHTML = "";
 
     if (filtered.length === 0) {
-        container.innerHTML = `<p class="empty-msg">Không tìm thấy nhóm sinh viên nào khớp với bộ lọc.</p>`;
+        container.innerHTML = `
+            <div class="empty-msg">
+                <div class="empty-state-card">
+                    <div class="empty-state-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <h3 class="empty-state-title">Không tìm thấy nhóm sinh viên nào</h3>
+                    <p class="empty-state-desc">Không có kết quả nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại. Vui lòng thử lại với tiêu chí khác.</p>
+                </div>
+            </div>
+        `;
         return;
     }
 
     filtered.forEach(async (group, index) => {
         const { leaderInfo, member2Info, member3Info } = await getGroupMemberInfo(group);
 
-        // 1. Lấy phần trăm tiến độ từ Backend trả về
         const progress = Number(group.progress_percentage || group.milestone_progress || group.progress) || 0;
         
-        // 2. Xác định trạng thái tiến độ
         const progressState = getGroupProgressState(group);
         const isWarning = progressState === "WARNING";
         const isOnTrack = progressState === "ON_TRACK";
+        const isUnconfigured = progressState === "UNCONFIGURED";
+
         const statusClass = isWarning ? "tag-warning" : isOnTrack ? "tag-success" : "tag-neutral";
         const statusText = isWarning
             ? '<i class="fa-solid fa-triangle-exclamation"></i> Chậm tiến độ'
             : isOnTrack
-                ? '<i class="fa-solid fa-check-circle"></i> Đúng tiến độ'
-                : progressState === "UNCONFIGURED"
+                ? '<i class="fa-solid fa-circle-check"></i> Đúng tiến độ'
+                : isUnconfigured
                     ? '<i class="fa-solid fa-circle-info"></i> Chưa cấu hình mốc'
-                    : '<i class="fa-solid fa-circle-info"></i> Chưa xác định tiến độ';
+                    : '<i class="fa-solid fa-circle-info"></i> Đang khởi tạo';
         const barColor = isWarning ? "bg-orange" : isOnTrack ? "bg-blue" : "bg-neutral";
         const percentColor = isWarning ? "text-red" : "";
 
-        // Lấy thông tin đề tài
+        // Thông tin đề tài
         const topicTitle = group.topic?.title || group.title || "Đề tài chưa cập nhật tên";
         const topicCategory = group.topic?.category || group.category || "Web / Ứng dụng";
-        const displayGroupCode = group.group_code || group.topic_code || 'N0' + (index + 1);
+        const displayGroupCode = group.group_code || group.topic_code || ('N0' + (index + 1));
         const chatTopicId = group.topic?._id || group.topic_id?._id || group.topic_id || group._id;
 
-        // Thông tin Trưởng nhóm (Hoặc sinh viên thực hiện đề tài)
+        // Trưởng nhóm
         const leaderCode = group.leader_code || group.leaderCode || group.student_code || "Chưa ĐK";
+        const leaderInitial = getNameInitials(leaderInfo.full_name || leaderCode, "T");
 
         let membersHtml = `
             <div class="member-item leader">
-                <span class="member-role" title="Trưởng nhóm"><i class="fa-solid fa-crown"></i></span>
+                <div class="member-avatar avatar-leader" title="Trưởng nhóm">${leaderInitial}</div>
                 <div class="member-info">
-                    <p class="member-name">${leaderInfo.full_name} (${leaderCode})</p>
-                    <small>
-                        ${leaderInfo.phone ? `<a href="tel:${leaderInfo.phone}">${leaderInfo.phone}</a> • ` : ''}
-                        ${leaderInfo.email ? `<a href="mailto:${leaderInfo.email}">${leaderInfo.email}</a>` : 'Chưa có email'}
-                    </small>
+                    <div class="member-name-row">
+                        <span class="member-name">${leaderInfo.full_name}</span>
+                        <small style="color: #64748b;">(${leaderCode})</small>
+                        <i class="fa-solid fa-crown crown-badge" title="Trưởng nhóm"></i>
+                    </div>
+                    <div class="member-contact">
+                        ${leaderInfo.phone ? `<a href="tel:${leaderInfo.phone}"><i class="fa-solid fa-phone"></i> ${leaderInfo.phone}</a>` : ''}
+                        ${leaderInfo.email ? `<a href="mailto:${leaderInfo.email}"><i class="fa-regular fa-envelope"></i> ${leaderInfo.email}</a>` : ''}
+                        ${!leaderInfo.phone && !leaderInfo.email ? '<span style="color:#94a3b8; font-size:11.5px;">Chưa cập nhật liên hệ</span>' : ''}
+                    </div>
                 </div>
             </div>
         `;
 
-        // Thông tin Thành viên 2 (Nếu có)
+        // Thành viên 2
         const member2Code = group.member2_code || group.member2Code;
         if (member2Code && member2Info) {
+            const m2Initial = getNameInitials(member2Info.full_name || member2Code, "S");
             membersHtml += `
                 <div class="member-item">
-                    <span class="member-role"><i class="fa-solid fa-user"></i></span>
+                    <div class="member-avatar avatar-member-1">${m2Initial}</div>
                     <div class="member-info">
-                        <p class="member-name">${member2Info.full_name} (${member2Code})</p>
-                        <small>
-                            ${member2Info.phone ? `<a href="tel:${member2Info.phone}">${member2Info.phone}</a> • ` : ''}
-                            ${member2Info.email ? `<a href="mailto:${member2Info.email}">${member2Info.email}</a>` : 'Chưa có email'}
-                        </small>
+                        <div class="member-name-row">
+                            <span class="member-name">${member2Info.full_name}</span>
+                            <small style="color: #64748b;">(${member2Code})</small>
+                        </div>
+                        <div class="member-contact">
+                            ${member2Info.phone ? `<a href="tel:${member2Info.phone}"><i class="fa-solid fa-phone"></i> ${member2Info.phone}</a>` : ''}
+                            ${member2Info.email ? `<a href="mailto:${member2Info.email}"><i class="fa-regular fa-envelope"></i> ${member2Info.email}</a>` : ''}
+                            ${!member2Info.phone && !member2Info.email ? '<span style="color:#94a3b8; font-size:11.5px;">Chưa cập nhật liên hệ</span>' : ''}
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-        // Thông tin Thành viên 3 (Nếu có)
+        // Thành viên 3
         const member3Code = group.member3_code || group.member3Code;
         if (member3Code && member3Info) {
+            const m3Initial = getNameInitials(member3Info.full_name || member3Code, "S");
             membersHtml += `
                 <div class="member-item">
-                    <span class="member-role"><i class="fa-solid fa-user"></i></span>
+                    <div class="member-avatar avatar-member-2">${m3Initial}</div>
                     <div class="member-info">
-                        <p class="member-name">${member3Info.full_name} (${member3Code})</p>
-                        <small>
-                            ${member3Info.phone ? `<a href="tel:${member3Info.phone}">${member3Info.phone}</a> • ` : ''}
-                            ${member3Info.email ? `<a href="mailto:${member3Info.email}">${member3Info.email}</a>` : 'Chưa có email'}
-                        </small>
+                        <div class="member-name-row">
+                            <span class="member-name">${member3Info.full_name}</span>
+                            <small style="color: #64748b;">(${member3Code})</small>
+                        </div>
+                        <div class="member-contact">
+                            ${member3Info.phone ? `<a href="tel:${member3Info.phone}"><i class="fa-solid fa-phone"></i> ${member3Info.phone}</a>` : ''}
+                            ${member3Info.email ? `<a href="mailto:${member3Info.email}"><i class="fa-regular fa-envelope"></i> ${member3Info.email}</a>` : ''}
+                            ${!member3Info.phone && !member3Info.email ? '<span style="color:#94a3b8; font-size:11.5px;">Chưa cập nhật liên hệ</span>' : ''}
+                        </div>
                     </div>
                 </div>
             `;
         }
 
         const card = document.createElement("div");
-        card.className = "group-card";
+        card.className = `group-card ${isWarning ? "has-late" : ""}`;
         card.setAttribute("data-status", isWarning ? "WARNING" : "ON_TRACK");
 
         card.innerHTML = `
             <div class="group-card-header">
                 <div class="group-badge-code">
+                    <i class="fa-solid fa-users"></i>
                     <span>Nhóm</span>
                     <strong>${displayGroupCode}</strong>
                 </div>
@@ -429,8 +568,8 @@ function filterAndRenderGroups() {
             </div>
 
             <div class="group-topic-title">
-                <h3>${topicTitle}</h3>
-                <span class="category-text">${topicCategory}</span>
+                <h3 title="${escapeLecturerChatText(topicTitle)}">${topicTitle}</h3>
+                <span class="category-chip"><i class="fa-solid fa-layer-group"></i> ${topicCategory}</span>
             </div>
 
             <div class="group-members-list">
@@ -439,7 +578,7 @@ function filterAndRenderGroups() {
 
             <div class="group-progress-section">
                 <div class="progress-labels">
-                    <span>Milestone hiện tại</span>
+                    <span>Milestone hoàn thành</span>
                     <strong class="${percentColor}">${progress}%</strong>
                 </div>
                 <div class="progress-bar-container">
@@ -546,10 +685,15 @@ async function loadLecturerGroupChat() {
                 : "";
             previousDay = dayKey;
             const senderName = mine ? "Bạn" : (message.sender_name || message.sender_code);
+            const avatarName = message.sender_name || message.sender_code;
+            const avatarNameParts = String(avatarName || "").trim().split(/\s+/).filter(Boolean);
+            const initialLetter = (avatarNameParts.length ? avatarNameParts[avatarNameParts.length - 1].charAt(0) : "U").toLocaleUpperCase("vi-VN");
+            const avatarColors = getChatAvatarColors(message.sender_code || avatarName);
+            const avatarStyle = mine ? "" : `background-color: ${avatarColors.background}; color: ${avatarColors.color};`;
             return `
                 ${dayDivider}
                 <div class="group-chat-message ${mine ? "mine" : ""}">
-                    <span class="group-chat-avatar"><i class="fa-solid fa-user"></i></span>
+                    <span class="group-chat-avatar" style="${avatarStyle}">${mine ? '<i class="fa-solid fa-user"></i>' : escapeLecturerChatText(initialLetter)}</span>
                     <div class="group-chat-message-body">
                         <div class="group-chat-meta"><span>${escapeLecturerChatText(senderName)}</span><span>${time}</span></div>
                         <div class="group-chat-bubble">${escapeLecturerChatText(message.content)}</div>
@@ -636,13 +780,3 @@ if (lecturerChatForm) {
     });
 }
 
-/**
- * Tính năng xuất danh sách sang dạng dữ liệu giả lập (Export Excel)
- */
-function exportGroupsToExcel() {
-    if (allGroupsData.length === 0) {
-        showAppNotification("Không có dữ liệu nhóm sinh viên để xuất!");
-        return;
-    }
-    showAppNotification(`Đang tiến hành tạo file Excel cho ${allGroupsData.length} nhóm hướng dẫn...`);
-}

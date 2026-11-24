@@ -68,13 +68,27 @@ exports.getScheduleData = async (req, res) => {
         const memberCodes = [topic.leader_code, topic.member2_code, topic.member3_code]
             .filter(Boolean);
 
+        const memberUsers = memberCodes.length > 0 ? await User.find({
+            $or: memberCodes.map(code => ({ user_code: userCodePattern(code) }))
+        }).select('user_code full_name') : [];
+
+        const memberNameMap = new Map(memberUsers.map(u => [String(u.user_code).toUpperCase(), u.full_name]));
+
         // Lấy danh sách việc chung; hỗ trợ cả việc cũ chưa có topic_id.
-        const todos = await Todo.find({
+        const rawTodos = await Todo.find({
             $or: [
                 { topic_id: topic._id },
                 { topic_id: null, student_code: { $in: memberCodes } }
             ]
         }).sort({ createdAt: -1 });
+
+        const todos = rawTodos.map(todo => {
+            const obj = todo.toObject();
+            if (obj.assigned_to) {
+                obj.assigned_to_name = memberNameMap.get(String(obj.assigned_to).toUpperCase()) || obj.assigned_to;
+            }
+            return obj;
+        });
 
         // Tính số buổi họp sắp tới (chưa diễn ra và chưa bị hủy)
         const now = new Date();
@@ -121,7 +135,11 @@ exports.getScheduleData = async (req, res) => {
                 lecturer_code: topic.lecturer_code,
                 leader_code: topic.leader_code,
                 member2_code: topic.member2_code,
-                member3_code: topic.member3_code
+                member3_code: topic.member3_code,
+                members: memberUsers.map(u => ({
+                    user_code: u.user_code,
+                    full_name: u.full_name
+                }))
             },
             stats: {
                 upcoming_meetings: upcomingMeetings,
@@ -140,10 +158,13 @@ exports.getScheduleData = async (req, res) => {
 // 2. Sinh viên đăng ký lịch hẹn mới với GVHD (Mặc định PENDING)
 exports.createMeeting = async (req, res) => {
     try {
-        const { topic_id, title, meeting_date, time_start, time_end, type, location, availability_id } = req.body;
+        const { topic_id, title, location, availability_id } = req.body;
         const studentCode = String(req.user?.user_code || '').trim();
         if (String(req.user?.role || '').toUpperCase() !== 'STUDENT' || !studentCode) {
             return res.status(403).json({ success: false, message: 'Chỉ sinh viên mới được đăng ký lịch hẹn.' });
+        }
+        if (!availability_id) {
+            return res.status(400).json({ success: false, message: 'Vui lòng chọn khung giờ rảnh do giảng viên công khai.' });
         }
         const escapedStudentCode = studentCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const topic = await Topic.findOne({
@@ -158,21 +179,18 @@ exports.createMeeting = async (req, res) => {
         if (!topic) return res.status(403).json({ success: false, message: 'Bạn không có quyền đặt lịch cho đề tài này.' });
         const lecturer_code = topic.lecturer_code;
 
-        let slot = null;
-        if (availability_id) {
-            slot = await AvailabilitySlot.findOneAndUpdate(
-                { _id: availability_id, lecturer_code, status: "OPEN", $expr: { $lt: [{ $ifNull: ["$booked_count", 0] }, { $ifNull: ["$max_bookings", 3] }] } },
-                [{ $set: { booked_count: { $add: [{ $ifNull: ["$booked_count", 0] }, 1] }, status: { $cond: [{ $gte: [{ $add: [{ $ifNull: ["$booked_count", 0] }, 1] }, { $ifNull: ["$max_bookings", 3] }] }, "FULL", "OPEN"] } } }],
-                { new: true }
-            );
-            if (!slot) return res.status(409).json({ message: "Khung giờ này đã đủ số nhóm hoặc không còn mở!" });
-        }
+        const slot = await AvailabilitySlot.findOneAndUpdate(
+            { _id: availability_id, lecturer_code, status: "OPEN", $expr: { $lt: [{ $ifNull: ["$booked_count", 0] }, { $ifNull: ["$max_bookings", 3] }] } },
+            [{ $set: { booked_count: { $add: [{ $ifNull: ["$booked_count", 0] }, 1] }, status: { $cond: [{ $gte: [{ $add: [{ $ifNull: ["$booked_count", 0] }, 1] }, { $ifNull: ["$max_bookings", 3] }] }, "FULL", "OPEN"] } } }],
+            { new: true }
+        );
+        if (!slot) return res.status(409).json({ message: "Khung giờ này đã đủ số nhóm hoặc không còn mở!" });
 
-        const meetingDate = slot ? slot.available_date : meeting_date;
-        const meetingStart = slot ? slot.time_start : time_start;
-        const meetingEnd = slot ? slot.time_end : time_end;
-        const meetingType = slot ? slot.type : type;
-        const meetingLocation = slot?.location || location;
+        const meetingDate = slot.available_date;
+        const meetingStart = slot.time_start;
+        const meetingEnd = slot.time_end;
+        const meetingType = slot.type;
+        const meetingLocation = slot.location || location;
 
         const newMeeting = new Meeting({
             topic_id,
@@ -548,7 +566,21 @@ exports.getLecturerMeetings = async (req, res) => {
         .populate("topic_id", "title group_code") // Lấy thêm Tên đề tài & Mã nhóm từ bảng Topic
         .sort({ meeting_date: 1, time_start: 1 });
 
-        res.status(200).json({ success: true, data: meetings });
+        const studentCodes = [...new Set(meetings.map(m => m.student_code).filter(Boolean))];
+        const studentUsers = studentCodes.length > 0 ? await User.find({
+            $or: studentCodes.map(code => ({ user_code: userCodePattern(code) }))
+        }).select('user_code full_name') : [];
+
+        const studentNameMap = new Map(studentUsers.map(u => [String(u.user_code).toUpperCase(), u.full_name]));
+
+        const enrichedMeetings = meetings.map(m => {
+            const obj = m.toObject();
+            const sCode = String(obj.student_code || '').trim().toUpperCase();
+            obj.student_name = studentNameMap.get(sCode) || obj.student_code || '';
+            return obj;
+        });
+
+        res.status(200).json({ success: true, data: enrichedMeetings });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi lấy danh sách lịch hẹn!", error: error.message });
     }

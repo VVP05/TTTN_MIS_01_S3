@@ -3,72 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thông báo giảng viên - QUẢN LÝ TTTN</title>
-    <link rel="stylesheet" href="../../css/common/notifications.css">
-    <link rel="stylesheet" href="../../css/lecturer/lecturer-pending-alert.css">
+    <title>Thông Báo | Cổng Giảng Viên</title>
+    
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
+    <link rel="stylesheet" href="../../css/lecturer/lecturer-notifications.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="../../css/common/chat-unread.css">
     <link rel="stylesheet" href="../../css/common/lecturer-logout-modal.css">
+    <link rel="stylesheet" href="../../css/lecturer/lecturer-pending-alert.css">
     <link rel="stylesheet" href="../../css/responsive.css">
 </head>
 <body>
+
     <div class="app-layout">
+        <!-- 1. SIDEBAR BÊN TRÁI -->
         <aside class="sidebar">
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                        <span>CỔNG GIẢNG VIÊN</span>
+                    </div>
                 </div>
+
                 <nav class="sidebar-menu">
                     <ul>
-                        <li class="menu-item"><a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> Dashboard</a></li>
-                        <li class="menu-item"><a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a></li>
-                        <li class="menu-item"><a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a></li>
-                        <li class="menu-item"><a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a></li>
-                        <li class="menu-item"><a href="lecturer-milestones.html"><i class="fa-solid fa-calendar-check"></i> Milestone & Hạn nộp</a></li>
-                        <li class="menu-item"><a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu & Biểu mẫu</a></li>
-                        <li class="menu-item active"><a href="lecturer-notifications.html"><i class="fa-solid fa-bell"></i> Thông báo<span id="sidebarNotificationBadge" class="sidebar-notification-badge" style="display: none;">0</span></a></li>
-                        <li class="menu-item"><a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a></li>
+                        <li class="menu-item">
+                            <a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn<span id="chatSidebarBadge" class="chat-unread-badge chat-sidebar-unread-badge" hidden></span></a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-milestones.html"><i class="fa-solid fa-calendar-check"></i> Milestone & Hạn nộp</a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu & Biểu mẫu</a>
+                        </li>
+                        <li class="menu-item active">
+                            <a href="lecturer-notifications.html"><i class="fa-solid fa-bell"></i> Thông báo<span id="sidebarNotificationBadge" class="sidebar-notification-badge" style="display: none;">0</span></a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a>
+                        </li>
                     </ul>
                 </nav>
             </div>
+
             <div class="sidebar-bottom">
-                <div class="sidebar-footer"><p>© 2026 Khoa CNTT<br>All rights reserved.</p></div>
+                <div class="sidebar-footer">
+                    <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
+                </div>
             </div>
         </aside>
 
+        <!-- 2. MAIN CONTENT AREA -->
         <div class="main-wrapper">
+            <!-- TOP NAVBAR -->
             <header class="top-navbar">
-                <div class="navbar-left"><button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button></div>
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle" id="btnMenuToggle" aria-label="Mở menu"><i class="fa-solid fa-bars"></i></button>
+                </div>
+
                 <div class="navbar-right">
-                    <div class="user-profile"><span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span><span id="userName" class="user-name">Giảng viên</span><span id="userCode" class="user-badge">GV</span></div>
-                    <button id="logoutBtn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Giảng viên</span>
+                        <span id="userCode" class="user-badge">GV</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout" aria-label="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
                 </div>
             </header>
 
+            <!-- MAIN CONTENT BODY -->
             <main class="content-body">
-                <div class="page-header-row">
-                    <div>
+                <!-- HEADER TRANG -->
+                <div class="notif-page-header">
+                    <div class="header-left">
                         <h1>Thông báo dành cho Giảng viên</h1>
                         <p>Xem các thông báo được gửi tới Giảng viên hoặc toàn bộ hệ thống.</p>
                     </div>
-                    <div><button id="btnMarkAllRead" class="btn-secondary"><i class="fa-solid fa-check-double"></i> Đánh dấu tất cả đã đọc</button></div>
-                </div>
-
-                <div class="filter-tabs margin-top-20">
-                    <button class="tab-btn active" data-filter="ALL">Tất cả <span id="countAll" class="tab-count">0</span></button>
-                    <button class="tab-btn" data-filter="UNREAD">Chưa đọc <span id="countUnread" class="tab-count unread-count">0</span></button>
-                    
-                    <button class="tab-btn" data-filter="FACULTY">Từ Khoa / Hệ thống</button>
-                </div>
-
-                <div class="notifications-wrapper margin-top-16">
-                    <div id="emptyNotif" class="empty-state" style="display: none; text-align: center; padding: 50px 20px; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
-                        <i class="fa-regular fa-bell-slash" style="font-size: 48px; color: #94a3b8; margin-bottom: 16px;"></i>
-                        <h3 style="color: #334155; font-size: 18px; margin-bottom: 8px;">Chưa có thông báo nào</h3>
-                        <p style="color: #64748b; font-size: 14px;">Bạn sẽ nhận được thông báo khi có cập nhật mới từ Khoa hoặc Admin.</p>
+                    <div class="header-right">
+                        <button id="btnMarkAllRead" class="btn-mark-all" disabled title="Không có thông báo chưa đọc">
+                            <i class="fa-solid fa-check-double"></i> Đánh dấu tất cả đã đọc
+                        </button>
                     </div>
-                    <div class="notifications-list" id="notifContainer"></div>
+                </div>
+
+                <!-- THANH ĐIỀU HƯỚNG TABS & TÌM KIẾM -->
+                <div class="notif-toolbar">
+                    <div class="notif-filter-tabs">
+                        <button type="button" class="notif-tab-btn active" data-filter="ALL">
+                            <i class="fa-solid fa-inbox"></i> Tất cả <span id="countAll" class="notif-tab-count">0</span>
+                        </button>
+                        <button type="button" class="notif-tab-btn" data-filter="UNREAD">
+                            <i class="fa-regular fa-envelope"></i> Chưa đọc <span id="countUnread" class="notif-tab-count unread-badge">0</span>
+                        </button>
+                        <button type="button" class="notif-tab-btn" data-filter="FACULTY">
+                            <i class="fa-solid fa-building-columns"></i> Từ Khoa / Hệ thống
+                        </button>
+                    </div>
+
+                    <div class="notif-search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="notifSearchInput" class="notif-search-input" placeholder="Tìm kiếm theo tiêu đề, nội dung...">
+                        <button type="button" id="btnClearSearch" class="notif-clear-search" aria-label="Xóa tìm kiếm"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <!-- KHU VỰC DANH SÁCH THÔNG BÁO -->
+                <div class="notif-main-area">
+                    <!-- Trạng thái trống -->
+                    <div id="emptyNotif" class="notif-empty-state" style="display: none;">
+                        <i class="fa-regular fa-bell-slash empty-icon"></i>
+                        <h3>Bạn chưa có thông báo nào</h3>
+                        <p>Bạn sẽ nhận được thông báo khi có hoạt động mới từ Khoa hoặc sinh viên.</p>
+                    </div>
+
+                    <!-- Danh sách các card thông báo -->
+                    <div id="notifContainer" class="notifications-list" aria-live="polite"></div>
                 </div>
 
                 <footer class="page-footer">© 2026 Khoa CNTT - All rights reserved.</footer>
@@ -76,40 +143,68 @@
         </div>
     </div>
 
-    <div id="notifModal" class="modal-overlay">
-        <div class="modal-box large">
+    <!-- MODAL CHI TIẾT THÔNG BÁO -->
+    <div id="notifModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
             <div class="modal-header">
-                <div><span id="modalSenderTag" class="sender-tag lecturer">Giảng viên hướng dẫn</span><span id="modalTime" class="modal-date">Vừa xong</span></div>
-                <button id="btnCloseNotifModal" class="btn-close">&times;</button>
+                <div class="modal-header-meta">
+                    <span id="modalSenderTag" class="source-badge lecturer">Khoa CNTT</span>
+                    <span id="modalTime" class="modal-date">Vừa xong</span>
+                </div>
+                <button id="btnCloseNotifModal" class="btn-close" aria-label="Đóng popup">&times;</button>
             </div>
             <div class="modal-body">
                 <h3 id="modalTitle" class="notif-detail-title">Tiêu đề thông báo</h3>
-                <div class="sender-info"><i class="fa-solid fa-user-check"></i> <strong>Người gửi:</strong> <span id="modalSender">Người gửi</span></div>
+                <div class="sender-info">
+                    <i class="fa-solid fa-user-check"></i>
+                    <strong>Người gửi:</strong> <span id="modalSender">Người gửi</span>
+                </div>
                 <div class="divider"></div>
                 <div id="modalContent" class="notif-detail-content">Nội dung chi tiết thông báo...</div>
-                <div id="modalAttachmentBox" class="attachment-download-box" style="display: none;"><div class="att-info"><i class="fa-solid fa-file-word file-icon"></i><div><span id="modalFileName" class="att-name">Tai_lieu.docx</span><small>Tài liệu đính kèm chính thức</small></div></div><a href="#" id="modalFileDownload" class="btn-download" target="_blank"><i class="fa-solid fa-download"></i> Tải về</a></div>
+
+                <!-- Khung tệp đính kèm -->
+                <div id="modalAttachmentBox" class="attachment-download-box" style="display: none;">
+                    <div class="att-info">
+                        <i class="fa-solid fa-file-word file-icon"></i>
+                        <div>
+                            <span id="modalFileName" class="att-name">Tai_lieu.docx</span>
+                            <small>Tài liệu đính kèm chính thức</small>
+                        </div>
+                    </div>
+                    <a href="#" id="modalFileDownload" class="btn-download" target="_blank">
+                        <i class="fa-solid fa-download"></i> Tải về
+                    </a>
+                </div>
             </div>
-            <div class="modal-footer"><button id="btnConfirmReadModal" class="btn-primary">Đóng & Đã hiểu</button></div>
+            <div class="modal-footer">
+                <button type="button" id="btnConfirmReadModal" class="btn-primary">Đóng & Đã hiểu</button>
+            </div>
         </div>
     </div>
 
-    <div id="logoutModal" class="modal-overlay">
+    <!-- MODAL XÁC NHẬN ĐĂNG XUẤT -->
+    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-box small">
-            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
-            <h3>Xác nhận đăng xuất</h3>
-            <p>Bạn có chắc chắn muốn thoát khỏi hệ thống giảng viên không?</p>
-            <div class="modal-actions">
-                <button type="button" id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
-                <button type="button" id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
+            <div class="modal-icon" style="font-size: 36px; color: var(--danger, #DC2626); margin-bottom: 12px;">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 8px;">Xác nhận đăng xuất</h3>
+            <p style="font-size: 14px; color: #64748B; margin-bottom: 20px;">Bạn có chắc chắn muốn thoát khỏi hệ thống giảng viên không?</p>
+            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" id="cancelLogoutBtn" class="btn-cancel" style="height: 38px; padding: 0 16px; border-radius: 8px; border: 1px solid #CBD5E1; background: #fff; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
+                <button type="button" id="confirmLogoutBtn" class="btn-confirm" style="height: 38px; padding: 0 16px; border-radius: 8px; border: none; background: var(--danger, #DC2626); color: #fff; cursor: pointer; font-weight: 600;">Đăng xuất</button>
             </div>
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="../../js/config.js"></script>
     <script src="../../js/common/chat-unread-sidebar.js"></script>
-    <script src="../../js/shared/notifications.js"></script>
+    <script src="../../js/common/notif-badge.js"></script>
     <script src="../../js/lecturer/lecturer-pending-alert.js"></script>
+    <script src="../../js/lecturer/lecturer-notifications.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
     <script src="../../js/common/sidebar-toggle.js"></script>
+    <script src="../../js/common/lecturer-logout-dialog.js"></script>
 </body>
 </html>

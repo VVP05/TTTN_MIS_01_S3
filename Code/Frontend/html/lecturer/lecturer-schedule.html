@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiến Độ & Lịch Gặp | Cổng Giảng Viên</title>
     
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-schedule.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="../../css/common/chat-unread.css">
     <link rel="stylesheet" href="../../css/common/lecturer-logout-modal.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-pending-alert.css">
     <link rel="stylesheet" href="../../css/responsive.css">
@@ -22,7 +28,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                        <span>CỔNG GIẢNG VIÊN</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -34,7 +43,7 @@
                             <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn<span id="chatSidebarBadge" class="chat-unread-badge chat-sidebar-unread-badge" hidden></span></a>
                         </li>
                         <li class="menu-item active">
                             <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
@@ -96,46 +105,68 @@
                     </button>
                 </div>
 
-                <!-- MINI STATS BAR -->
+                <!-- 4 THẺ THỐNG KÊ (MINI STATS BAR) -->
                 <div class="schedule-stats-bar">
-                    <div class="stat-box">
-                        <span class="stat-label">Tổng số lịch gặp</span>
-                        <strong class="stat-number" id="totalMeetingsCount">0 <small>buổi</small></strong>
+                    <div class="stat-box stat-blue" data-filter="ALL">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Tổng số lịch gặp</span>
+                            <strong class="stat-number" id="totalMeetingsCount">0 <small>buổi</small></strong>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Lịch hẹn chờ duyệt</span>
-                        <strong class="stat-number text-orange" id="pendingMeetingsCount">0 <small>yêu cầu</small></strong>
+                    <div class="stat-box stat-orange" data-filter="PENDING">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Lịch hẹn chờ duyệt</span>
+                            <strong class="stat-number text-orange" id="pendingMeetingsCount">0 <small>yêu cầu</small></strong>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Đã đồng ý (Approved)</span>
-                        <strong class="stat-number text-green" id="approvedMeetingsCount">0 <small>buổi</small></strong>
+                    <div class="stat-box stat-green" data-filter="APPROVED">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Đã đồng ý (Approved)</span>
+                            <strong class="stat-number text-green" id="approvedMeetingsCount">0 <small>buổi</small></strong>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Đã hoàn thành</span>
-                        <strong class="stat-number text-blue" id="completedMeetingsCount">0 <small>buổi</small></strong>
+                    <div class="stat-box stat-purple" data-filter="COMPLETED">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Đã hoàn thành</span>
+                            <strong class="stat-number text-purple" id="completedMeetingsCount">0 <small>buổi</small></strong>
+                        </div>
                     </div>
                 </div>
 
                 <!-- SECTION 1: BẢNG MA TRẬN TIẾN ĐỘ -->
                 <div class="section-container">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-chart-gantt"></i> Ma Trận Kiểm Soát Tiến Độ Mốc Báo Cáo</h2>
-                        <span class="table-subtitle">Tự động cập nhật trực tiếp theo các mốc sinh viên đã nộp</span>
+                        <div class="section-title-wrap">
+                            <h2><i class="fa-solid fa-chart-gantt"></i> Tiến độ mốc báo cáo</h2>
+                            <p class="table-subtitle">Tự động cập nhật trực tiếp theo các mốc sinh viên đã nộp</p>
+                        </div>
                     </div>
 
                     <div class="table-responsive">
                         <table class="progress-matrix-table">
                             <thead>
                                 <tr id="progressMatrixHeader">
-                                    <th style="min-width: 100px;">Mã Đề Tài</th>
-                                    <th style="min-width: 200px;">Tên Đề Tài</th>
-                                    <th id="matrixStatusHeader" style="text-align: center;">Trạng Thái</th>
-                                    <th id="matrixActionHeader" style="text-align: center;">Thao Tác</th>
+                                    <th style="min-width: 100px;">Mã đề tài</th>
+                                    <th style="min-width: 240px;">Tên đề tài</th>
+                                    <th id="matrixStatusHeader" style="text-align: center;">Trạng thái</th>
+                                    <th id="matrixActionHeader" style="text-align: center;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="progressMatrixBody">
                                 <tr>
-                                    <td colspan="4" style="text-align: center; color: #64748b; padding: 24px;">
+                                    <td colspan="4" style="text-align: center; color: #64748b; padding: 32px;">
                                         <i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu tiến độ...
                                     </td>
                                 </tr>
@@ -147,7 +178,10 @@
                 <!-- SECTION 2: LỊCH GẶP HƯỚNG DẪN -->
                 <div class="section-container margin-top-24">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-calendar-days"></i> Danh Sách Lịch Gặp Hướng Dẫn</h2>
+                        <div class="section-title-wrap">
+                            <h2><i class="fa-solid fa-calendar-days"></i> Danh sách lịch gặp hướng dẫn</h2>
+                            <p class="table-subtitle">Xem chi tiết các buổi họp định kỳ, phê duyệt đề xuất lịch gặp của các nhóm</p>
+                        </div>
                         
                         <div class="view-filter">
                             <button class="filter-chip active" data-filter="ALL">Tất cả</button>
@@ -165,17 +199,26 @@
                     </div>
                 </div>
 
+                <!-- SECTION 3: CÔNG KHAI KHUNG GIỜ RẢNH -->
                 <div class="section-container margin-top-24 availability-section">
                     <div class="availability-hero">
-                        <div class="availability-hero-art"><i class="fa-regular fa-calendar-check"></i><span><i class="fa-regular fa-clock"></i></span></div>
+                        <div class="availability-hero-icon"><i class="fa-solid fa-clock"></i></div>
                         <div class="availability-hero-copy">
                             <h2>Công khai khung giờ rảnh</h2>
-                            <p>Quản lý các khung giờ mà sinh viên có thể đăng ký.</p>
+                            <p>Quản lý các khung giờ mà sinh viên có thể đăng ký hẹn gặp hướng dẫn.</p>
                         </div>
-                        <div class="availability-hero-note"><i class="fa-solid fa-users"></i><span>Sinh viên chỉ có thể đặt vào<br>các khung giờ này</span></div>
+                        <div class="availability-hero-note">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Sinh viên chỉ có thể đặt vào các khung giờ bạn công khai</span>
+                        </div>
                     </div>
-                    <div class="availability-list-heading"><h3><i class="fa-regular fa-calendar-days"></i> Danh sách khung giờ đã công khai</h3><span id="availabilityCount" class="availability-count">0 khung giờ</span></div>
-                    <div id="availabilityList" class="availability-list"><p class="availability-empty-hint">Các khung giờ bạn mở sẽ hiển thị tại đây để sinh viên lựa chọn.</p></div>
+                    <div class="availability-list-heading">
+                        <h3><i class="fa-regular fa-calendar-days"></i> Danh sách khung giờ đã công khai</h3>
+                        <span id="availabilityCount" class="availability-count">0 khung giờ</span>
+                    </div>
+                    <div id="availabilityList" class="availability-list">
+                        <p class="availability-empty-hint">Các khung giờ bạn mở sẽ hiển thị tại đây để sinh viên lựa chọn.</p>
+                    </div>
                 </div>
 
             </main>
@@ -194,16 +237,13 @@
                 <button class="btn-close-modal availability-close" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="availability-modal-body">
-                <div class="availability-illustration" aria-hidden="true">
-                    <div class="illustration-calendar"><i class="fa-regular fa-calendar-check"></i><span class="illustration-clock"><i class="fa-regular fa-clock"></i></span></div>
-                </div>
                 <form id="availabilityForm" class="availability-modal-form">
-                    <div class="availability-field"><span class="availability-field-icon blue"><i class="fa-regular fa-calendar-days"></i></span><div class="form-group"><label>Ngày rảnh <span class="required">*</span></label><input type="date" id="availabilityDate" required></div></div>
-                    <div class="availability-field"><span class="availability-field-icon purple"><i class="fa-regular fa-clock"></i></span><div class="form-group"><label>Giờ bắt đầu <span class="required">*</span></label><input type="time" id="availabilityStart" value="09:00" required></div></div>
-                    <div class="availability-field"><span class="availability-field-icon purple"><i class="fa-regular fa-clock"></i></span><div class="form-group"><label>Giờ kết thúc <span class="required">*</span></label><input type="time" id="availabilityEnd" value="10:00" required></div></div>
-                    <div class="availability-field"><span class="availability-field-icon green"><i class="fa-solid fa-users"></i></span><div class="form-group"><label>Số nhóm tối đa</label><input type="number" id="availabilityCapacity" value="3" min="1" max="20"></div></div>
-                    <div class="availability-field"><span class="availability-field-icon blue"><i class="fa-solid fa-video"></i></span><div class="form-group"><label>Hình thức</label><select id="availabilityType"><option value="ONLINE">Online (Meet)</option><option value="OFFLINE">Offline (Trường)</option></select></div></div>
-                    <div class="availability-field"><span class="availability-field-icon purple"><i class="fa-solid fa-link"></i></span><div class="form-group"><label>Link Meet / Phòng</label><input type="text" id="availabilityLocation" placeholder="Nhập link hoặc số phòng"></div></div>
+                    <div class="availability-field"><div class="form-group"><label>Ngày rảnh <span class="required">*</span></label><input type="date" id="availabilityDate" required></div></div>
+                    <div class="availability-field"><div class="form-group"><label>Số nhóm tối đa</label><input type="number" id="availabilityCapacity" value="3" min="1" max="20"></div></div>
+                    <div class="availability-field"><div class="form-group"><label>Giờ bắt đầu <span class="required">*</span></label><input type="time" id="availabilityStart" value="09:00" required></div></div>
+                    <div class="availability-field"><div class="form-group"><label>Giờ kết thúc <span class="required">*</span></label><input type="time" id="availabilityEnd" value="10:00" required></div></div>
+                    <div class="availability-field"><div class="form-group"><label>Hình thức</label><select id="availabilityType"><option value="ONLINE">Online (Meet)</option><option value="OFFLINE">Offline (Trường)</option></select></div></div>
+                    <div class="availability-field"><div class="form-group"><label>Link Meet / Phòng</label><input type="text" id="availabilityLocation" placeholder="VD: meet.google.com/xyz hoặc P.A102"></div></div>
                 </form>
             </div>
             <div class="availability-modal-footer">
@@ -213,6 +253,7 @@
         </div>
     </div>
 
+    <!-- MODAL XÁC NHẬN NGỪNG KHUNG GIỜ -->
     <div id="closeAvailabilityConfirmModal" class="modal-overlay" style="display: none;" role="presentation">
         <div class="modal-box availability-confirm-box" role="dialog" aria-modal="true" aria-labelledby="closeAvailabilityConfirmTitle">
             <div class="availability-confirm-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
@@ -225,6 +266,7 @@
         </div>
     </div>
 
+    <!-- MODAL XÁC NHẬN ĐĂNG XUẤT -->
     <div id="logoutModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
@@ -237,6 +279,7 @@
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="../../js/config.js"></script>
     <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/notif-badge.js"></script>

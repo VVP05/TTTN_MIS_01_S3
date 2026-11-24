@@ -14,6 +14,7 @@ const {
     updateStudentProfile,
     createLecturer,
     updateLecturer,
+    updateLecturerProfile,
     updateLecturerQuotas,
     deleteLecturer,
     changePassword,
@@ -78,6 +79,7 @@ router.get('/lecturers', authMiddleware, requireRole('ADMIN', 'STUDENT'), getLec
 router.post('/lecturers', authMiddleware, requireRole('ADMIN'), createLecturer);
 router.put('/lecturers/bulk-quota', authMiddleware, requireRole('ADMIN'), updateLecturerQuotas);
 router.put('/lecturers/:user_code', authMiddleware, requireRole('ADMIN'), updateLecturer);
+router.put('/lecturers/:user_code/profile', authMiddleware, requireRole('LECTURER'), requireSelfCode, updateLecturerProfile);
 router.delete('/lecturers/:user_code', authMiddleware, requireRole('ADMIN'), deleteLecturer);
 router.get('/students/export', authMiddleware, requireRole('ADMIN'), userExportController.exportStudents);
 router.get('/students', authMiddleware, requireRole('ADMIN'), getStudents);

@@ -1,0 +1,1152 @@
+/* =========================================================
+   HỆ THỐNG QUẢN LÝ THỰC TẬP TỐT NGHIỆP - ADMIN DASHBOARD CSS
+   Giao diện Quản Trị Giáo Dục Hiện Đại, Sạch, Chuyên Nghiệp
+   ========================================================= */
+
+:root {
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-light: #EFF6FF;
+    --primary-gradient: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+    --success: #16A34A;
+    --success-light: #DCFCE7;
+    --warning: #D97706;
+    --warning-light: #FEF3C7;
+    --danger: #DC2626;
+    --danger-light: #FEE2E2;
+    --purple: #7C3AED;
+    --purple-light: #F3E8FF;
+
+    --bg-page: #F4F7FE;
+    --card-bg: #FFFFFF;
+    --card-shadow: 0 4px 20px rgba(30, 64, 175, 0.06);
+    --card-shadow-hover: 0 8px 24px rgba(30, 64, 175, 0.12);
+    --card-radius: 16px;
+    --border-color: #E2E8F0;
+    --border-soft: rgba(226, 232, 240, 0.8);
+
+    --text-main: #0F172A;
+    --text-body: #334155;
+    --text-muted: #64748B;
+    --text-placeholder: #94A3B8;
+
+    --font-sans: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--bg-page) !important;
+    font-family: var(--font-sans) !important;
+    color: var(--text-body) !important;
+}
+
+/* =========================================================
+   1. SIDEBAR NÂNG CẤP ĐỒNG BỘ
+   ========================================================= */
+.sidebar {
+    width: 260px !important;
+    background-color: #FFFFFF !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+.sidebar-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 22px 20px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+}
+
+.sidebar-brand .logo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-gradient);
+    color: #FFFFFF;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    flex-shrink: 0;
+}
+
+.sidebar-brand .brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-brand .brand-text h2 {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #1E3A8A !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.2px;
+}
+
+.sidebar-brand .brand-text span {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--primary) !important;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-menu-wrapper {
+    padding: 12px 14px 24px !important;
+}
+
+.menu-heading,
+.admin-menu-heading-toggle {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: var(--text-muted) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 14px 10px 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: none !important;
+    border: none !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    text-align: left !important;
+}
+
+.admin-menu-heading-toggle:hover {
+    color: var(--text-main) !important;
+}
+
+.admin-menu-chevron {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid #94A3B8;
+    border-bottom: 2px solid #94A3B8;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-right: 4px;
+}
+
+.admin-menu-heading-toggle[aria-expanded="false"] .admin-menu-chevron {
+    transform: rotate(-45deg);
+}
+
+.menu-list {
+    list-style: none !important;
+    margin-bottom: 4px;
+}
+
+.menu-item {
+    margin-bottom: 4px;
+}
+
+.menu-item a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    text-decoration: none !important;
+    transition: var(--transition) !important;
+    margin: 0 !important;
+}
+
+.menu-item a:hover {
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
+}
+
+.menu-item a:hover i {
+    color: var(--primary) !important;
+}
+
+.menu-item.active a {
+    background: var(--primary-gradient) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+}
+
+.menu-item.active a i {
+    color: #FFFFFF !important;
+}
+
+/* =========================================================
+   2. TOPBAR NÂNG CẤP
+   ========================================================= */
+.top-navbar {
+    height: 64px !important;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 0 28px !important;
+}
+
+.semester-filter {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+    height: 40px !important;
+    padding: 0 14px !important;
+    transition: var(--transition);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.semester-filter:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.semester-filter i {
+    color: var(--primary);
+    font-size: 14px;
+}
+
+.select-clean {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: var(--text-main) !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    outline: none !important;
+}
+
+.user-profile {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.user-profile .avatar-icon {
+    font-size: 26px !important;
+    color: var(--primary) !important;
+}
+
+.user-name {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-main) !important;
+}
+
+.user-badge {
+    background: var(--primary-gradient) !important;
+    color: #FFFFFF !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    letter-spacing: 0.5px;
+}
+
+.btn-logout {
+    height: 38px !important;
+    padding: 0 14px !important;
+    background: #FFF1F2 !important;
+    border: 1px solid #FFE4E6 !important;
+    border-radius: 8px !important;
+    color: #DC2626 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: var(--transition) !important;
+}
+
+.btn-logout:hover {
+    background: #FEE2E2 !important;
+    border-color: #FECACA !important;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   3. HERO BANNER CHÀO MỪNG
+   ========================================================= */
+.content-body {
+    padding: 28px !important;
+    flex: 1;
+}
+
+.admin-hero-card {
+    background: #FFFFFF;
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-hero-card::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--primary-gradient);
+}
+
+.hero-text-side h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.hero-text-side p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.hero-summary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 6px 14px;
+    background: var(--primary-light);
+    border: 1px solid #DBEAFE;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: #1E40AF;
+    font-weight: 500;
+}
+
+.hero-summary-pill.has-pending {
+    background: #FEF3C7;
+    border-color: #FDE68A;
+    color: #92400E;
+}
+
+.hero-summary-pill .btn-quick-process {
+    background: var(--primary);
+    color: #FFFFFF;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 6px;
+    transition: var(--transition);
+}
+
+.hero-summary-pill .btn-quick-process:hover {
+    background: var(--primary-hover);
+}
+
+.hero-meta-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.hero-date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.hero-semester-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #F1F5F9;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* =========================================================
+   4. 5 THẺ KPI THỐNG KÊ
+   ========================================================= */
+.kpi-grid-5 {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 20px !important;
+    margin-bottom: 24px !important;
+}
+
+.kpi-card {
+    background: #FFFFFF !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow) !important;
+    padding: 22px 20px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    border: 1px solid transparent !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: var(--card-shadow-hover) !important;
+    border-color: #E2E8F0 !important;
+}
+
+.kpi-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    flex-shrink: 0 !important;
+    transition: transform 0.2s ease;
+}
+
+.kpi-card:hover .kpi-icon {
+    transform: scale(1.08);
+}
+
+/* Màu icon theo từng card */
+.kpi-card.card-blue .kpi-icon {
+    background: rgba(37, 99, 235, 0.12) !important;
+    color: var(--primary) !important;
+}
+
+.kpi-card.card-green .kpi-icon {
+    background: rgba(22, 163, 74, 0.12) !important;
+    color: var(--success) !important;
+}
+
+.kpi-card.card-orange .kpi-icon {
+    background: rgba(217, 119, 6, 0.12) !important;
+    color: var(--warning) !important;
+}
+
+.kpi-card.card-purple .kpi-icon {
+    background: rgba(124, 58, 237, 0.12) !important;
+    color: var(--purple) !important;
+}
+
+.kpi-card.card-red .kpi-icon {
+    background: rgba(220, 38, 38, 0.12) !important;
+    color: var(--danger) !important;
+}
+
+.kpi-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.kpi-value {
+    font-size: 30px !important;
+    font-weight: 700 !important;
+    color: var(--text-main) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-title {
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: var(--text-muted) !important;
+    margin-top: 4px !important;
+    display: block;
+}
+
+.kpi-trend {
+    margin-top: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    line-height: 1.3 !important;
+}
+
+.kpi-trend.text-green {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.kpi-trend.text-blue {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.kpi-trend.text-red {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* Chấm pulse khi có đề tài chờ phê duyệt */
+.pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--danger);
+    border-radius: 50%;
+    margin-right: 4px;
+    animation: pulseRing 1.6s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+@keyframes pulseRing {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+/* =========================================================
+   5. CÁC CARD KHỐI CHỨC NĂNG
+   ========================================================= */
+.card-box {
+    background: #FFFFFF !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow) !important;
+    border: none !important;
+    padding: 22px 24px !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 18px !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.card-header h3 {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: var(--text-main) !important;
+    letter-spacing: -0.01em;
+}
+
+.link-more {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--primary) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: var(--transition);
+}
+
+.link-more:hover {
+    color: var(--primary-hover) !important;
+    transform: translateX(2px);
+}
+
+/* Lưới 3 cột: Biểu đồ tháng + Biểu đồ tròn + Hoạt động gần đây */
+.grid-3-col {
+    display: grid !important;
+    grid-template-columns: 1.15fr 0.95fr 0.9fr !important;
+    gap: 24px !important;
+    margin-top: 24px !important;
+}
+
+/* KHỐI BIỂU ĐỒ THÁNG */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 250px;
+}
+
+.chart-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.chart-empty-state i {
+    font-size: 38px;
+    color: #CBD5E1;
+    margin-bottom: 10px;
+}
+
+/* KHỐI BIỂU ĐỒ DOUGHNUT TRẠNG THÁI */
+.doughnut-wrapper {
+    position: relative;
+    height: 190px !important;
+}
+
+.chart-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.chart-center-text .total-num {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: var(--text-main) !important;
+    display: block;
+    line-height: 1.1;
+}
+
+.chart-center-text .total-label {
+    font-size: 12px !important;
+    color: var(--text-muted) !important;
+    font-weight: 500;
+}
+
+.chart-legend-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px !important;
+    color: var(--text-body);
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}
+
+.legend-item:hover {
+    background-color: #F8FAFC;
+}
+
+.legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-left .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-item strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* =========================================================
+   6. HOẠT ĐỘNG MỚI NHẤT (TIMELINE)
+   ========================================================= */
+.activity-list {
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Tùy chỉnh thanh cuộn mảnh */
+.activity-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.activity-list::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F1F5F9;
+    position: relative;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.activity-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.activity-avatar.role-lecturer {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.activity-avatar.role-admin {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.activity-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-desc {
+    font-size: 13.5px;
+    color: var(--text-main);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.activity-desc strong {
+    font-weight: 600;
+}
+
+.activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.activity-empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+}
+
+.activity-empty-state i {
+    font-size: 32px;
+    color: #CBD5E1;
+    margin-bottom: 8px;
+}
+
+.btn-retry-activity {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    color: var(--primary);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-retry-activity:hover {
+    background: #F8FAFC;
+    border-color: var(--primary);
+}
+
+/* =========================================================
+   7. BẢNG ĐỀ TÀI & THAO TÁC NHANH (GRID 2-1)
+   ========================================================= */
+.grid-2-1 {
+    display: grid !important;
+    grid-template-columns: 1.8fr 1.2fr !important;
+    gap: 24px !important;
+    margin-top: 24px !important;
+}
+
+/* BẢNG DỮ LIỆU ĐỀ TÀI CHỜ XỬ LÝ */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.data-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    font-size: 13.5px !important;
+}
+
+.data-table th {
+    background: #F8FAFC !important;
+    color: var(--text-muted) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 12px 14px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    text-align: left !important;
+}
+
+.data-table td {
+    padding: 14px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+    vertical-align: middle !important;
+    color: var(--text-body) !important;
+}
+
+.data-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+    background-color: #F8FAFC !important;
+}
+
+.topic-code-badge {
+    font-family: monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.topic-title-cell {
+    font-weight: 600;
+    color: var(--text-main);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    max-width: 240px;
+}
+
+.user-identity-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-cell-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: var(--text-muted);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.user-cell-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-cell-name {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 13px;
+}
+
+.user-cell-code {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.waiting-time-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.waiting-time-badge.urgent {
+    color: var(--warning);
+    background: var(--warning-light);
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+.btn-table-action {
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-table-action:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+}
+
+/* =========================================================
+   8. KHỐI THAO TÁC NHANH
+   ========================================================= */
+.quick-action-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+}
+
+.quick-card {
+    height: 88px !important;
+    background: #FFFFFF !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    color: var(--text-main) !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    position: relative;
+}
+
+.quick-card:hover:not(.quick-card-disabled):not(:disabled) {
+    transform: translateY(-2px) !important;
+    border-color: #93C5FD !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08) !important;
+    color: var(--primary) !important;
+}
+
+.qa-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 17px !important;
+}
+
+.qa-icon.green { background: #DCFCE7 !important; color: #16A34A !important; }
+.qa-icon.blue { background: #DBEAFE !important; color: #2563EB !important; }
+.qa-icon.orange { background: #FEF3C7 !important; color: #D97706 !important; }
+.qa-icon.red { background: #FEE2E2 !important; color: #DC2626 !important; }
+.qa-icon.purple { background: #F3E8FF !important; color: #7C3AED !important; }
+.qa-icon.gray { background: #F1F5F9 !important; color: #94A3B8 !important; }
+
+.quick-card span {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+}
+
+.quick-card.quick-card-disabled,
+.quick-card:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    background: #F8FAFC !important;
+}
+
+.quick-card-disabled .badge-coming-soon {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748B;
+    background: #E2E8F0;
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+
+/* =========================================================
+   9. KHỐI CẦN XỬ LÝ (ACTION REQUIRED CARD)
+   ========================================================= */
+.action-required-card {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: var(--card-radius);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(217, 119, 6, 0.05);
+}
+
+.action-required-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.action-required-header i {
+    font-size: 18px;
+    color: var(--warning);
+}
+
+.action-required-header h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #92400E;
+}
+
+.action-required-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.action-required-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #FFFFFF;
+    border-radius: 10px;
+    border: 1px solid #FEF3C7;
+    font-size: 13.5px;
+    color: var(--text-main);
+}
+
+.action-required-item .item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-required-item i.item-icon {
+    color: var(--warning);
+    font-size: 15px;
+}
+
+.action-required-item .btn-action-go {
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: var(--warning);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.action-required-item .btn-action-go:hover {
+    background: #B45309;
+}
+
+/* =========================================================
+   10. SKELETON LOADERS
+   ========================================================= */
+.skeleton-box {
+    background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s infinite;
+    border-radius: 6px;
+}
+
+@keyframes skeletonShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.page-footer {
+    text-align: center !important;
+    font-size: 13px !important;
+    color: var(--text-muted) !important;
+    margin-top: 36px !important;
+    padding: 16px 0 !important;
+}
+
+/* =========================================================
+   11. RESPONSIVE DESIGN
+   ========================================================= */
+@media (max-width: 1280px) {
+    .kpi-grid-5 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    .grid-3-col {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .grid-3-col .card-box:last-child {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 1024px) {
+    .grid-3-col {
+        grid-template-columns: 1fr !important;
+    }
+    .grid-3-col .card-box:last-child {
+        grid-column: span 1;
+    }
+    .grid-2-1 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-body {
+        padding: 16px !important;
+    }
+    .admin-hero-card {
+        padding: 18px 20px;
+    }
+    .hero-meta-side {
+        align-items: flex-start;
+    }
+    .kpi-grid-5 {
+        grid-template-columns: 1fr !important;
+    }
+    .quick-action-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

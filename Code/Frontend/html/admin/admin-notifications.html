@@ -3,29 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thông Báo Hệ Thống - QUẢN LÝ TTTN</title>
+    <title>Quản Lý Thông Báo Hệ Thống | Cổng Quản Trị Viên</title>
 
-    <!-- Font & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/admin-notifications.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
-    <link rel="stylesheet" href="../../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
+    <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <i class="fa-solid fa-graduation-cap logo-icon"></i>
-                <span class="brand-name">QUẢN LÝ TTTN</span>
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <span>CỔNG QUẢN TRỊ VIÊN</span>
+                </div>
             </div>
 
             <div class="sidebar-menu-wrapper">
                 <ul class="menu-list">
                     <li class="menu-item">
                         <a href="admin-dashboard.html">
-                            <i class="fa-solid fa-layer-group"></i>
+                            <i class="fa-solid fa-border-all"></i>
                             <span>Tổng quan</span>
                         </a>
                     </li>
@@ -52,19 +60,19 @@
                     <li class="menu-item">
                         <a href="admin-semesters.html">
                             <i class="fa-solid fa-calendar-days"></i>
-                            <span>Học kỳ & đăng ký</span>
+                            <span>Học kỳ &amp; đăng ký</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="admin-teams.html">
                             <i class="fa-solid fa-users-rectangle"></i>
-                            <span>Nhóm & Phân công</span>
+                            <span>Nhóm &amp; Phân công</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="admin-documents.html">
                             <i class="fa-solid fa-file-lines"></i>
-                            <span>Tài liệu & Biểu mẫu</span>
+                            <span>Tài liệu &amp; Biểu mẫu</span>
                         </a>
                     </li>
                     <li class="menu-item active">
@@ -87,242 +95,385 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <div class="main-content">
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper" id="mainWrapper">
+
             <!-- TOPBAR -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="btn-toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle btn-toggle-sidebar" id="sidebarToggle" aria-label="Mở menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                 </div>
-                <div class="topbar-right">
-                    <div class="semester-pill">
+                <div class="navbar-right">
+                    <div class="semester-filter">
                         <i class="fa-solid fa-graduation-cap"></i>
-                        <select class="semester-select">
-                            <option>Học kỳ 2 (2025 - 2026)</option>
-                            <option>Học kỳ 1 (2025 - 2026)</option>
+                        <select id="semesterSelect" class="select-clean" aria-label="Lọc theo học kỳ">
+                            <option value="">Đang tải học kỳ...</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </div>
 
-                    <div class="user-info">
-                        <i class="fa-solid fa-circle-user avatar"></i>
-                        <span class="user-name">Quản Trị Viên</span>
-                        <span class="role-badge">ADMIN</span>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Quản Trị Viên</span>
+                        <span class="user-badge">ADMIN</span>
                     </div>
 
-                    <button class="btn-logout-top" id="openLogoutBtn">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    <button class="btn-logout" id="openLogoutBtn" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Đăng xuất</span>
                     </button>
                 </div>
             </header>
 
             <!-- PAGE BODY -->
             <main class="page-body">
-                <div class="page-title-box">
-                    <div>
-                        <h2>Quản Lý Thông Báo Hệ Thống</h2>
-                        <p class="subtitle">Đăng tin tức, gửi thông báo quan trọng tới Sinh viên và Giảng viên.</p>
-                    </div>
-                    <button class="btn btn-primary" id="openAddModalBtn">
-                        <i class="fa-solid fa-paper-plane"></i> Tạo Thông Báo Mới
-                    </button>
-                </div>
 
-                <!-- CARDS SUMMARY -->
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <div class="summary-icon blue"><i class="fa-solid fa-bullhorn"></i></div>
-                        <div class="summary-info">
-                            <span class="summary-label">Tổng số thông báo</span>
-                            <strong class="summary-value" id="totalCount">0</strong>
-                        </div>
+                <!-- PAGE HEADER ROW -->
+                <div class="page-header-row">
+                    <div class="page-header-left">
+                        <h1 class="page-title">Quản lý thông báo hệ thống</h1>
+                        <p class="page-desc">Đăng tin tức, gửi thông báo quan trọng tới Sinh viên và Giảng viên trong hệ thống.</p>
                     </div>
-
-                    <div class="summary-card">
-                        <div class="summary-icon red"><i class="fa-solid fa-thumbtack"></i></div>
-                        <div class="summary-info">
-                            <span class="summary-label">Đang ghim (Pinned)</span>
-                            <strong class="summary-value" id="pinnedCount">0</strong>
-                        </div>
-                    </div>
-
-                    <div class="summary-card">
-                        <div class="summary-icon green"><i class="fa-solid fa-circle-check"></i></div>
-                        <div class="summary-info">
-                            <span class="summary-label">Đã phát hành</span>
-                            <strong class="summary-value" id="publishedCount">0</strong>
-                        </div>
-                    </div>
-
-                    <div class="summary-card">
-                        <div class="summary-icon orange"><i class="fa-solid fa-file-pen"></i></div>
-                        <div class="summary-info">
-                            <span class="summary-label">Bản nháp</span>
-                            <strong class="summary-value" id="draftCount">0</strong>
-                        </div>
+                    <div class="page-header-right">
+                        <button class="btn-action btn-action-primary" id="openAddModalBtn" aria-label="Tạo thông báo mới">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Tạo thông báo mới</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- BẢNG DỮ LIỆU -->
-                <div class="card-panel margin-top-20">
+                <!-- BỐN THẺ THỐNG KÊ -->
+                <div class="quick-stats-grid">
+                    <div class="stat-card" data-quick-filter="all" role="button" tabindex="0" aria-label="Tổng số thông báo">
+                        <div class="stat-icon-wrap stat-blue">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="totalCount">0</div>
+                            <div class="stat-label">Tổng số thông báo</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card stat-pinned-card" data-quick-filter="pinned" role="button" tabindex="0" aria-label="Đang ghim">
+                        <div class="stat-icon-wrap stat-red">
+                            <i class="fa-solid fa-thumbtack"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="pinnedCount">0</div>
+                            <div class="stat-label">Đang ghim</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" data-quick-filter="published" role="button" tabindex="0" aria-label="Đã phát hành">
+                        <div class="stat-icon-wrap stat-green">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="publishedCount">0</div>
+                            <div class="stat-label">Đã phát hành</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" data-quick-filter="draft" role="button" tabindex="0" aria-label="Bản nháp">
+                        <div class="stat-icon-wrap stat-orange">
+                            <i class="fa-solid fa-file-pen"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="draftCount">0</div>
+                            <div class="stat-label">Bản nháp</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD BẢNG DỮ LIỆU & BỘ LỌC -->
+                <section class="content-card table-card">
+                    <!-- FILTER BAR -->
                     <div class="filter-bar">
-                        <div class="search-input-group">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm tiêu đề hoặc nội dung thông báo...">
-                        </div>
+                        <div class="filter-bar-left">
+                            <div class="search-wrap">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="searchInput" class="search-input"
+                                    placeholder="Tìm tiêu đề hoặc nội dung thông báo..." aria-label="Tìm thông báo">
+                            </div>
 
-                        <div class="filter-controls">
-                            <select id="targetFilter" class="select-box">
-                                <option value="">Tất cả Đối tượng</option>
+                            <select id="targetFilter" class="filter-select" aria-label="Lọc đối tượng">
+                                <option value="">Tất cả đối tượng</option>
                                 <option value="all">Tất cả người dùng</option>
                                 <option value="students">Chỉ Sinh viên</option>
                                 <option value="lecturers">Chỉ Giảng viên</option>
                             </select>
 
-                            <select id="statusFilter" class="select-box">
-                                <option value="">Tất cả Trạng thái</option>
+                            <select id="statusFilter" class="filter-select" aria-label="Lọc trạng thái">
+                                <option value="">Tất cả trạng thái</option>
                                 <option value="published">Đã phát hành</option>
                                 <option value="draft">Bản nháp</option>
                             </select>
+                        </div>
 
-                            <button id="resetFilterBtn" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                        <div class="filter-bar-right">
+                            <button id="resetFilterBtn" class="btn-reset" aria-label="Đặt lại bộ lọc">
+                                <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                            </button>
                         </div>
                     </div>
 
-                    <div class="table-container margin-top-16">
-                        <table class="custom-table">
+                    <!-- Filter chips -->
+                    <div class="active-filter-chips" id="activeFilterChips" style="display: none;"></div>
+
+                    <!-- Quick Filter Tabs -->
+                    <div class="quick-filter-tabs">
+                        <button class="tab-btn active" data-tab-filter="all" aria-pressed="true">Tất cả</button>
+                        <button class="tab-btn" data-tab-filter="pinned" aria-pressed="false">Đang ghim</button>
+                        <button class="tab-btn" data-tab-filter="published" aria-pressed="false">Đã phát hành</button>
+                        <button class="tab-btn" data-tab-filter="draft" aria-pressed="false">Bản nháp</button>
+                    </div>
+
+                    <!-- BẢNG DỮ LIỆU -->
+                    <div class="table-scroll-wrap">
+                        <table class="data-table" id="notifTable">
                             <thead>
                                 <tr>
-                                    <th width="40" class="text-center"><i class="fa-solid fa-thumbtack"></i></th>
-                                    <th>Tiêu Đề Thông Báo</th>
-                                    <th width="150">Đối Tượng Nhận</th>
-                                    <th width="130">Độ Ưu Tiên</th>
-                                    <th width="150">Ngày Đăng</th>
-                                    <th class="text-center" width="120">Trạng Thái</th>
-                                    <th class="text-center" width="130">Thao Tác</th>
+                                    <th width="50" class="text-center col-pin">GHIM</th>
+                                    <th class="col-title">TIÊU ĐỀ THÔNG BÁO</th>
+                                    <th width="160" class="col-target">ĐỐI TƯỢNG NHẬN</th>
+                                    <th width="140" class="col-priority">ĐỘ ƯU TIÊN</th>
+                                    <th width="160" class="col-date">NGÀY ĐĂNG</th>
+                                    <th width="130" class="text-center col-status">TRẠNG THÁI</th>
+                                    <th width="140" class="text-center col-actions">THAO TÁC</th>
                                 </tr>
                             </thead>
                             <tbody id="notifTableBody">
-                                <!-- Render JS -->
+                                <!-- Skeleton rows -->
+                                <tr class="skeleton-row">
+                                    <td class="text-center"><div class="skeleton-cell" style="width:20px;height:20px;border-radius:4px;margin:0 auto;"></div></td>
+                                    <td>
+                                        <div class="skeleton-cell" style="width: 240px; height: 16px; margin-bottom: 6px;"></div>
+                                        <div class="skeleton-cell" style="width: 160px; height: 12px;"></div>
+                                    </td>
+                                    <td><div class="skeleton-cell" style="width: 100px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 90px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 110px; height: 14px;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 80px; height: 24px; border-radius: 12px; margin: 0 auto;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 90px; height: 32px; border-radius: 8px; margin: 0 auto;"></div></td>
+                                </tr>
+                                <tr class="skeleton-row">
+                                    <td class="text-center"><div class="skeleton-cell" style="width:20px;height:20px;border-radius:4px;margin:0 auto;"></div></td>
+                                    <td>
+                                        <div class="skeleton-cell" style="width: 280px; height: 16px; margin-bottom: 6px;"></div>
+                                        <div class="skeleton-cell" style="width: 180px; height: 12px;"></div>
+                                    </td>
+                                    <td><div class="skeleton-cell" style="width: 110px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 85px; height: 24px; border-radius: 12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width: 110px; height: 14px;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 80px; height: 24px; border-radius: 12px; margin: 0 auto;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width: 90px; height: 32px; border-radius: 8px; margin: 0 auto;"></div></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
+
+                    <!-- FOOTER PHÂN TRANG -->
+                    <div class="table-footer">
+                        <div class="footer-left">
+                            <span class="pagination-info" id="paginationInfo">Hiển thị...</span>
+                            <div class="page-size-wrap">
+                                <span>Hiển thị</span>
+                                <select id="pageSizeSelect" class="page-size-select" aria-label="Số dòng mỗi trang">
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span>/ trang</span>
+                            </div>
+                        </div>
+                        <div class="pagination-wrap" id="paginationControls" role="navigation" aria-label="Phân trang danh sách thông báo"></div>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
 
     <!-- MODAL TẠO / SỬA THÔNG BÁO -->
-    <div id="notifModal" class="modal-overlay">
-        <div class="modal-card modal-md">
+    <div id="notifModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-card modal-lg">
             <div class="modal-head">
-                <h3 id="modalTitle">Soạn Thông Báo Mới</h3>
-                <span class="close-modal" id="closeNotifModal">&times;</span>
+                <div class="modal-head-left">
+                    <div class="modal-icon-wrap">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h3 class="modal-title" id="modalTitle">Soạn Thông Báo Mới</h3>
+                        <p class="modal-subtitle">Gửi tin tức hoặc cập nhật quan trọng tới các bên liên quan.</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeNotifModal" aria-label="Đóng modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
+
             <div class="modal-body">
                 <form id="notifForm">
                     <input type="hidden" id="notifId">
 
-                    <div class="form-group">
-                        <label class="form-label">Tiêu đề thông báo *</label>
-                        <input type="text" id="notifTitle" class="form-control" placeholder="Ví dụ: Lịch nộp Báo cáo Tiến độ Giữa kỳ Học kỳ 2" required>
+                    <!-- Tiêu đề -->
+                    <div class="form-group-item">
+                        <div class="label-with-counter">
+                            <label class="form-label-item" for="notifTitle">
+                                Tiêu đề thông báo <span class="required-mark">*</span>
+                            </label>
+                            <span class="char-counter" id="titleCharCount">0 / 200</span>
+                        </div>
+                        <input type="text" id="notifTitle" class="form-input-item"
+                            placeholder="Ví dụ: Lịch nộp Báo cáo Tiến độ Giữa kỳ Học kỳ 2" maxlength="200" required>
                     </div>
 
-                    <div class="form-row margin-top-12">
-                        <div class="form-group flex-1">
-                            <label class="form-label">Đối tượng nhận *</label>
-                            <select id="notifTarget" class="form-control">
-                                <option value="all">Tất cả (Sinh viên & Giảng viên)</option>
+                    <!-- Đối tượng & Độ ưu tiên -->
+                    <div class="form-grid-2 margin-top-16">
+                        <div class="form-group-item">
+                            <label class="form-label-item" for="notifTarget">
+                                Đối tượng nhận <span class="required-mark">*</span>
+                            </label>
+                            <select id="notifTarget" class="form-select-item" required>
+                                <option value="all">Tất cả (Sinh viên &amp; Giảng viên)</option>
                                 <option value="students">Chỉ Sinh viên</option>
                                 <option value="lecturers">Chỉ Giảng viên</option>
                             </select>
                         </div>
 
-                        <div class="form-group flex-1">
-                            <label class="form-label">Độ ưu tiên *</label>
-                            <select id="notifPriority" class="form-control">
-                                <option value="info">Thông tin chung (Xanh)</option>
+                        <div class="form-group-item">
+                            <label class="form-label-item" for="notifPriority">
+                                Độ ưu tiên <span class="required-mark">*</span>
+                            </label>
+                            <select id="notifPriority" class="form-select-item" required>
+                                <option value="info">Thông tin chung (Xanh dương)</option>
                                 <option value="warning">Quan trọng (Cam)</option>
                                 <option value="danger">Khẩn cấp (Đỏ)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="form-group margin-top-12">
-                        <label class="form-label">Nội dung chi tiết *</label>
-                        <textarea id="notifContent" class="form-control" rows="5" placeholder="Nhập chi tiết nội dung thông báo..." required></textarea>
+                    <!-- Nội dung chi tiết -->
+                    <div class="form-group-item margin-top-16">
+                        <div class="label-with-counter">
+                            <label class="form-label-item" for="notifContent">
+                                Nội dung chi tiết <span class="required-mark">*</span>
+                            </label>
+                            <span class="char-counter" id="contentCharCount">0 ký tự</span>
+                        </div>
+                        <textarea id="notifContent" class="form-textarea-item" rows="6"
+                            placeholder="Nhập chi tiết nội dung thông báo tới người nhận..." required></textarea>
                     </div>
 
-                    <div class="form-group margin-top-12">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="notifPinned">
-                            <span class="checkmark"></span>
-                            <span>Ghim thông báo này lên đầu danh sách tin tức</span>
+                    <!-- Ghim lên đầu -->
+                    <div class="form-group-item margin-top-16">
+                        <label class="custom-toggle-label">
+                            <input type="checkbox" id="notifPinned" class="toggle-checkbox">
+                            <span class="toggle-switch"></span>
+                            <span class="toggle-text">
+                                <strong>Ghim thông báo này lên đầu</strong>
+                                <small>Thông báo sẽ luôn hiển thị ở vị trí ưu tiên hàng đầu trong danh sách tin tức.</small>
+                            </span>
                         </label>
                     </div>
                 </form>
             </div>
-            <div class="modal-foot margin-top-16">
-                <button type="button" class="btn btn-outline" id="saveDraftBtn"><i class="fa-solid fa-floppy-disk"></i> Lưu Bản Nháp</button>
-                <button type="button" class="btn btn-primary" id="publishBtn"><i class="fa-solid fa-paper-plane"></i> Phát Hành Ngay</button>
+
+            <div class="modal-foot">
+                <button type="button" class="btn-action btn-action-outline" id="saveDraftBtn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Lưu Bản Nháp</span>
+                </button>
+                <button type="button" class="btn-action btn-action-primary" id="publishBtn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span id="publishBtnText">Phát Hành Ngay</span>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- MODAL XEM CHI TIẾT THÔNG BÁO -->
-    <div id="viewModal" class="modal-overlay">
+    <div id="viewModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
         <div class="modal-card modal-md">
             <div class="modal-head">
-                <h3>Chi Tiết Thông Báo</h3>
-                <span class="close-modal" id="closeViewModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="view-notif-header">
-                    <span id="viewPriorityBadge" class="priority-badge"></span>
-                    <span id="viewTargetBadge" class="target-badge"></span>
-                    <span id="viewPinnedBadge" class="pinned-badge"><i class="fa-solid fa-thumbtack"></i> Đã ghim</span>
+                <div class="modal-head-left">
+                    <div class="modal-icon-wrap" style="background: #EFF6FF; color: var(--primary);">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                    </div>
+                    <div>
+                        <h3 class="modal-title">Chi Tiết Thông Báo</h3>
+                        <p class="modal-subtitle">Xem nội dung thông báo hệ thống đã phát hành.</p>
+                    </div>
                 </div>
-                <h3 id="viewTitle" class="margin-top-12"></h3>
-                <div class="view-meta margin-top-8">
+                <button class="modal-close-btn" id="closeViewModal" aria-label="Đóng modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="view-notif-badges">
+                    <span id="viewPriorityBadge" class="priority-badge-chip"></span>
+                    <span id="viewTargetBadge" class="target-badge-chip"></span>
+                    <span id="viewPinnedBadge" class="pinned-indicator-chip" style="display: none;">
+                        <i class="fa-solid fa-thumbtack"></i> Đã ghim
+                    </span>
+                </div>
+
+                <h2 id="viewTitle" class="view-notif-title"></h2>
+
+                <div class="view-meta-row">
                     <span><i class="fa-regular fa-user"></i> Người đăng: <strong>Admin Hệ Thống</strong></span>
                     <span><i class="fa-regular fa-clock"></i> <span id="viewDate"></span></span>
                 </div>
-                <hr class="divider">
-                <div id="viewContent" class="view-content-body"></div>
+
+                <div class="view-content-box" id="viewContent"></div>
             </div>
-            <div class="modal-foot margin-top-16">
-                <button class="btn btn-outline" id="closeViewBtn">Đóng</button>
+
+            <div class="modal-foot">
+                <button type="button" class="btn-action btn-action-outline" id="closeViewBtn">Đóng</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL XÁC NHẬN XÓA -->
-    <div id="deleteModal" class="modal-overlay">
+    <div id="deleteModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
         <div class="modal-card modal-sm text-center">
-            <div class="modal-icon-red"><i class="fa-solid fa-trash-can"></i></div>
-            <h3>Xóa Thông Báo?</h3>
-            <p class="margin-top-8">Bạn có chắc chắn muốn xóa thông báo này không? Thao tác không thể hoàn tác.</p>
-            <div class="modal-foot center margin-top-16">
-                <button class="btn btn-outline" id="cancelDeleteBtn">Hủy</button>
-                <button class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+            <div class="modal-danger-icon">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3 class="modal-title" id="deleteModalTitle" style="margin-bottom: 8px;">Xác nhận xóa thông báo</h3>
+            <p id="deleteModalDesc" style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
+                Bạn có chắc chắn muốn xóa thông báo này không? Thao tác này không thể hoàn tác.
+            </p>
+            <div class="modal-foot" style="justify-content: center; margin-top: 20px;">
+                <button type="button" class="btn-action btn-action-outline" id="cancelDeleteBtn">Hủy</button>
+                <button type="button" class="btn-action btn-action-danger" id="confirmDeleteBtn">
+                    <i class="fa-solid fa-trash-can"></i> Xóa vĩnh viễn
+                </button>
             </div>
         </div>
     </div>
 
     <!-- MODAL ĐĂNG XUẤT -->
-    <div id="logoutModal" class="modal-overlay">
+    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
         <div class="modal-card modal-sm text-center">
-            <div class="modal-icon-red"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
-            <h3>Xác nhận đăng xuất</h3>
-            <p class="margin-top-8">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
-            <div class="modal-foot center margin-top-16">
-                <button class="btn btn-outline" id="cancelLogout">Hủy</button>
-                <button class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
+            <div class="modal-danger-icon">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </div>
+            <h3 class="modal-title" id="logoutModalTitle" style="margin-bottom: 8px;">Xác nhận đăng xuất</h3>
+            <p style="font-size: 14px; color: var(--text-muted);">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
+            <div class="modal-foot" style="justify-content: center; margin-top: 20px;">
+                <button type="button" class="btn-action btn-action-outline" id="cancelLogout">Hủy</button>
+                <button type="button" class="btn-action btn-action-danger" id="confirmLogout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/admin-pagination.js"></script>
     <script src="../../js/admin/admin-notifications.js"></script>
     <script src="../../js/admin/admin-sidebar.js"></script>
     <script src="../../js/common/app-notifications.js"></script>

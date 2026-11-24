@@ -3,29 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhóm & Phân công - QUẢN LÝ TTTN</title>
+    <title>Nhóm & Phân công GVHD | Cổng Quản Trị Viên</title>
 
-    <!-- Font & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/admin-teams.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
-    <link rel="stylesheet" href="../../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-layout">
         <!-- SIDEBAR -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <i class="fa-solid fa-graduation-cap logo-icon"></i>
-                <span class="brand-name">QUẢN LÝ TTTN</span>
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <span>CỔNG QUẢN TRỊ VIÊN</span>
+                </div>
             </div>
 
             <div class="sidebar-menu-wrapper">
                 <ul class="menu-list">
                     <li class="menu-item">
                         <a href="admin-dashboard.html">
-                            <i class="fa-solid fa-layer-group"></i>
+                            <i class="fa-solid fa-border-all"></i>
                             <span>Tổng quan</span>
                         </a>
                     </li>
@@ -52,19 +60,19 @@
                     <li class="menu-item">
                         <a href="admin-semesters.html">
                             <i class="fa-solid fa-calendar-days"></i>
-                            <span>Học kỳ & đăng ký</span>
+                            <span>Học kỳ &amp; đăng ký</span>
                         </a>
                     </li>
                     <li class="menu-item active">
                         <a href="admin-teams.html">
                             <i class="fa-solid fa-users-rectangle"></i>
-                            <span>Nhóm & Phân công</span>
+                            <span>Nhóm &amp; Phân công</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="admin-documents.html">
                             <i class="fa-solid fa-file-lines"></i>
-                            <span>Tài liệu & Biểu mẫu</span>
+                            <span>Tài liệu &amp; Biểu mẫu</span>
                         </a>
                     </li>
                     <li class="menu-item">
@@ -88,130 +96,282 @@
         </aside>
 
         <!-- MAIN WRAPPER -->
-        <div class="main-content">
+        <div class="main-wrapper" id="mainWrapper">
+
             <!-- TOPBAR -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="btn-toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle btn-toggle-sidebar" id="sidebarToggle" aria-label="Mở menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                 </div>
-                <div class="topbar-right">
-                    <div class="semester-pill">
+                <div class="navbar-right">
+                    <div class="semester-filter">
                         <i class="fa-solid fa-graduation-cap"></i>
-                        <select class="semester-select">
-                            <option>Học kỳ 2 (2025 - 2026)</option>
-                            <option>Học kỳ 1 (2025 - 2026)</option>
+                        <select id="semesterSelect" class="select-clean" aria-label="Lọc theo học kỳ">
+                            <option value="">Đang tải học kỳ...</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </div>
-
-                    <div class="user-info">
-                        <i class="fa-solid fa-circle-user avatar"></i>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
                         <span class="user-name">Quản Trị Viên</span>
-                        <span class="role-badge">ADMIN</span>
+                        <span class="user-badge">ADMIN</span>
                     </div>
-
-                    <button class="btn-logout-top" id="openLogoutBtn">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    <button class="btn-logout" id="openLogoutBtn" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Đăng xuất</span>
                     </button>
                 </div>
             </header>
 
             <!-- PAGE BODY -->
             <main class="page-body">
-                <div class="page-title-box">
-                    <div>
-                        <h2>Quản Lý Nhóm & Phân Công GVHD</h2>
-                        <p class="subtitle">Quản lý danh sách nhóm thực tập, đề tài và phân công Giảng viên hướng dẫn.</p>
+
+                <!-- PAGE HEADER -->
+                <div class="page-header-row">
+                    <div class="page-header-left">
+                        <h1 class="page-title">Quản lý nhóm &amp; phân công GVHD</h1>
+                        <p class="page-desc">Quản lý danh sách nhóm thực tập, đề tài và phân công Giảng viên hướng dẫn.</p>
+                    </div>
+                    <div class="page-header-right">
+                        <button class="btn-action btn-action-primary" id="bulkAssignBtn" disabled
+                            title="Chọn ít nhất một nhóm" aria-label="Phân công hàng loạt">
+                            <i class="fa-solid fa-user-plus"></i>
+                            Phân công hàng loạt
+                        </button>
                     </div>
                 </div>
 
-                <!-- BỘ LỌC TÌM KIẾM -->
-                <div class="card-panel">
-                    <div class="filter-bar">
-                        <div class="search-input-group">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm Mã nhóm, Tên đề tài, GVHD, Sinh viên...">
+                <!-- THỐNG KÊ NHANH -->
+                <div class="quick-stats-grid" id="quickStatsGrid">
+                    <div class="stat-card" data-quick-filter="all" role="button" tabindex="0" aria-label="Tổng số nhóm">
+                        <div class="stat-icon-wrap stat-blue">
+                            <i class="fa-solid fa-users-rectangle"></i>
                         </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statTotal">—</div>
+                            <div class="stat-label">Tổng số nhóm</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" data-quick-filter="assigned" role="button" tabindex="0" aria-label="Đã phân công GVHD">
+                        <div class="stat-icon-wrap stat-green">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statAssigned">—</div>
+                            <div class="stat-label">Đã phân công GVHD</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-urgent" data-quick-filter="unassigned" role="button" tabindex="0" aria-label="Chưa phân công">
+                        <div class="stat-icon-wrap stat-orange">
+                            <i class="fa-solid fa-user-clock"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statUnassigned">
+                                —
+                                <span class="pulse-dot" id="unassignedPulse" style="display:none;"></span>
+                            </div>
+                            <div class="stat-label">Chưa phân công</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" data-quick-filter="all" role="button" tabindex="0" aria-label="Giảng viên đang hướng dẫn">
+                        <div class="stat-icon-wrap stat-purple">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div class="stat-body">
+                            <div class="stat-number" id="statLecturers">—</div>
+                            <div class="stat-label">Giảng viên đang HD</div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="filter-controls">
-                            <select id="statusFilter" class="select-box">
-                                <option value="">Tất cả Trạng thái GVHD</option>
+                <!-- FILTER CARD -->
+                <div class="content-card">
+                    <div class="filter-bar">
+                        <div class="filter-bar-left">
+                            <div class="search-wrap">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="searchInput" class="search-input"
+                                    placeholder="Tìm mã nhóm, tên đề tài, GVHD, sinh viên..."
+                                    aria-label="Tìm kiếm nhóm">
+                            </div>
+                            <select id="statusFilter" class="filter-select" aria-label="Lọc trạng thái GVHD">
+                                <option value="">Tất cả trạng thái GVHD</option>
                                 <option value="assigned">Đã có GVHD</option>
                                 <option value="unassigned">Chưa có GVHD</option>
                             </select>
-
-                            <button id="resetFilterBtn" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
                         </div>
+                        <div class="filter-bar-right">
+                            <button id="resetFilterBtn" class="btn-reset" aria-label="Đặt lại bộ lọc">
+                                <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active filter chips -->
+                    <div class="active-filter-chips" id="activeFilterChips" style="display:none;"></div>
+
+                    <!-- Quick filter tabs -->
+                    <div class="quick-filter-tabs">
+                        <button class="tab-btn active" data-tab-filter="" aria-pressed="true">Tất cả</button>
+                        <button class="tab-btn" data-tab-filter="unassigned" aria-pressed="false">Chưa phân công</button>
+                        <button class="tab-btn" data-tab-filter="assigned" aria-pressed="false">Đã phân công</button>
                     </div>
                 </div>
 
                 <!-- BẢNG DỮ LIỆU -->
-                <div class="card-panel margin-top-16">
-                    <div class="table-container">
-                        <table class="custom-table">
+                <div class="content-card table-card">
+
+                    <!-- Bulk action toolbar -->
+                    <div class="bulk-toolbar" id="bulkToolbar" style="display:none;">
+                        <span class="bulk-info">
+                            <i class="fa-solid fa-check-square"></i>
+                            Đã chọn <strong id="bulkSelectionCount">0</strong> nhóm
+                        </span>
+                        <div class="bulk-actions">
+                            <button class="btn-action btn-action-primary btn-sm" id="bulkAssignToolbarBtn">
+                                <i class="fa-solid fa-user-plus"></i> Phân công hàng loạt
+                            </button>
+                            <button class="btn-action btn-action-outline btn-sm" id="clearTeamSelectionBtn">
+                                <i class="fa-solid fa-xmark"></i> Bỏ chọn
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll-wrap">
+                        <table class="data-table" id="teamsTable">
                             <thead>
                                 <tr>
-                                    <th width="40"><input type="checkbox" id="checkAll"></th>
-                                    <th width="100">Mã Nhóm</th>
-                                    <th>Tên Đề Tài & Thành Viên</th>
-                                    <th>Giảng Viên Hướng Dẫn</th>
-                                    <th class="text-center" width="160">Trạng Thái GVHD</th>
-                                    <th class="text-center" width="120">Thao tác</th>
+                                    <th class="col-check">
+                                        <input type="checkbox" id="checkAll" aria-label="Chọn tất cả">
+                                    </th>
+                                    <th class="col-code">MÃ NHÓM</th>
+                                    <th class="col-topic">TÊN ĐỀ TÀI &amp; THÀNH VIÊN</th>
+                                    <th class="col-status-topic">TRẠNG THÁI ĐỀ TÀI</th>
+                                    <th class="col-lecturer">GIẢNG VIÊN HƯỚNG DẪN</th>
+                                    <th class="col-status text-center">TRẠNG THÁI GVHD</th>
+                                    <th class="col-actions text-center">THAO TÁC</th>
                                 </tr>
                             </thead>
                             <tbody id="teamTableBody">
-                                <!-- JS Render -->
+                                <!-- Skeleton loading rows -->
+                                <tr class="skeleton-row">
+                                    <td><div class="skeleton-cell" style="width:20px;height:20px;border-radius:4px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width:70px;"></div></td>
+                                    <td>
+                                        <div class="skeleton-cell" style="width:200px;margin-bottom:6px;"></div>
+                                        <div class="skeleton-cell" style="width:150px;height:10px;"></div>
+                                    </td>
+                                    <td><div class="skeleton-cell" style="width:90px;height:24px;border-radius:12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width:130px;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width:100px;height:24px;border-radius:12px;margin:0 auto;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width:80px;height:30px;border-radius:8px;margin:0 auto;"></div></td>
+                                </tr>
+                                <tr class="skeleton-row">
+                                    <td><div class="skeleton-cell" style="width:20px;height:20px;border-radius:4px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width:60px;"></div></td>
+                                    <td>
+                                        <div class="skeleton-cell" style="width:220px;margin-bottom:6px;"></div>
+                                        <div class="skeleton-cell" style="width:170px;height:10px;"></div>
+                                    </td>
+                                    <td><div class="skeleton-cell" style="width:90px;height:24px;border-radius:12px;"></div></td>
+                                    <td><div class="skeleton-cell" style="width:140px;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width:100px;height:24px;border-radius:12px;margin:0 auto;"></div></td>
+                                    <td class="text-center"><div class="skeleton-cell" style="width:80px;height:30px;border-radius:8px;margin:0 auto;"></div></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- PHÂN TRANG -->
+                    <!-- TABLE FOOTER -->
                     <div class="table-footer">
-                        <span class="pagination-text" id="paginationInfo">Hiển thị...</span>
-                        <div class="pagination-btns" id="teamsPagination" aria-label="Phân trang danh sách nhóm"></div>
+                        <div class="footer-left">
+                            <span class="pagination-info" id="paginationInfo">Hiển thị...</span>
+                            <div class="page-size-wrap">
+                                <span>Hiển thị</span>
+                                <select id="pageSizeSelect" class="page-size-select" aria-label="Số dòng mỗi trang">
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span>/ trang</span>
+                            </div>
+                        </div>
+                        <div class="pagination-wrap" id="teamsPagination" role="navigation" aria-label="Phân trang danh sách nhóm"></div>
                     </div>
                 </div>
+
             </main>
         </div>
     </div>
 
     <!-- MODAL PHÂN CÔNG GIẢNG VIÊN HƯỚNG DẪN -->
-    <div id="assignModal" class="modal-overlay">
-        <div class="modal-card modal-md">
+    <div id="assignModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
+        <div class="modal-card modal-lg">
             <div class="modal-head">
-                <h3>Phân Công / Đổi Giảng Viên Hướng Dẫn</h3>
-                <span class="close-modal" id="closeAssignModal">&times;</span>
+                <div class="modal-head-left">
+                    <div class="modal-icon-wrap">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="modal-title" id="assignModalTitle">Phân công giảng viên hướng dẫn</h3>
+                        <p class="modal-subtitle" id="assignModalSubtitle">Chọn GVHD cho nhóm này</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeAssignModal" aria-label="Đóng modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
+
             <div class="modal-body">
-                <div class="detail-row">
-                    <span class="detail-label">Nhóm & Đề tài</span>
-                    <div class="detail-value" id="modalTeamTitle"><strong>-</strong></div>
+                <!-- Tóm tắt nhóm -->
+                <div class="team-summary-box" id="modalTeamTitle">
+                    <!-- JS render -->
                 </div>
 
-                <div class="form-group margin-top-16">
-                    <label class="form-label">Chọn Giảng viên hướng dẫn *</label>
-                    <select id="lecturerHDSelect" class="form-control">
+                <!-- Tìm kiếm giảng viên -->
+                <div class="form-group-new">
+                    <label class="form-label-new" for="lecturerSearchInput">
+                        Chọn giảng viên hướng dẫn <span class="required-mark">*</span>
+                    </label>
+                    <div class="search-wrap" style="margin-bottom:12px;">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="lecturerSearchInput" class="search-input"
+                            placeholder="Tìm theo tên hoặc mã giảng viên..."
+                            aria-label="Tìm giảng viên">
+                    </div>
+                    <select id="lecturerHDSelect" class="form-select-new" aria-label="Danh sách giảng viên hướng dẫn">
                         <option value="">-- Chọn Giảng Viên Hướng Dẫn --</option>
-                        <!-- Dynamic Lecturers -->
                     </select>
+                    <div id="assignChangeNote" class="assign-change-note" style="display:none;"></div>
                 </div>
             </div>
-            <div class="modal-foot margin-top-16">
-                <button type="button" class="btn btn-outline" id="cancelAssignBtn">Hủy</button>
-                <button type="button" class="btn btn-primary" id="saveAssignBtn"><i class="fa-solid fa-floppy-disk"></i> Lưu Phân Công</button>
+
+            <div class="modal-foot">
+                <button type="button" class="btn-action btn-action-outline" id="cancelAssignBtn">
+                    <i class="fa-solid fa-xmark"></i> Hủy
+                </button>
+                <button type="button" class="btn-action btn-action-primary" id="saveAssignBtn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span id="saveAssignText">Xác nhận phân công</span>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- MODAL ĐĂNG XUẤT -->
-    <div id="logoutModal" class="modal-overlay">
+    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
         <div class="modal-card modal-sm text-center">
-            <div class="modal-icon-red"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
-            <h3>Xác nhận đăng xuất</h3>
-            <p class="margin-top-8">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
-            <div class="modal-foot center margin-top-16">
-                <button class="btn btn-outline" id="cancelLogout">Hủy</button>
-                <button class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
+            <div class="modal-danger-icon">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </div>
+            <h3 class="modal-title" id="logoutModalTitle" style="margin-bottom:8px;">Xác nhận đăng xuất</h3>
+            <p style="font-size:14px;color:var(--text-muted);">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
+            <div class="modal-foot" style="justify-content:center; margin-top:20px;">
+                <button class="btn-action btn-action-outline" id="cancelLogout">Hủy</button>
+                <button class="btn-action btn-action-danger" id="confirmLogout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
             </div>
         </div>
     </div>

@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nhóm SV Hướng Dẫn | Cổng Giảng Viên</title>
     
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-groups.css">
@@ -24,7 +29,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                        <span>CỔNG GIẢNG VIÊN</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -94,48 +102,73 @@
                         <p>Quản lý danh sách sinh viên, theo dõi tiến độ tổng thể và liên lạc nhanh với các nhóm.</p>
                     </div>
                     <div class="header-actions">
-                        <button id="exportExcelBtn" class="btn-outline">
-                            <i class="fa-solid fa-file-excel"></i> Xuất Excel
-                        </button>
                         <button id="openBroadcastModalBtn" class="btn-primary">
                             <i class="fa-solid fa-paper-plane"></i> Gửi thông báo chung
                         </button>
                     </div>
                 </div>
 
-                <!-- MINI STATS BAR -->
+                <!-- 4 THẺ THỐNG KÊ (MINI STATS BAR) -->
                 <div class="groups-stats-bar">
-                    <div class="stat-box">
-                        <span class="stat-label">Tổng số nhóm đang HD</span>
-                        <strong id="stat-total-groups" class="stat-number">0</strong>
+                    <div class="stat-box stat-blue" data-filter="ALL">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-people-group"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Tổng số nhóm đang HD</span>
+                            <strong id="stat-total-groups" class="stat-number">0</strong>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Tổng số sinh viên</span>
-                        <strong id="stat-total-students" class="stat-number">0</strong>
+                    <div class="stat-box stat-purple">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Tổng số sinh viên</span>
+                            <strong id="stat-total-students" class="stat-number">0</strong>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Đang đúng tiến độ</span>
-                        <strong id="stat-on-track" class="stat-number text-green">0</strong>
+                    <div class="stat-box stat-green" data-filter="ON_TRACK">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Đang đúng tiến độ</span>
+                            <strong id="stat-on-track" class="stat-number text-green">0</strong>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Cần nhắc nhở / Trễ hạn</span>
-                        <strong id="stat-warning" class="stat-number text-red">0</strong>
+                    <div class="stat-box stat-red" data-filter="WARNING">
+                        <div class="stat-box-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Cần nhắc nhở / Trễ hạn</span>
+                            <strong id="stat-warning" class="stat-number text-red">0</strong>
+                        </div>
                     </div>
                 </div>
 
                 <!-- FILTER & SEARCH TOOLBAR -->
                 <div class="groups-toolbar">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="searchGroupInput" placeholder="Tìm mã nhóm, tên đề tài, tên SV...">
+                    <div class="groups-toolbar-left">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchGroupInput" placeholder="Tìm mã nhóm, tên đề tài, tên SV, MSSV...">
+                        </div>
+                        <div class="filter-controls">
+                            <div class="filter-select-wrapper">
+                                <select id="statusFilter" class="select-filter">
+                                    <option value="ALL">Tất cả tình trạng tiến độ</option>
+                                    <option value="ON_TRACK">Đúng tiến độ</option>
+                                    <option value="WARNING">Cần lưu ý / Trễ hạn</option>
+                                    <option value="UNCONFIGURED">Chưa cấu hình mốc</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="filter-controls">
-                        <select id="statusFilter" class="select-filter">
-                            <option value="ALL">Tất cả tình trạng</option>
-                            <option value="ON_TRACK">Đúng tiến độ</option>
-                            <option value="WARNING">Cần lưu ý / Trễ hạn</option>
-                        </select>
-                    </div>
+                    <button type="button" id="btnClearGroupFilters" class="btn-clear-filters" style="display: none;">
+                        <i class="fa-solid fa-rotate-left"></i> Xóa lọc
+                    </button>
                 </div>
 
                 <!-- GROUPS GRID (LƯỚI THẺ NHÓM - RỖNG ĐỂ JS RENDER) -->
@@ -176,6 +209,7 @@
         </div>
     </div>
 
+    <!-- MODAL: CHAT VỚI TRƯỞNG NHÓM -->
     <div id="groupChatModal" class="modal-overlay">
         <div class="modal-box group-chat-modal">
             <div class="group-chat-header">
@@ -206,6 +240,7 @@
         </div>
     </div>
 
+    <!-- MODAL: XÁC NHẬN ĐĂNG XUẤT -->
     <div id="logoutModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
@@ -218,6 +253,7 @@
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="../../js/config.js"></script>
     <script src="../../js/common/chat-unread-sidebar.js"></script>
     <script src="../../js/common/notif-badge.js"></script>

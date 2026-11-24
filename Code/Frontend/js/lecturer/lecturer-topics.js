@@ -12,6 +12,14 @@ let currentSelectedTopicId = null;
 let currentActionType = null; // 'APPROVE' | 'REJECT' | 'REVISION'
 let editingPoolTopicId = null;
 
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // 1. KIỂM TRA ĐĂNG NHẬP (Bắt buộc Token và Role là LECTURER)
     let lecturerAuth = null;
@@ -53,19 +61,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabContents = document.querySelectorAll(".tab-content");
     const openCreateModalBtn = document.getElementById("openCreateModalBtn");
     const openTopicImportBtn = document.getElementById("openTopicImportBtn");
+
     const updateCreateButtonVisibility = activeTab => {
-        if (openCreateModalBtn) openCreateModalBtn.hidden = activeTab !== "my-topics";
-        if (openTopicImportBtn) openTopicImportBtn.hidden = activeTab !== "my-topics";
+        // Luôn hiển thị nút để giảng viên thao tác nhanh, nếu nhấn từ tab khác sẽ tự mở modal/tab kho
+        if (openCreateModalBtn) openCreateModalBtn.hidden = false;
+        if (openTopicImportBtn) openTopicImportBtn.hidden = false;
     };
 
     updateCreateButtonVisibility(document.querySelector(".tab-btn.active")?.dataset.tab);
 
     tabButtons.forEach(btn => {
         btn.addEventListener("click", () => {
-            tabButtons.forEach(b => b.classList.remove("active"));
+            tabButtons.forEach(b => {
+                b.classList.remove("active");
+                b.setAttribute("aria-selected", "false");
+            });
             tabContents.forEach(c => c.classList.remove("active"));
 
             btn.classList.add("active");
+            btn.setAttribute("aria-selected", "true");
             const targetTabId = btn.getAttribute("data-tab");
             const targetContent = document.getElementById(`tab-${targetTabId}`);
             if (targetContent) targetContent.classList.add("active");
@@ -76,12 +90,30 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // Chuyển tab khi nhấp vào thẻ KPI
+    document.querySelectorAll(".stat-kpi-card[data-tab-target]").forEach(card => {
+        card.addEventListener("click", () => {
+            const targetTab = card.getAttribute("data-tab-target");
+            const targetBtn = document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
+            if (targetBtn) targetBtn.click();
+        });
+    });
+
     // 4. LẮNG NGHE LỌC & TÌM KIẾM
     const searchInput = document.getElementById("searchTopicInput");
     const categoryFilter = document.getElementById("categoryFilter");
+    const clearFilterBtn = document.getElementById("btnClearFilters");
 
     if (searchInput) searchInput.addEventListener("input", filterAndRender);
     if (categoryFilter) categoryFilter.addEventListener("change", filterAndRender);
+
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener("click", () => {
+            if (searchInput) searchInput.value = "";
+            if (categoryFilter) categoryFilter.value = "ALL";
+            filterAndRender();
+        });
+    }
 
     // 5. THIẾT LẬP CÁC MODAL THAO TÁC
     setupModals(lecturerCode, token);
@@ -105,18 +137,40 @@ async function loadLecturerTopics(lecturerCode, token) {
                 approved: result.data.approved || [],
                 myPool: result.data.myPool || []
             };
-            // Cập nhật số lượng huy hiệu (badge) tab Chờ duyệt
+
+            const pendingCount = allTopicsData.pending.length;
+            const approvedCount = allTopicsData.approved.length;
+            const poolTotal = allTopicsData.myPool.length;
+            const poolOpen = allTopicsData.myPool.filter(t => 
+                !t.is_registered && 
+                t.status !== 'REGISTERED' && 
+                t.status !== 'REJECTED' && 
+                (Number(t.registered_groups) || 0) < (Number(t.max_groups) || 1)
+            ).length;
+
+            // Cập nhật 4 thẻ KPI thống kê
+            const statPending = document.getElementById("statKpiPending");
+            const statApproved = document.getElementById("statKpiApproved");
+            const statPoolTotal = document.getElementById("statKpiPoolTotal");
+            const statPoolOpen = document.getElementById("statKpiPoolOpen");
+
+            if (statPending) statPending.textContent = pendingCount;
+            if (statApproved) statApproved.textContent = approvedCount;
+            if (statPoolTotal) statPoolTotal.textContent = poolTotal;
+            if (statPoolOpen) statPoolOpen.textContent = poolOpen;
+
+            // Cập nhật số lượng huy hiệu (badge) các tab
             const badgePending = document.getElementById("badge-pending");
             if (badgePending) {
-                badgePending.textContent = allTopicsData.pending.length;
-                badgePending.classList.toggle("has-pending", allTopicsData.pending.length > 0);
+                badgePending.textContent = pendingCount;
+                badgePending.classList.toggle("has-pending", pendingCount > 0);
             }
 
             const badgeApproved = document.getElementById("badge-approved");
-            if (badgeApproved) badgeApproved.textContent = allTopicsData.approved.length;
+            if (badgeApproved) badgeApproved.textContent = approvedCount;
 
             const badgeMyTopics = document.getElementById("badge-my-topics");
-            if (badgeMyTopics) badgeMyTopics.textContent = allTopicsData.myPool.length;
+            if (badgeMyTopics) badgeMyTopics.textContent = poolTotal;
 
             // Render ra giao diện
             filterAndRender();
@@ -133,8 +187,18 @@ async function loadLecturerTopics(lecturerCode, token) {
  * Lọc theo Từ khóa + Lĩnh vực và Render vào bảng
  */
 function filterAndRender() {
-    const keyword = (document.getElementById("searchTopicInput")?.value || "").toLowerCase().trim();
-    const category = document.getElementById("categoryFilter")?.value || "ALL";
+    const searchInput = document.getElementById("searchTopicInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const clearFilterBtn = document.getElementById("btnClearFilters");
+
+    const keyword = (searchInput?.value || "").toLowerCase().trim();
+    const category = categoryFilter?.value || "ALL";
+
+    // Cập nhật hiển thị nút Xóa bộ lọc
+    const hasFilter = Boolean(keyword) || (category !== "ALL");
+    if (clearFilterBtn) {
+        clearFilterBtn.style.display = hasFilter ? "inline-flex" : "none";
+    }
 
     // Hàm kiểm tra 1 đề tài có thỏa mãn điều kiện lọc không
     const matchFilter = (topic) => {
@@ -142,8 +206,11 @@ function filterAndRender() {
             (topic.title || "").toLowerCase().includes(keyword) ||
             (topic.topic_code || "").toLowerCase().includes(keyword) ||
             (topic.leader_code || topic.student_code || "").toLowerCase().includes(keyword) ||
+            (topic.leader_name || "").toLowerCase().includes(keyword) ||
             (topic.member2_code || "").toLowerCase().includes(keyword) ||
-            (topic.member3_code || "").toLowerCase().includes(keyword)
+            (topic.member2_name || "").toLowerCase().includes(keyword) ||
+            (topic.member3_code || "").toLowerCase().includes(keyword) ||
+            (topic.member3_name || "").toLowerCase().includes(keyword)
         );
         const matchCategory = (category === "ALL" || topic.category === category);
         return matchKeyword && matchCategory;
@@ -161,7 +228,7 @@ function filterAndRender() {
 }
 
 /**
- * RENDER TAB 1: CHỜ PHÊ DUYỆT
+ * RENDER TAB 1: CHỜ PHÊ DUYỆT (ƯU TIÊN THAO TÁC AN TOÀN)
  */
 function renderPendingTable(list) {
     const tbody = document.getElementById("tbody-pending");
@@ -171,37 +238,86 @@ function renderPendingTable(list) {
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: #64748b;">Không có đề tài nào chờ phê duyệt</td></tr>`;
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon green">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h4>Không có đề tài nào chờ phê duyệt</h4>
+                        <p>Bạn đã xử lý hết các đề xuất đề tài từ sinh viên. Khi có nhóm mới đăng ký, danh sách sẽ hiển thị tại đây.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
         if (footerText) footerText.innerHTML = "Hiển thị <strong>0</strong> kết quả";
         return;
     }
 
     list.forEach(topic => {
         const tr = document.createElement("tr");
-        const dateStr = topic.createdAt ? new Date(topic.createdAt).toLocaleDateString("vi-VN") : "N/A";
+        tr.className = "row-pending";
+
+        const created = topic.createdAt ? new Date(topic.createdAt) : null;
+        const dateStr = created ? created.toLocaleDateString("vi-VN") : "N/A";
+        let relativeTimeStr = "";
+        let isOverdueDays = false;
+        if (created) {
+            const now = new Date();
+            const diffMs = now - created;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) relativeTimeStr = "Hôm nay";
+            else if (diffDays === 1) relativeTimeStr = "Hôm qua";
+            else {
+                relativeTimeStr = `Cách đây ${diffDays} ngày`;
+                if (diffDays >= 3) isOverdueDays = true;
+            }
+        }
+
         const tagClass = getCategoryTagClass(topic.category);
+        const codeDisplay = topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"));
+        const leaderCode = topic.leader_code || topic.student_code || "N/A";
+        const leaderName = topic.leader_name || leaderCode;
+        const leaderInitial = leaderName.trim().split(/\s+/).slice(-2)
+            .map(part => part.charAt(0).toLocaleUpperCase("vi-VN")).join("");
 
         tr.innerHTML = `
-            <td><strong>${topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"))}</strong></td>
+            <td><span class="topic-code-cell">${escapeHtml(codeDisplay)}</span></td>
             <td>
-                <div class="topic-title-cell">
-                    <a href="#" class="topic-title-link">${topic.title}</a>
-                    <small>${topic.description ? topic.description.substring(0, 70) + "..." : "Không có mô tả"}</small>
+                <div class="topic-title-cell" title="${escapeHtml(topic.title || '')}">
+                    <span class="topic-title-main">${escapeHtml(topic.title || "Chưa có tên đề tài")}</span>
+                    <span class="topic-desc-sub" title="${escapeHtml(topic.description || '')}">${escapeHtml(topic.description || "Không có mô tả")}</span>
                 </div>
             </td>
-            <td><span class="tag ${tagClass}">${topic.category || "Web / Ứng dụng"}</span></td>
-            <td><strong>${topic.leader_code || "N/A"}</strong></td>
-            <td>${dateStr}</td>
-            <td class="action-buttons">
-                <button class="btn-icon btn-approve" title="Phê duyệt đề tài" onclick="openConfirmModal('${topic._id}', 'APPROVE')">
-                    <i class="fa-solid fa-check"></i>
-                </button>
-                <button class="btn-icon btn-revision" title="Yêu cầu chỉnh sửa" onclick="openRevisionModal('${topic._id}')">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-                <button class="btn-icon btn-reject" title="Từ chối đề tài" onclick="openConfirmModal('${topic._id}', 'REJECT')">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+            <td><span class="tag-chip ${tagClass}">${escapeHtml(topic.category || "Web / Ứng dụng")}</span></td>
+            <td>
+                <div class="student-cell">
+                    <span class="student-avatar is-leader" title="Trưởng nhóm">${leaderInitial}</span>
+                    <div class="student-info">
+                        <span class="student-name">${escapeHtml(leaderName)}</span>
+                        <span class="student-code-badge">${leaderCode !== "N/A" ? `MSSV: ${escapeHtml(leaderCode)} · ` : ""}Trưởng nhóm</span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="date-cell-info">
+                    <span class="date-main"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
+                    ${relativeTimeStr ? `<span class="date-relative ${isOverdueDays ? 'warning' : ''}">${relativeTimeStr}</span>` : ''}
+                </div>
+            </td>
+            <td>
+                <div class="action-buttons-group">
+                    <button type="button" class="btn-table-action btn-action-approve" title="Phê duyệt hướng dẫn đề tài này" onclick="openConfirmModal('${topic._id}', 'APPROVE')">
+                        <i class="fa-solid fa-check"></i> <span>Duyệt</span>
+                    </button>
+                    <button type="button" class="btn-table-action btn-action-reject" title="Từ chối hướng dẫn đề tài này" onclick="openConfirmModal('${topic._id}', 'REJECT')">
+                        <i class="fa-solid fa-xmark"></i> <span>Từ chối</span>
+                    </button>
+                    <button type="button" class="btn-icon-action" title="Yêu cầu sinh viên chỉnh sửa" onclick="openRevisionModal('${topic._id}')">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -213,7 +329,7 @@ function renderPendingTable(list) {
 }
 
 /**
- * RENDER TAB 2: ĐÃ PHÊ DUYỆT (HIỂN THỊ CÁC THÀNH VIÊN)
+ * RENDER TAB 2: ĐÃ PHÊ DUYỆT (ĐANG HƯỚNG DẪN)
  */
 function renderApprovedTable(list) {
     const tbody = document.getElementById("tbody-approved");
@@ -223,7 +339,19 @@ function renderApprovedTable(list) {
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: #64748b;">Chưa có đề tài nào được phê duyệt</td></tr>`;
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon blue">
+                            <i class="fa-solid fa-user-group"></i>
+                        </div>
+                        <h4>Chưa có đề tài nào đang hướng dẫn</h4>
+                        <p>Các đề tài sau khi bạn phê duyệt sẽ xuất hiện tại đây để thuận tiện theo dõi tiến độ các tuần.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
         if (footerText) footerText.innerHTML = "Hiển thị <strong>0</strong> kết quả";
         return;
     }
@@ -232,20 +360,65 @@ function renderApprovedTable(list) {
         const tr = document.createElement("tr");
         const dateStr = topic.updatedAt ? new Date(topic.updatedAt).toLocaleDateString("vi-VN") : "N/A";
         const tagClass = getCategoryTagClass(topic.category);
-        
-        // Tạo chuỗi danh sách sinh viên tham gia
-        let members = topic.leader_code || "N/A";
-        if (topic.member2_code) members += `, ${topic.member2_code}`;
-        if (topic.member3_code) members += `, ${topic.member3_code}`;
+        const codeDisplay = topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"));
+
+        // Danh sách sinh viên thực hiện
+        const membersList = [
+            { code: topic.leader_code || topic.student_code, name: topic.leader_name },
+            { code: topic.member2_code, name: topic.member2_name },
+            { code: topic.member3_code, name: topic.member3_name }
+        ].filter(member => member.code);
+        const membersHtml = `
+            <div class="students-stack">
+                ${membersList.map((member, idx) => {
+                    const isLeader = idx === 0;
+                    const displayName = member.name || member.code;
+                    const initial = displayName.trim().split(/\s+/).slice(-2)
+                        .map(part => part.charAt(0).toLocaleUpperCase("vi-VN")).join("");
+                    return `
+                        <div class="student-cell" title="${escapeHtml(`${isLeader ? 'Trưởng nhóm: ' : 'Thành viên: '}${displayName} (${member.code})`)}">
+                            <span class="student-avatar ${isLeader ? 'is-leader' : ''}">${initial}</span>
+                            <span class="student-info">
+                                <span class="student-name" style="font-size: 12.5px;">${escapeHtml(displayName)}</span>
+                                <span class="student-code-badge">${escapeHtml(member.code)}</span>
+                            </span>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+        `;
 
         tr.innerHTML = `
-            <td><strong>${topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"))}</strong></td>
-            <td><strong>${topic.title}</strong></td>
-            <td><span class="tag ${tagClass}">${topic.category || "Web / Ứng dụng"}</span></td>
-            <td>${members}</td>
-            <td>${dateStr}</td>
-            <td><span class="badge badge-success">Đang hướng dẫn</span></td>
-            <td><a href="lecturer-progress-detail.html?topicId=${encodeURIComponent(topic._id)}" class="link-action">Xem tiến độ</a></td>
+            <td><span class="topic-code-cell">${escapeHtml(codeDisplay)}</span></td>
+            <td>
+                <div class="topic-title-cell" title="${escapeHtml(topic.title || '')}">
+                    <span class="topic-title-main">${escapeHtml(topic.title || "Chưa có tên")}</span>
+                </div>
+            </td>
+            <td><span class="tag-chip ${tagClass}">${escapeHtml(topic.category || "Web / Ứng dụng")}</span></td>
+            <td>${membersHtml}</td>
+            <td>
+                <span class="date-main"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
+            </td>
+            <td>
+                <div class="progress-cell-wrap">
+                    <span class="progress-text-sm">Tuần 01/15 (7%)</span>
+                    <div class="progress-track-sm">
+                        <div class="progress-fill-sm" style="width: 7%;"></div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="status-pill status-green">
+                    <span class="dot"></span>
+                    <span>Đang hướng dẫn</span>
+                </span>
+            </td>
+            <td style="text-align: center;">
+                <a href="lecturer-progress-detail.html?topicId=${encodeURIComponent(topic._id)}" class="btn-outline-action">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Xem tiến độ</span>
+                </a>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -256,7 +429,7 @@ function renderApprovedTable(list) {
 }
 
 /**
- * RENDER TAB 3: KHO ĐỀ TÀI CỦA TÔI (Đã thêm logic tự đối soát dữ liệu với danh sách Đã phê duyệt)
+ * RENDER TAB 3: KHO ĐỀ TÀI CỦA GIẢNG VIÊN
  */
 function renderMyTopicsTable(list) {
     const tbody = document.getElementById("tbody-mytopics");
@@ -266,7 +439,22 @@ function renderMyTopicsTable(list) {
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: #64748b;">Kho đề tài trống. Bạn chưa đăng đề tài gợi ý nào.</td></tr>`;
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon gray">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </div>
+                        <h4>Kho đề tài trống</h4>
+                        <p>Bạn chưa đăng đề tài gợi ý nào vào kho. Hãy thêm đề tài để sinh viên đăng ký!</p>
+                        <button type="button" class="btn-primary" style="margin-top: 14px;" onclick="document.getElementById('openCreateModalBtn')?.click()">
+                            <i class="fa-solid fa-plus"></i> Đề xuất đề tài mới
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
         if (footerText) footerText.innerHTML = "Hiển thị <strong>0</strong> kết quả";
         return;
     }
@@ -274,33 +462,41 @@ function renderMyTopicsTable(list) {
     list.forEach(topic => {
         const tr = document.createElement("tr");
         const tagClass = getCategoryTagClass(topic.category);
+        const codeDisplay = topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"));
         const registeredGroups = Number(topic.registered_groups) || 0;
         const maxGroupsValue = Number(topic.max_groups);
-        const maxGroups = Number.isInteger(maxGroupsValue) && maxGroupsValue >= 0
-            ? maxGroupsValue
-            : 1;
+        const maxGroups = Number.isInteger(maxGroupsValue) && maxGroupsValue >= 0 ? maxGroupsValue : 1;
         const isRegistered = topic.status === 'REGISTERED' || topic.is_registered === true;
 
-        const statusBadge = maxGroups === 0 && registeredGroups === 0
-            ? `<span class="badge badge-warning">Tạm khóa (hết chỉ tiêu)</span>`
-            : isRegistered
-            ? `<span class="badge badge-success">Đã có nhóm đăng ký (${registeredGroups}/${maxGroups})</span>`
-            : topic.status === 'APPROVED'
-            ? `<span class="badge badge-primary">Đang mở (${registeredGroups}/${maxGroups})</span>`
-            : topic.status === 'PENDING'
-            ? `<span class="badge badge-warning">Chờ duyệt</span>`
-            : topic.status === 'REJECTED'
-            ? `<span class="badge badge-danger">Đã từ chối</span>`
-            : `<span class="badge badge-primary">Đang mở (${registeredGroups}/${maxGroups})</span>`;
+        let statusBadge = "";
+        if (maxGroups === 0 && registeredGroups === 0) {
+            statusBadge = `<span class="status-pill status-gray"><span class="dot"></span> Tạm khóa</span>`;
+        } else if (isRegistered || registeredGroups >= maxGroups) {
+            statusBadge = `<span class="status-pill status-blue"><span class="dot"></span> Đã có nhóm (${registeredGroups}/${maxGroups})</span>`;
+        } else {
+            statusBadge = `<span class="status-pill status-green"><span class="dot"></span> Đang mở (${registeredGroups}/${maxGroups})</span>`;
+        }
+
+        const reqText = topic.requirements || topic.description || "Không có yêu cầu cụ thể";
 
         tr.innerHTML = `
-            <td><strong>${topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"))}</strong></td>
-            <td><strong>${topic.title}</strong></td>
-            <td><span class="tag ${tagClass}">${topic.category || "Web / Ứng dụng"}</span></td>
-            <td>${topic.requirements || topic.description || "Không có yêu cầu"}</td>
-            <td>${statusBadge}</td>
+            <td><span class="topic-code-cell">${escapeHtml(codeDisplay)}</span></td>
             <td>
-                <button type="button" class="btn-text-edit" data-edit-pool-topic="${topic._id}">Sửa</button>
+                <div class="topic-title-cell" title="${escapeHtml(topic.title || '')}">
+                    <span class="topic-title-main">${escapeHtml(topic.title || "Chưa có tên")}</span>
+                </div>
+            </td>
+            <td><span class="tag-chip ${tagClass}">${escapeHtml(topic.category || "Web / Ứng dụng")}</span></td>
+            <td>
+                <div class="requirements-cell" title="${escapeHtml(reqText)}">
+                    ${escapeHtml(reqText)}
+                </div>
+            </td>
+            <td>${statusBadge}</td>
+            <td style="text-align: center;">
+                <button type="button" class="btn-outline-action" data-edit-pool-topic="${topic._id}" title="Chỉnh sửa thông tin đề tài">
+                    <i class="fa-solid fa-pen-to-square"></i> <span>Sửa</span>
+                </button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -315,8 +511,9 @@ function renderMyTopicsTable(list) {
  * Hàm trợ giúp chọn màu Tag theo lĩnh vực
  */
 function getCategoryTagClass(category) {
-    if (category === "AI / ML") return "tag-green";
-    if (category === "Dữ liệu / Phân tích") return "tag-purple";
+    if (category === "AI / ML") return "tag-purple";
+    if (category === "Dữ liệu / Phân tích") return "tag-orange";
+    if (category === "Khác") return "tag-gray";
     return "tag-blue";
 }
 
@@ -328,6 +525,7 @@ function setupModals(lecturerCode, token) {
     const revisionModal = document.getElementById("revisionModal");
     const confirmModal = document.getElementById("actionConfirmModal");
     const topicImportModal = document.getElementById("topicImportModal");
+    const rejectModal = document.getElementById("rejectTopicModal");
 
     // Đóng Modal khi bấm nút X hoặc Hủy
     document.querySelectorAll(".btn-close-modal").forEach(btn => {
@@ -336,6 +534,7 @@ function setupModals(lecturerCode, token) {
             if (revisionModal) revisionModal.style.display = "none";
             if (confirmModal) confirmModal.style.display = "none";
             if (topicImportModal) topicImportModal.style.display = "none";
+            if (rejectModal) rejectModal.style.display = "none";
         });
     });
 
@@ -422,7 +621,7 @@ function setupModals(lecturerCode, token) {
                     // Tải lại dữ liệu và tự động kích hoạt Tab Kho đề tài để xem kết quả
                     await loadLecturerTopics(lecturerCode, token);
 
-                    const poolTabBtn = document.querySelector('.tab-btn[data-tab="mytopics"]');
+                    const poolTabBtn = document.querySelector('.tab-btn[data-tab="my-topics"]');
                     if (poolTabBtn) poolTabBtn.click();
                 } else {
                     showAppNotification("Lỗi: " + (result.message || "Không thể tạo đề tài"));
@@ -447,26 +646,32 @@ function setupModals(lecturerCode, token) {
     function clearTopicImportPreview() {
         previewValidCount = 0;
         previewedFile = null;
-        importSummary.textContent = "";
-        importMessage.textContent = "";
-        importMessage.className = "topic-import-message";
-        confirmImportButton.disabled = true;
-        previewBody.replaceChildren();
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.colSpan = 5;
-        cell.className = "topic-import-empty";
-        cell.textContent = "Chưa có dữ liệu xem trước.";
-        row.appendChild(cell);
-        previewBody.appendChild(row);
+        if (importSummary) importSummary.textContent = "";
+        if (importMessage) {
+            importMessage.textContent = "";
+            importMessage.className = "topic-import-message";
+        }
+        if (confirmImportButton) confirmImportButton.disabled = true;
+        if (previewBody) {
+            previewBody.replaceChildren();
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 5;
+            cell.className = "topic-import-empty";
+            cell.textContent = "Chưa có dữ liệu xem trước.";
+            row.appendChild(cell);
+            previewBody.appendChild(row);
+        }
     }
 
     function setTopicImportMessage(message, type) {
+        if (!importMessage) return;
         importMessage.textContent = message;
         importMessage.className = `topic-import-message ${type || ""}`;
     }
 
     function renderTopicImportRows(rows) {
+        if (!previewBody) return;
         previewBody.replaceChildren();
         rows.forEach(rowData => {
             const row = document.createElement("tr");
@@ -487,9 +692,7 @@ function setupModals(lecturerCode, token) {
             row.appendChild(category);
 
             const validation = document.createElement("td");
-            validation.textContent = rowData.valid
-                ? "Hợp lệ"
-                : rowData.errors.join(" ");
+            validation.textContent = rowData.valid ? "Hợp lệ" : rowData.errors.join(" ");
             validation.className = rowData.valid ? "topic-import-valid" : "topic-import-invalid";
             row.appendChild(validation);
             previewBody.appendChild(row);
@@ -501,7 +704,7 @@ function setupModals(lecturerCode, token) {
             !await window.verifyAuthSession("LECTURER")) {
             throw new Error("Không thể xác minh phiên Giảng viên.");
         }
-        const file = importFileInput.files?.[0];
+        const file = importFileInput?.files?.[0];
         if (!file) throw new Error("Vui lòng chọn file Excel.");
 
         const formData = new FormData();
@@ -520,7 +723,7 @@ function setupModals(lecturerCode, token) {
     }
 
     openImportButton?.addEventListener("click", () => {
-        importFileInput.value = "";
+        if (importFileInput) importFileInput.value = "";
         clearTopicImportPreview();
         if (topicImportModal) topicImportModal.style.display = "flex";
     });
@@ -552,15 +755,15 @@ function setupModals(lecturerCode, token) {
     previewImportButton?.addEventListener("click", async () => {
         clearTopicImportPreview();
         previewImportButton.disabled = true;
-        previewImportButton.textContent = "Đang kiểm tra...";
+        previewImportButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang kiểm tra...</span>';
         try {
             const data = await sendTopicImportFile(`${API_BASE_URL}/lecturer-pool/import/preview`);
             previewValidCount = data.valid_count;
             const selectedFile = importFileInput.files[0];
             previewedFile = `${selectedFile.name}:${selectedFile.size}:${selectedFile.lastModified}`;
-            importSummary.textContent = `Tổng ${data.total_rows} dòng: ${data.valid_count} hợp lệ, ${data.error_count} có lỗi.`;
+            if (importSummary) importSummary.textContent = `Tổng ${data.total_rows} dòng: ${data.valid_count} hợp lệ, ${data.error_count} có lỗi.`;
             renderTopicImportRows(data.rows);
-            confirmImportButton.disabled = previewValidCount === 0;
+            if (confirmImportButton) confirmImportButton.disabled = previewValidCount === 0;
             setTopicImportMessage(
                 previewValidCount
                     ? "Có thể import các dòng hợp lệ; các dòng lỗi sẽ được bỏ qua."
@@ -571,21 +774,21 @@ function setupModals(lecturerCode, token) {
             setTopicImportMessage(error.message || "Không thể kiểm tra file Excel.", "error");
         } finally {
             previewImportButton.disabled = false;
-            previewImportButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Kiểm tra & xem trước';
+            previewImportButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> <span>Kiểm tra & xem trước</span>';
         }
     });
 
     confirmImportButton?.addEventListener("click", async () => {
-        const selectedFile = importFileInput.files?.[0];
+        const selectedFile = importFileInput?.files?.[0];
         if (!previewValidCount || !selectedFile ||
             previewedFile !== `${selectedFile.name}:${selectedFile.size}:${selectedFile.lastModified}`) return;
         confirmImportButton.disabled = true;
-        previewImportButton.disabled = true;
+        if (previewImportButton) previewImportButton.disabled = true;
         confirmImportButton.textContent = "Đang import...";
         try {
             const data = await sendTopicImportFile(`${API_BASE_URL}/lecturer-pool/import`);
             previewValidCount = 0;
-            importSummary.textContent = `Đã import ${data.imported_count}/${data.total_rows} đề tài hợp lệ.`;
+            if (importSummary) importSummary.textContent = `Đã import ${data.imported_count}/${data.total_rows} đề tài hợp lệ.`;
             setTopicImportMessage(data.message, data.imported_count ? "success" : "error");
             confirmImportButton.disabled = true;
             showAppNotification(data.message || "Đã import đề tài vào kho.");
@@ -594,12 +797,11 @@ function setupModals(lecturerCode, token) {
             setTopicImportMessage(error.message || "Không thể import đề tài.", "error");
             confirmImportButton.disabled = false;
         } finally {
-            previewImportButton.disabled = false;
+            if (previewImportButton) previewImportButton.disabled = false;
             confirmImportButton.textContent = "Import đề tài hợp lệ";
         }
     });
 
-    const rejectModal = document.getElementById("rejectTopicModal");
     const rejectReasonInput = document.getElementById("rejectReasonInput");
     const confirmRejectBtn = document.getElementById("confirmRejectBtn");
 
@@ -663,21 +865,35 @@ window.openConfirmModal = function(topicId, actionType) {
     currentSelectedTopicId = topicId;
     currentActionType = actionType;
 
+    const topic = allTopicsData.pending.find(t => t._id === topicId) || {};
+    const codeDisplay = topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"));
+    const leaderCode = topic.leader_code || topic.student_code || "N/A";
+    const leaderName = topic.leader_name || leaderCode;
+
+    const previewHtml = `
+        <div class="preview-title">${escapeHtml(topic.title || 'Chưa có tên đề tài')}</div>
+        <div class="preview-meta">
+            <span><i class="fa-solid fa-hashtag"></i> <strong>${escapeHtml(codeDisplay)}</strong></span>
+            <span><i class="fa-solid fa-user"></i> Trưởng nhóm: <strong>${escapeHtml(leaderName)}</strong>${leaderCode !== "N/A" ? ` (${escapeHtml(leaderCode)})` : ""}</span>
+            <span><i class="fa-solid fa-layer-group"></i> ${escapeHtml(topic.category || 'Web / Ứng dụng')}</span>
+        </div>
+    `;
+
     const modal = document.getElementById("actionConfirmModal");
     const iconEl = document.getElementById("confirmIcon");
     const titleEl = document.getElementById("confirmTitle");
     const msgEl = document.getElementById("confirmMessage");
     const actionBtn = document.getElementById("confirmActionBtn");
-
-    if (!modal) return;
+    const approvePreview = document.getElementById("approveTopicPreview");
 
     if (actionType === 'APPROVE') {
         if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #16a34a; font-size: 3rem;"></i>';
         if (titleEl) titleEl.textContent = "Xác nhận phê duyệt";
         if (msgEl) msgEl.textContent = "Bạn có chắc chắn muốn phê duyệt đề tài này cho nhóm sinh viên không?";
+        if (approvePreview) approvePreview.innerHTML = previewHtml;
         if (actionBtn) {
             actionBtn.style.backgroundColor = "#16a34a";
-            actionBtn.textContent = "Phê duyệt ngay";
+            actionBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đồng ý phê duyệt';
         }
 
         if (modal) modal.style.display = "flex";
@@ -685,6 +901,8 @@ window.openConfirmModal = function(topicId, actionType) {
         if (modal) modal.style.display = "none";
         const rejectModal = document.getElementById("rejectTopicModal");
         const rejectReasonInput = document.getElementById("rejectReasonInput");
+        const rejectPreview = document.getElementById("rejectTopicPreview");
+        if (rejectPreview) rejectPreview.innerHTML = previewHtml;
         if (rejectReasonInput) rejectReasonInput.value = "";
         if (rejectModal) rejectModal.style.display = "flex";
     }
@@ -695,6 +913,23 @@ window.openConfirmModal = function(topicId, actionType) {
  */
 window.openRevisionModal = function(topicId) {
     currentSelectedTopicId = topicId;
+    const topic = allTopicsData.pending.find(t => t._id === topicId) || {};
+    const codeDisplay = topic.topic_code || ("DT-" + (topic._id ? topic._id.slice(-5).toUpperCase() : "0000"));
+    const leaderCode = topic.leader_code || topic.student_code || "N/A";
+    const leaderName = topic.leader_name || leaderCode;
+
+    const revisionPreview = document.getElementById("revisionTopicPreview");
+    if (revisionPreview) {
+        revisionPreview.innerHTML = `
+            <div class="preview-title">${escapeHtml(topic.title || 'Chưa có tên đề tài')}</div>
+            <div class="preview-meta">
+                <span><i class="fa-solid fa-hashtag"></i> <strong>${escapeHtml(codeDisplay)}</strong></span>
+                <span><i class="fa-solid fa-user"></i> Trưởng nhóm: <strong>${escapeHtml(leaderName)}</strong>${leaderCode !== "N/A" ? ` (${escapeHtml(leaderCode)})` : ""}</span>
+                <span><i class="fa-solid fa-layer-group"></i> ${escapeHtml(topic.category || 'Web / Ứng dụng')}</span>
+            </div>
+        `;
+    }
+
     const modal = document.getElementById("revisionModal");
     if (modal) modal.style.display = "flex";
 };

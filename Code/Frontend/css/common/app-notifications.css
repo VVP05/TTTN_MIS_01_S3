@@ -1,6 +1,6 @@
 .app-notification-container {
     position: fixed;
-    top: 22px;
+    top: 76px;
     right: 24px;
     z-index: 9999;
     width: min(390px, calc(100vw - 32px));
@@ -264,7 +264,7 @@
 
 @media (max-width: 600px) {
     .app-notification-container {
-        top: 14px;
+        top: 70px;
         right: 16px;
         left: 16px;
         width: auto;

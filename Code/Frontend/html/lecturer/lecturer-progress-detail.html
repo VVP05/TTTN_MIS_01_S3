@@ -4,59 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi Tiết Tiến Độ Nhóm | Cổng Giảng Viên</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
+    <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
     <link rel="stylesheet" href="../../css/lecturer/lecturer-progress-detail.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="../../css/common/chat-unread.css">
+    <link rel="stylesheet" href="../../css/common/lecturer-logout-modal.css">
     <link rel="stylesheet" href="../../css/responsive.css">
 </head>
 <body>
-
-    <div class="main-wrapper progress-detail-page">
-        <a href="lecturer-topics.html" class="back-link">
-            <i class="fa-solid fa-arrow-left"></i><span>Quay lại danh sách đề tài</span>
-        </a>
-
-        <!-- 1. THÔNG TIN CHUNG NHÓM -->
-        <div class="progress-header-card" id="progressHeader">
-            <div class="topic-heading">
-                <span class="status-pill" id="topicStatus">Đang thực hiện</span>
-                <span class="topic-kicker">CHI TIẾT NHÓM HƯỚNG DẪN</span>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-logo">
+                    <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                        <span>CỔNG GIẢNG VIÊN</span>
+                    </div>
+                </div>
+                <nav class="sidebar-menu" aria-label="Điều hướng giảng viên">
+                    <ul>
+                        <li class="menu-item"><a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> Dashboard</a></li>
+                        <li class="menu-item"><a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt &amp; Quản lý đề tài</a></li>
+                        <li class="menu-item"><a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn<span id="chatSidebarBadge" class="chat-unread-badge chat-sidebar-unread-badge" hidden></span></a></li>
+                        <li class="menu-item active"><a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ &amp; Lịch gặp</a></li>
+                        <li class="menu-item"><a href="lecturer-milestones.html"><i class="fa-solid fa-calendar-check"></i> Milestone &amp; Hạn nộp</a></li>
+                        <li class="menu-item"><a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu &amp; Biểu mẫu</a></li>
+                        <li class="menu-item"><a href="lecturer-notifications.html"><i class="fa-solid fa-bell"></i> Thông báo<span id="sidebarNotificationBadge" class="sidebar-notification-badge" style="display:none;">0</span></a></li>
+                        <li class="menu-item"><a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a></li>
+                    </ul>
+                </nav>
             </div>
-            <h2 id="topicTitle">Đang tải dữ liệu...</h2>
-            <p id="topicMeta">Đang tải thông tin đề tài...</p>
-            <div class="members-heading"><i class="fa-solid fa-users"></i> Thành viên nhóm</div>
-            <div class="member-list" id="memberList"></div>
+            <div class="sidebar-bottom">
+                <div class="sidebar-footer"><p>© 2026 Khoa CNTT<br>All rights reserved.</p></div>
+            </div>
+        </aside>
+
+        <div class="main-wrapper">
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle" type="button" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars"></i></button>
+                    <nav class="progress-breadcrumb" aria-label="Breadcrumb">
+                        <a href="lecturer-schedule.html">Tiến độ &amp; Lịch gặp</a>
+                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                        <span id="breadcrumbGroupCode">Chi tiết nhóm</span>
+                    </nav>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Giảng viên</span>
+                        <span id="userCode" class="user-badge">GV</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout" type="button" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body progress-detail-page">
+                <div class="progress-page-content">
+                    <div class="progress-page-heading">
+                        <div>
+                            <h1>Chi tiết tiến độ nhóm</h1>
+                            <p>Theo dõi các mốc báo cáo và phản hồi bài nộp của sinh viên.</p>
+                        </div>
+                    </div>
+
+                    <section class="progress-header-card" id="progressHeader" aria-labelledby="topicTitle">
+                        <div class="topic-heading">
+                            <span class="status-pill" id="topicStatus">Đang thực hiện</span>
+                        </div>
+                        <h2 id="topicTitle">Đang tải dữ liệu...</h2>
+                        <p id="topicMeta">Đang tải thông tin đề tài...</p>
+                        <div class="members-heading">
+                            <div class="members-title-group">
+                                <span><i class="fa-solid fa-users"></i> Thành viên nhóm</span>
+                                <a class="member-chat-link" href="lecturer-groups.html" title="Mở danh sách nhóm để bắt đầu chat">
+                                    <i class="fa-solid fa-comments"></i> Chat
+                                </a>
+                            </div>
+                        </div>
+                        <div class="member-list" id="memberList"></div>
+                    </section>
+
+                    <section class="progress-section" aria-labelledby="milestoneHeading">
+                        <div class="section-heading">
+                            <div>
+                                <h2 id="milestoneHeading">Tiến độ các giai đoạn</h2>
+                            </div>
+                            <span id="progressMilestoneCount">Đang tải mốc...</span>
+                        </div>
+                        <div class="milestone-tracker" id="milestoneTracker"></div>
+                    </section>
+
+                    <section class="submissions-card" aria-labelledby="submissionHeading">
+                        <div class="card-header">
+                            <div>
+                                <h2 id="submissionHeading">Danh sách báo cáo công việc đã nộp</h2>
+                            </div>
+                        </div>
+                        <div class="submission-cards-container" id="submissionTableBody" aria-live="polite"></div>
+                    </section>
+                </div>
+            </main>
         </div>
+    </div>
 
-        <!-- 2. THEO DÕI TIẾN ĐỘ THEO CỘT MỐC (MILESTONES) -->
-        <div class="section-heading"><h3>Tiến độ các giai đoạn</h3><span id="progressMilestoneCount">Đang tải mốc...</span></div>
-        <div class="milestone-tracker" id="milestoneTracker"></div>
-
-        <!-- 3. BẢNG BÁO CÁO HÀNG TUẦN & ĐÁNH GIÁ CỦA GV -->
-        <div class="table-card submissions-card">
-            <div class="card-header">
-                <h3>Danh sách báo cáo công việc đã nộp</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Tuần / Ngày nộp</th>
-                            <th>Mốc báo cáo</th>
-                            <th>File đính kèm</th>
-                            <th>Trạng thái</th>
-                            <th>Nhận xét</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="submissionTableBody"></tbody>
-                </table>
+    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3 id="logoutTitle">Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi hệ thống giảng viên không?</p>
+            <div class="modal-actions">
+                <button type="button" id="cancelLogoutBtn" class="btn-cancel">Hủy bỏ</button>
+                <button type="button" id="confirmLogoutBtn" class="btn-confirm">Đăng xuất</button>
             </div>
         </div>
     </div>
+
     <script src="../../js/config.js"></script>
+    <script src="../../js/common/confirm-dialog.js"></script>
     <script src="../../js/lecturer/lecturer-progress-detail.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
+    <script src="../../js/common/chat-unread-sidebar.js"></script>
+    <script src="../../js/common/notif-badge.js"></script>
+    <script src="../../js/common/sidebar-toggle.js"></script>
+    <script src="../../js/common/lecturer-logout-dialog.js"></script>
 </body>
 </html>

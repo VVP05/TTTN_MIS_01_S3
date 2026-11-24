@@ -1,76 +1,441 @@
-/* THANH SỐ LIỆU TÓM TẮT (STATS BAR) */
+/* =========================================================
+   GIAO DIỆN QUẢN LÝ NHÓM SV HƯỚNG DẪN (GIẢNG VIÊN)
+   Design System: Giáo dục hiện đại, sạch sẽ, thoáng mát
+   ========================================================= */
+
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
+    --primary-border: #bfdbfe;
+    
+    --success: #16a34a;
+    --success-light: #f0fdf4;
+    --success-border: #bbf7d0;
+    
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --warning-border: #fde68a;
+    
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+    --danger-border: #fecaca;
+    
+    --purple: #7c3aed;
+    --purple-light: #f5f3ff;
+    --purple-border: #ddd6fe;
+
+    --bg-page: #f4f7fe;
+    --card-bg: #ffffff;
+    --card-radius: 16px;
+    --card-shadow: 0 4px 20px rgba(30, 64, 175, 0.06);
+    --card-shadow-hover: 0 10px 25px rgba(30, 64, 175, 0.12);
+
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --border-color: #e2e8f0;
+}
+
+/* CONTENT BODY KHÔNG BỊ CO CỤM TRÊN MÀN HÌNH RỘNG */
+.content-body {
+    width: 100% !important;
+    max-width: none !important;
+    flex: 1;
+    padding: 24px 28px !important;
+    background-color: var(--bg-page);
+    box-sizing: border-box;
+    font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 1. HEADER TRANG & BREADCRUMB */
+.page-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.page-header-text h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    margin: 0 0 6px 0;
+    line-height: 1.25;
+}
+
+.page-header-text p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-actions .btn-primary {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+.header-actions .btn-outline {
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #ffffff;
+    color: var(--success);
+    border: 1px solid var(--success-border);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.08);
+    transition: all 0.2s ease;
+}
+
+.header-actions .btn-outline:hover {
+    background-color: var(--success-light);
+    border-color: var(--success);
+    color: #15803d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+}
+
+/* 2. BỐN THẺ THỐNG KÊ (STATS BAR) */
 .groups-stats-bar {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 20px;
     margin-bottom: 24px;
 }
 
 .stat-box {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 18px;
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: none;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-box:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.stat-box-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.stat-box.stat-blue .stat-box-icon {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: #2563eb;
+}
+
+.stat-box.stat-purple .stat-box-icon {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    color: #7c3aed;
+}
+
+.stat-box.stat-green .stat-box-icon {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    color: #16a34a;
+}
+
+.stat-box.stat-red .stat-box-icon {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    color: #dc2626;
+}
+
+.stat-box.stat-red.has-warning {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.1);
+}
+
+.stat-box.stat-red.has-warning .stat-box-icon {
+    animation: gentle-shake 2.5s infinite ease-in-out;
+}
+
+@keyframes gentle-shake {
+    0%, 100% { transform: rotate(0deg); }
+    20%, 60% { transform: rotate(-6deg); }
+    40%, 80% { transform: rotate(6deg); }
+}
+
+.stat-content {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    min-width: 0;
 }
 
 .stat-label {
-    font-size: 12.5px;
-    color: #64748b;
-    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-number {
-    font-size: 22px;
-    color: #0f172a;
+    font-size: 28px;
+    color: var(--text-main);
     font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
 }
 
-.text-green { color: #16a34a; }
-.text-red { color: #ef4444; }
+.text-green { color: #16a34a !important; }
+.text-red { color: #dc2626 !important; }
 
-/* TOOLBAR TÌM KIẾM & LỌC */
+/* 3. TOOLBAR TÌM KIẾM & LỌC (ĐÃ SỬA LỖI VIỀN ĐEN KHUNG VUÔNG) */
 .groups-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 10px 16px;
-    margin-bottom: 20px;
-    gap: 12px;
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    gap: 16px;
+    box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
 }
 
+.groups-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 320px;
+    flex-wrap: wrap;
+}
+
+/* Ô TÌM KIẾM CHUẨN HIỆN ĐẠI */
 .groups-toolbar .search-box {
-    width: 320px;
+    position: relative;
+    width: 360px;
+    max-width: 100%;
 }
 
-/* LƯỚI THẺ NHÓM (GROUPS GRID) */
+.groups-toolbar .search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 15px;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.groups-toolbar .search-box input {
+    width: 100%;
+    height: 42px;
+    padding: 0 16px 0 42px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: var(--text-main);
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.groups-toolbar .search-box input::placeholder {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.groups-toolbar .search-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    background-color: #ffffff;
+}
+
+.groups-toolbar .search-box input:focus + i,
+.groups-toolbar .search-box:focus-within i {
+    color: var(--primary);
+}
+
+/* SELECT TÌM KIẾM TÙY CHỈNH - LOẠI BỎ TRIỆT ĐỂ BORDER ĐEN MẶC ĐỊNH */
+.filter-controls {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.filter-select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.select-filter {
+    height: 42px;
+    padding: 0 36px 0 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    background-color: #ffffff;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.select-filter:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.filter-select-wrapper::after {
+    content: "\f078";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 12px;
+    color: #64748b;
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* CHIPS LỌC NHANH TRẠNG THÁI */
+.quick-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: #f1f5f9;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+    background: #e2e8f0;
+    color: var(--text-main);
+}
+
+.filter-chip.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary-border);
+    font-weight: 600;
+}
+
+/* NÚT RESET LỌC */
+.btn-clear-filters {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px dashed #cbd5e1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-clear-filters:hover {
+    background: #f8fafc;
+    color: var(--danger);
+    border-color: var(--danger-border);
+}
+
+/* 4. LƯỚI THẺ NHÓM (GROUPS GRID) */
 .groups-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 20px;
+    gap: 24px;
 }
 
 .group-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 18px;
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 16px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    gap: 18px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .group-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
     border-color: #cbd5e1;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+}
+
+.group-card.has-late {
+    border-left: 4px solid var(--danger);
 }
 
 /* Header Thẻ Nhóm */
@@ -78,188 +443,274 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 12px;
+    gap: 10px;
 }
 
 .group-badge-code {
-    background: #eff6ff;
-    color: #2563eb;
-    padding: 4px 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 6px 12px;
     border-radius: 8px;
     font-size: 13px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
+    border: 1px solid var(--primary-border);
 }
 
 .group-badge-code strong {
     font-weight: 700;
+    font-size: 13.5px;
 }
 
 .status-tag {
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 20px;
-    display: flex;
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
 }
 
 .tag-success {
-    background: #f0fdf4;
-    color: #16a34a;
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success-border);
 }
 
 .tag-warning {
-    background: #fef2f2;
-    color: #ef4444;
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
 }
 
 .tag-neutral {
     background: #f1f5f9;
     color: #64748b;
+    border: 1px solid #e2e8f0;
 }
 
-/* Tiêu đề đề tài */
+/* Tiêu đề đề tài & Chip lĩnh vực */
+.group-topic-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .group-topic-title h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: #1e293b;
-    line-height: 1.4;
-    margin-bottom: 4px;
-}
-
-.category-text {
-    font-size: 11.5px;
+    font-size: 16px;
     font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
+    color: var(--text-main);
+    line-height: 1.45;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 46px;
 }
 
-/* Danh sách thành viên */
+.category-chip {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.category-chip i {
+    font-size: 11px;
+    color: var(--primary);
+}
+
+/* Danh sách thành viên (Hiện đại hơn với Avatar chữ cái) */
 .group-members-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
     background: #f8fafc;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
 }
 
 .member-item {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: center;
+    gap: 12px;
 }
 
-.member-role {
-    width: 24px;
-    height: 24px;
-    background: #e2e8f0;
-    color: #64748b;
+.member-avatar {
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
     flex-shrink: 0;
-    margin-top: 2px;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.member-item.leader .member-role {
-    background: #fef3c7;
-    color: #d97706;
+.avatar-leader {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    position: relative;
 }
 
-.member-info .member-name {
-    font-size: 13px;
+.avatar-member-1 {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.avatar-member-2 {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.member-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.member-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.member-name {
+    font-size: 13.5px;
     font-weight: 600;
-    color: #1e293b;
-    margin: 0;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.member-info small {
-    font-size: 11.5px;
-    color: #64748b;
+.crown-badge {
+    color: #f59e0b;
+    font-size: 12px;
+    margin-left: 2px;
 }
 
-.member-info small a {
-    color: #475569;
+.member-contact {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.member-contact a {
+    color: var(--text-muted);
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
 }
 
-.member-info small a:hover {
-    color: #2563eb;
-    text-decoration: underline;
+.member-contact a:hover {
+    color: var(--primary);
 }
 
 /* Thanh tiến độ Milestone */
 .group-progress-section {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    background: #ffffff;
+    padding-top: 4px;
 }
 
 .progress-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
-    color: #475569;
-    font-weight: 600;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.progress-labels strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
 }
 
 .progress-bar-container {
     width: 100%;
     height: 8px;
     background: #e2e8f0;
-    border-radius: 4px;
+    border-radius: 999px;
     overflow: hidden;
 }
 
 .progress-bar-fill {
     height: 100%;
-    border-radius: 4px;
-    transition: width 0.3s ease;
+    border-radius: 999px;
+    transition: width 0.4s ease;
 }
 
-.bg-blue { background-color: #2563eb; }
-.bg-orange { background-color: #f97316; }
-.bg-neutral { background-color: #94a3b8; }
+.bg-blue {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
 
-/* Nút Hành động trong thẻ */
+.bg-orange {
+    background: linear-gradient(90deg, #f97316, #dc2626);
+}
+
+.bg-neutral {
+    background: #94a3b8;
+}
+
+/* Nút Hành động trong thẻ nhóm */
 .group-card-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
     border-top: 1px solid #f1f5f9;
-    padding-top: 14px;
+    padding-top: 16px;
+    margin-top: 2px;
 }
 
 .btn-card-action {
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-size: 12.5px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 13px;
     font-weight: 600;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 7px;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: none;
 }
 
 .btn-view-progress {
-    background: #eff6ff;
-    color: #2563eb;
-    border: 1px solid transparent;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary-border);
 }
 
 .btn-view-progress:hover {
-    background: #2563eb;
+    background: var(--primary);
     color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
 }
 
 .btn-message-group {
@@ -269,102 +720,68 @@
 }
 
 .btn-message-group:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: #f8fafc;
+    color: var(--text-main);
     border-color: #94a3b8;
-}
-
-/* Checkbox Label trong Modal */
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: #334155;
-    cursor: pointer;
-}
-
-/* =========================================================
-   CSS BỔ SUNG: HEADER ACTIONS & MODAL GỬI THÔNG BÁO CHUNG
-   ========================================================= */
-
-/* 1. Header & Nút thao tác trên cùng */
-.page-header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.btn-primary {
-    background-color: #2563eb;
-    color: #ffffff;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
-    transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-    background-color: #1d4ed8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
 }
 
-.btn-outline {
-    background-color: #ffffff;
-    color: #16a34a;
-    border: 1px solid #16a34a;
-    padding: 9px 16px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-}
-
-.btn-outline:hover {
-    background-color: #f0fdf4;
-    color: #15803d;
-    border-color: #15803d;
-}
-
-/* Thông báo khi không có dữ liệu */
+/* Trạng thái trống (Empty state) */
 .empty-msg {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 40px;
-    color: #64748b;
-    font-size: 15px;
-    background: #ffffff;
-    border: 1px dashed #cbd5e1;
-    border-radius: 12px;
+    padding: 60px 24px;
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    color: var(--text-muted);
 }
 
-/* 2. Lớp nền tối mờ khi mở Modal (Modal Overlay) */
+.empty-state-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+.empty-state-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+.empty-state-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.empty-state-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 400px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* MODAL GỬI THÔNG BÁO & LỜI NHẮN */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(15, 23, 42, 0.5);
+    background-color: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(4px);
     display: none;
     align-items: center;
@@ -372,21 +789,20 @@
     z-index: 1000;
 }
 
-/* 3. Hộp nội dung Modal (Modal Box) */
 .modal-box {
     background: #ffffff;
-    width: 500px;
-    max-width: 90vw;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    animation: modalSlideIn 0.25s ease-out;
+    width: 520px;
+    max-width: 92vw;
+    border-radius: 18px;
+    padding: 24px 28px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-15px) scale(0.98);
+        transform: translateY(-16px) scale(0.97);
     }
     to {
         opacity: 1;
@@ -394,95 +810,108 @@
     }
 }
 
-/* 4. Header của Modal */
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 14px;
-    margin-bottom: 18px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .modal-header h3 {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-main);
     margin: 0;
+    line-height: 1.3;
 }
 
 .btn-close-modal {
     background: transparent;
     border: none;
     font-size: 18px;
-    color: #94a3b8;
+    color: var(--text-light);
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 6px;
+    border-radius: 8px;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-close-modal:hover {
     background-color: #f1f5f9;
-    color: #475569;
+    color: var(--text-main);
 }
 
-/* 5. Form nhập liệu trong Modal */
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .form-group label {
     display: block;
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
     color: #334155;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .required {
-    color: #ef4444;
+    color: var(--danger);
 }
 
 .form-control {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 13.5px;
-    color: #1e293b;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-main);
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
 }
 
 .form-control:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 textarea.form-control {
     resize: vertical;
-    min-height: 100px;
+    min-height: 110px;
+    line-height: 1.5;
 }
 
-/* 6. Cụm nút bấm hành động bên dưới (Hủy & Gửi) */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    color: #334155;
+    cursor: pointer;
+    user-select: none;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
     margin-top: 24px;
     border-top: 1px solid #f1f5f9;
-    padding-top: 16px;
+    padding-top: 18px;
 }
 
 .btn-cancel {
     background-color: #f1f5f9;
-    color: #475569;
+    color: var(--text-muted);
     border: none;
-    padding: 9px 18px;
-    border-radius: 8px;
-    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -490,33 +919,37 @@ textarea.form-control {
 
 .btn-cancel:hover {
     background-color: #e2e8f0;
-    color: #1e293b;
+    color: var(--text-main);
 }
 
 .btn-submit {
-    background-color: #2563eb;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: #ffffff;
     border: none;
-    padding: 9px 20px;
-    border-radius: 8px;
-    font-size: 13px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-    transition: background-color 0.2s;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s;
 }
 
 .btn-submit:hover {
-    background-color: #1d4ed8;
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.35);
 }
 
+/* MODAL CHAT TRƯỞNG NHÓM */
 .group-chat-modal {
-    width: 760px;
+    width: 780px;
     max-width: 94vw;
     padding: 0;
     overflow: hidden;
     border: 1px solid #dce7fa;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, .2);
+    border-radius: 18px;
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.22);
 }
 
 .group-chat-header {
@@ -525,107 +958,179 @@ textarea.form-control {
     justify-content: space-between;
     gap: 12px;
     min-height: 80px;
-    padding: 15px 18px;
+    padding: 16px 20px;
     border-bottom: 1px solid #dfeaff;
-    background: linear-gradient(110deg, #eff6ff 0%, #f8fbff 48%, #fff 100%);
+    background: linear-gradient(110deg, #eff6ff 0%, #f8fbff 48%, #ffffff 100%);
 }
 
 .group-chat-heading {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 12px;
     min-width: 0;
 }
 
 .group-chat-heading-icon {
     display: grid;
     place-items: center;
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
     border-radius: 14px;
     color: #fff;
     background: linear-gradient(145deg, #3b82f6, #2563eb);
     font-size: 18px;
-    box-shadow: 0 6px 14px rgba(37, 99, 235, .24);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
 }
 
 .group-chat-heading h3 {
     overflow: hidden;
     margin: 0;
-    color: #102b56;
-    font-size: 16px;
-    font-weight: 750;
-    letter-spacing: -.2px;
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .group-chat-heading p {
     margin: 4px 0 0;
-    color: #7185a5;
-    font-size: 11.5px;
-}
-
-.group-chat-tools {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.group-chat-header .btn-close-modal {
-    padding: 7px 9px;
     color: #64748b;
-    font-size: 15px;
+    font-size: 12.5px;
 }
 
 .group-chat-messages {
-    height: min(52vh, 440px);
+    height: min(52vh, 460px);
     min-height: 280px;
     overflow-y: auto;
     border: 0;
-    border-radius: 0;
-    background-color: #f9fbff;
-    background-image: radial-gradient(#dce8fa 0.65px, transparent 0.65px);
+    background-color: #f8fafc;
+    background-image: radial-gradient(#e2e8f0 0.8px, transparent 0.8px);
     background-size: 18px 18px;
-    padding: 18px;
+    padding: 20px;
     scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.group-chat-messages::-webkit-scrollbar { width: 7px; }
-.group-chat-messages::-webkit-scrollbar-thumb { border-radius: 8px; background: #c9d9f2; }
+.group-chat-messages::-webkit-scrollbar { width: 6px; }
+.group-chat-messages::-webkit-scrollbar-thumb { border-radius: 8px; background: #cbd5e1; }
 
 .group-chat-day-separator {
     display: flex;
     justify-content: center;
-    margin: 0 0 20px;
+    margin: 8px 0;
 }
 
 .group-chat-day-separator span {
-    padding: 6px 13px;
-    border: 1px solid #e2eaf7;
+    padding: 5px 14px;
+    border: 1px solid #e2e8f0;
     border-radius: 999px;
-    background: #fff;
-    color: #7183a0;
-    font-size: 10.5px;
-    box-shadow: 0 3px 8px rgba(30, 64, 120, .05);
+    background: #ffffff;
+    color: #64748b;
+    font-size: 11.5px;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.group-chat-message {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.group-chat-message.mine {
+    flex-direction: row-reverse;
+}
+
+.group-chat-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.group-chat-message.mine .group-chat-avatar {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.group-chat-message-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: min(78%, 520px);
+}
+
+.group-chat-message.mine .group-chat-message-body {
+    align-items: flex-end;
+}
+
+.group-chat-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.group-chat-meta span:first-child {
+    color: #475569;
+    font-weight: 600;
+}
+
+.group-chat-message.mine .group-chat-meta {
+    justify-content: flex-end;
+}
+
+.group-chat-bubble {
+    padding: 10px 15px;
+    border-radius: 16px 16px 16px 4px;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 13.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e2e8f0;
+}
+
+.group-chat-message.mine .group-chat-bubble {
+    border-radius: 16px 16px 4px 16px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
 }
 
 .group-chat-empty {
     text-align: center;
     color: #94a3b8;
-    font-size: 12.5px;
+    font-size: 13.5px;
     padding: 40px 10px;
+    margin: auto;
 }
 
 .group-chat-compose {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 10px;
     margin: 0;
-    padding: 12px 14px;
+    padding: 14px 18px;
     border-top: 1px solid #e2eaf7;
-    background: linear-gradient(180deg, #fff, #f9fbff);
+    background: #ffffff;
 }
 
 .group-chat-input-wrap {
@@ -635,16 +1140,16 @@ textarea.form-control {
     min-width: 0;
     gap: 10px;
     height: 46px;
-    padding: 0 12px 0 15px;
-    border: 1px solid #d4e1f4;
-    border-radius: 13px;
-    background: #fff;
-    transition: box-shadow .2s, border-color .2s;
+    padding: 0 12px 0 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .group-chat-input-wrap:focus-within {
-    border-color: #93b7ff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .08);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .group-chat-compose input {
@@ -655,8 +1160,8 @@ textarea.form-control {
     border: 0;
     outline: none;
     background: transparent;
-    color: #334155;
-    font-size: 12px;
+    color: var(--text-main);
+    font-size: 14px;
 }
 
 .group-chat-compose > button[type="submit"] {
@@ -666,87 +1171,60 @@ textarea.form-control {
     width: 46px;
     height: 46px;
     border: none;
-    border-radius: 13px;
-    background: linear-gradient(145deg, #3478ed, #1d5fe0);
+    border-radius: 12px;
+    background: linear-gradient(145deg, #2563eb, #1d4ed8);
     color: #ffffff;
     cursor: pointer;
-    box-shadow: 0 6px 14px rgba(37, 99, 235, .25);
-    transition: .2s;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s;
 }
 
-.group-chat-compose > button[type="submit"]:hover { background: #1d4ed8; transform: translateY(-1px); }
-
-.group-chat-message {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    margin-bottom: 18px;
+.group-chat-compose > button[type="submit"]:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
 }
 
-.group-chat-message.mine {
-    flex-direction: row-reverse;
+/* RESPONSIVE DESIGN */
+@media (max-width: 1200px) {
+    .groups-stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-.group-chat-avatar {
-    display: grid;
-    place-items: center;
-    flex: 0 0 36px;
-    width: 36px;
-    height: 36px;
-    margin-bottom: 2px;
-    border: 2px solid #fff;
-    border-radius: 50%;
-    color: #3478ed;
-    background: linear-gradient(145deg, #eaf2ff, #dce9ff);
-    font-size: 14px;
-    box-shadow: 0 3px 9px rgba(37, 99, 235, .11);
-}
-
-.group-chat-message-body {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    max-width: min(78%, 520px);
-}
-
-.group-chat-message.mine .group-chat-message-body { align-items: flex-end; }
-
-.group-chat-bubble {
-    padding: 10px 14px;
-    border: 1px solid #e4eaf4;
-    border-radius: 15px 15px 15px 5px;
-    background: #fff;
-    color: #283a58;
-    font-size: 12.5px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    box-shadow: 0 4px 12px rgba(30, 64, 120, .05);
-}
-
-.group-chat-message.mine .group-chat-bubble {
-    border-color: #cfe0ff;
-    border-radius: 15px 15px 5px 15px;
-    background: linear-gradient(135deg, #e4efff, #f0f6ff);
-    color: #1c3e70;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, .08);
-}
-
-.group-chat-meta {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin: 0 0 6px;
-    color: #8999b2;
-    font-size: 10px;
-}
-
-.group-chat-meta span:first-child { color: #506786; font-weight: 650; }
-.group-chat-message.mine .group-chat-meta { justify-content: flex-end; }
-
-@media (max-width: 560px) {
-    .group-chat-header { align-items: flex-start; padding: 12px; }
-    .group-chat-messages { height: 56vh; min-height: 250px; padding: 12px; }
-    .group-chat-compose { padding: 9px; }
-    .group-chat-message-body { max-width: 82%; }
+@media (max-width: 768px) {
+    .content-body {
+        padding: 16px !important;
+    }
+    .page-header-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .groups-stats-bar {
+        grid-template-columns: 1fr;
+    }
+    .groups-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .groups-toolbar .search-box {
+        width: 100%;
+    }
+    .groups-toolbar-left {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .select-filter {
+        width: 100%;
+    }
+    .filter-select-wrapper {
+        width: 100%;
+    }
+    .groups-grid {
+        grid-template-columns: 1fr;
+    }
 }

@@ -1,44 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const campusClockHands = document.querySelectorAll("[data-clock-hand]");
-    if (campusClockHands.length > 0) {
-        const updateCampusClock = () => {
-            const now = new Date();
-            const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
-            const minutes = now.getMinutes() + seconds / 60;
-            const hours = (now.getHours() % 12) + minutes / 60;
-            const angles = {
-                hour: hours * 30,
-                minute: minutes * 6,
-                second: seconds * 6
-            };
-
-            campusClockHands.forEach((hand) => {
-                const angle = angles[hand.dataset.clockHand];
-                if (angle !== undefined) {
-                    hand.setAttribute("transform", `rotate(${angle} 303 570)`);
-                }
-            });
-        };
-
-        const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-        let clockTimer;
-        const updateAndScheduleCampusClock = () => {
-            updateCampusClock();
-            if (!motionPreference.matches) {
-                clockTimer = window.setTimeout(
-                    updateAndScheduleCampusClock,
-                    1000 - (Date.now() % 1000)
-                );
-            }
-        };
-
-        updateAndScheduleCampusClock();
-        motionPreference.addEventListener("change", (event) => {
-            window.clearTimeout(clockTimer);
-            if (!event.matches) updateAndScheduleCampusClock();
-        });
-    }
-
     const loginForm = document.getElementById("loginForm");
     const userCodeInput = document.getElementById("userCode");
     const passwordInput = document.getElementById("password");
@@ -47,103 +7,111 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = document.getElementById("submitBtn");
     const loginLoadingOverlay = document.getElementById("loginLoadingOverlay");
 
+    const btnText = submitBtn ? submitBtn.querySelector(".btn-text") : null;
+    const btnSpinner = submitBtn ? submitBtn.querySelector(".btn-spinner") : null;
+
     const setLoginLoading = (isLoading) => {
-        submitBtn.disabled = isLoading;
+        if (submitBtn) submitBtn.disabled = isLoading;
         if (loginLoadingOverlay) loginLoadingOverlay.hidden = !isLoading;
+        if (btnText) {
+            btnText.textContent = isLoading ? "Đang đăng nhập..." : "Đăng nhập hệ thống";
+        }
+        if (btnSpinner) btnSpinner.hidden = !isLoading;
     };
 
-    togglePassword.addEventListener("click", () => {
-        const isPasswordHidden = passwordInput.type === "password";
-        passwordInput.type = isPasswordHidden ? "text" : "password";
-        togglePassword.classList.toggle("is-visible", isPasswordHidden);
-        togglePassword.setAttribute(
-            "aria-label",
-            isPasswordHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu"
-        );
-        togglePassword.setAttribute(
-            "title",
-            isPasswordHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu"
-        );
-    });
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener("click", () => {
+            const isPasswordHidden = passwordInput.type === "password";
+            passwordInput.type = isPasswordHidden ? "text" : "password";
+            togglePassword.classList.toggle("is-visible", isPasswordHidden);
+            const label = isPasswordHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu";
+            togglePassword.setAttribute("aria-label", label);
+            togglePassword.setAttribute("title", label);
+        });
+    }
 
-    // Hàm hiển thị lỗi
+    // Hàm hiển thị lỗi (dùng banner inline đỏ nhạt)
     const showError = (message) => {
-        errorMessage.textContent = message;
-        errorMessage.style.display = "block";
+        if (errorMessage) {
+            errorMessage.textContent = message;
+            errorMessage.hidden = false;
+        }
     };
 
     // Hàm ẩn lỗi
     const clearError = () => {
-        errorMessage.textContent = "";
-        errorMessage.style.display = "none";
+        if (errorMessage) {
+            errorMessage.textContent = "";
+            errorMessage.hidden = true;
+        }
     };
 
     // Bắt sự kiện khi Submit Form
-    loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault(); // Chặn hành vi tải lại trang mặc định của Form
-        clearError();
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault(); // Chặn hành vi tải lại trang mặc định của Form
+            clearError();
 
-        const user_code = userCodeInput.value.trim();
-        const password = passwordInput.value.trim();
+            const user_code = userCodeInput ? userCodeInput.value.trim() : "";
+            const password = passwordInput ? passwordInput.value.trim() : "";
 
-        if (!user_code || !password) {
-            showError("Vui lòng nhập đầy đủ mã định danh và mật khẩu!");
-            return;
-        }
-
-        setLoginLoading(true);
-
-        try {
-            // Gửi request tới Backend API (Đổi cổng thành cổng thực tế của bạn sau này)
-            const response = await apiFetch(window.APP_CONFIG.API_BASE_URL + "/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ user_code, password })
-            });
-
-            const data = await response.json();
-
-            // Nếu Server trả về lỗi (400, 401, 404, 500...)
-            if (!response.ok) {
-                showError(data.message || "Tài khoản hoặc mật khẩu không chính xác!");
-                setLoginLoading(false);
+            if (!user_code || !password) {
+                showError("Vui lòng nhập đầy đủ mã định danh và mật khẩu!");
                 return;
             }
 
-            // --- NẾU ĐĂNG NHẬP THÀNH CÔNG ---
-            
-            // Keep only profile data in browser storage; the JWT stays in the HttpOnly cookie.
-            window.storeAuthUser(data.user);
-            window.resetAuthInactivityTimer();
+            setLoginLoading(true);
 
-            // 2. Điều hướng trang theo Role (STUDENT, LECTURER, ADMIN)
-            setTimeout(() => {
-                if (data.user.must_change_password) {
-                    window.location.href = "../auth/force-change-password.html";
+            try {
+                // Gửi request tới Backend API
+                const response = await apiFetch(window.APP_CONFIG.API_BASE_URL + "/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ user_code, password })
+                });
+
+                const data = await response.json();
+
+                // Nếu Server trả về lỗi (400, 401, 404, 500...)
+                if (!response.ok) {
+                    showError(data.message || "Tài khoản hoặc mật khẩu không chính xác!");
+                    setLoginLoading(false);
                     return;
                 }
 
-                const role = data.user.role;
-                if (role === "STUDENT") {
-                    window.location.href = "../student/student-dashboard.html";
-                } else if (role === "LECTURER") {
-                    window.location.href = "../lecturer/lecturer-dashboard.html";
-                } else if (role === "ADMIN") {
-                    window.location.href = "../admin/admin-dashboard.html";
-                } else {
-                    showError("Quyền truy cập không hợp lệ!");
-                    setLoginLoading(false);
-                }
-            }, 500); // Trễ nửa giây để trải nghiệm chuyển trang mượt hơn
+                // --- NẾU ĐĂNG NHẬP THÀNH CÔNG ---
+                window.storeAuthUser(data.user);
+                window.resetAuthInactivityTimer();
 
-        } catch (error) {
-            console.error("Lỗi kết nối:", error);
-            showError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
-            setLoginLoading(false);
-        }
-    });
+                // Điều hướng trang theo Role (STUDENT, LECTURER, ADMIN)
+                setTimeout(() => {
+                    if (data.user.must_change_password) {
+                        window.location.href = "../auth/force-change-password.html";
+                        return;
+                    }
+
+                    const role = data.user.role;
+                    if (role === "STUDENT") {
+                        window.location.href = "../student/student-dashboard.html";
+                    } else if (role === "LECTURER") {
+                        window.location.href = "../lecturer/lecturer-dashboard.html";
+                    } else if (role === "ADMIN") {
+                        window.location.href = "../admin/admin-dashboard.html";
+                    } else {
+                        showError("Quyền truy cập không hợp lệ!");
+                        setLoginLoading(false);
+                    }
+                }, 500); // Trễ nửa giây để trải nghiệm chuyển trang mượt hơn
+
+            } catch (error) {
+                console.error("Lỗi kết nối:", error);
+                showError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!");
+                setLoginLoading(false);
+            }
+        });
+    }
 
     // ===== XỬ LÝ MODAL "QUÊN MẬT KHẨU" =====
     const forgotPasswordModal = document.getElementById("forgotPasswordModal");
@@ -154,16 +122,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const fpEmailInput = document.getElementById("fpEmail");
     const forgotPasswordMessage = document.getElementById("forgotPasswordMessage");
     const fpSubmitBtn = document.getElementById("fpSubmitBtn");
+    const fpBtnText = fpSubmitBtn ? fpSubmitBtn.querySelector(".btn-text") : null;
+    const fpBtnSpinner = fpSubmitBtn ? fpSubmitBtn.querySelector(".btn-spinner") : null;
 
     const openForgotModal = () => {
-        forgotPasswordMessage.textContent = "";
-        forgotPasswordMessage.className = "fp-message";
-        forgotPasswordForm.reset();
-        forgotPasswordModal.classList.add("active");
+        if (forgotPasswordMessage) {
+            forgotPasswordMessage.textContent = "";
+            forgotPasswordMessage.className = "fp-message";
+        }
+        if (forgotPasswordForm) forgotPasswordForm.reset();
+        if (forgotPasswordModal) forgotPasswordModal.classList.add("active");
     };
 
     const closeForgotModal = () => {
-        forgotPasswordModal.classList.remove("active");
+        if (forgotPasswordModal) forgotPasswordModal.classList.remove("active");
     };
 
     if (openForgotPasswordBtn) {
@@ -185,20 +157,25 @@ document.addEventListener("DOMContentLoaded", () => {
         forgotPasswordForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const user_code = fpUserCodeInput.value.trim();
-            const email = fpEmailInput.value.trim();
+            const user_code = fpUserCodeInput ? fpUserCodeInput.value.trim() : "";
+            const email = fpEmailInput ? fpEmailInput.value.trim() : "";
 
-            forgotPasswordMessage.textContent = "";
-            forgotPasswordMessage.className = "fp-message";
+            if (forgotPasswordMessage) {
+                forgotPasswordMessage.textContent = "";
+                forgotPasswordMessage.className = "fp-message";
+            }
 
             if (!user_code || !email) {
-                forgotPasswordMessage.textContent = "Vui lòng nhập đầy đủ Mã định danh và Email!";
-                forgotPasswordMessage.classList.add("error");
+                if (forgotPasswordMessage) {
+                    forgotPasswordMessage.textContent = "Vui lòng nhập đầy đủ Mã định danh và Email!";
+                    forgotPasswordMessage.classList.add("error");
+                }
                 return;
             }
 
-            fpSubmitBtn.disabled = true;
-            fpSubmitBtn.innerHTML = "<span>Đang xử lý...</span>";
+            if (fpSubmitBtn) fpSubmitBtn.disabled = true;
+            if (fpBtnText) fpBtnText.textContent = "Đang xử lý...";
+            if (fpBtnSpinner) fpBtnSpinner.hidden = false;
 
             try {
                 const response = await apiFetch(window.APP_CONFIG.API_BASE_URL + "/api/auth/forgot-password", {
@@ -210,21 +187,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
-                    forgotPasswordMessage.textContent = data.message || "Không thể khôi phục mật khẩu, vui lòng thử lại!";
-                    forgotPasswordMessage.classList.add("error");
+                    if (forgotPasswordMessage) {
+                        forgotPasswordMessage.textContent = data.message || "Không thể khôi phục mật khẩu, vui lòng thử lại!";
+                        forgotPasswordMessage.classList.add("error");
+                    }
                     return;
                 }
 
-                forgotPasswordMessage.textContent = data.message;
-                forgotPasswordMessage.classList.add("success");
+                if (forgotPasswordMessage) {
+                    forgotPasswordMessage.textContent = data.message;
+                    forgotPasswordMessage.classList.add("success");
+                }
                 forgotPasswordForm.reset();
             } catch (error) {
                 console.error("Lỗi kết nối:", error);
-                forgotPasswordMessage.textContent = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!";
-                forgotPasswordMessage.classList.add("error");
+                if (forgotPasswordMessage) {
+                    forgotPasswordMessage.textContent = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server!";
+                    forgotPasswordMessage.classList.add("error");
+                }
             } finally {
-                fpSubmitBtn.disabled = false;
-                fpSubmitBtn.innerHTML = "<span>Xác nhận khôi phục</span>";
+                if (fpSubmitBtn) fpSubmitBtn.disabled = false;
+                if (fpBtnText) fpBtnText.textContent = "Xác nhận khôi phục";
+                if (fpBtnSpinner) fpBtnSpinner.hidden = true;
             }
         });
     }

@@ -1,35 +1,43 @@
+/* LOẠI BỎ TÔ HỒNG NỀN MENU ITEM - CHỈ HIỂN THỊ BADGE GỌN GÀNG */
 .sidebar-menu .menu-item:not(.active) > a.has-pending-review,
 .menu-item:not(.active) > a.has-pending-review {
-    color: #be123c;
-    background-color: #fff1f2;
+    color: inherit;
+    background-color: transparent;
 }
 
 .sidebar-menu a.has-pending-review::after,
 .menu-item a.has-pending-review::after {
-    content: "";
-    width: 8px;
-    height: 8px;
-    flex: 0 0 8px;
+    content: "!";
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    flex: 0 0 auto;
     margin-left: auto;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    background: #e11d48;
-    box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.16);
+    border-radius: 999px;
+    background: #EF4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
     animation: pending-review-pulse 1.8s ease-in-out infinite;
 }
 
 .sidebar-menu .menu-item.active a.has-pending-review::after,
 .menu-item.active a.has-pending-review::after {
-    border-color: #2563eb;
+    background: #ffffff;
+    color: #EF4444;
 }
 
 .notification-btn.has-pending-review {
-    color: #e11d48 !important;
+    color: #EF4444 !important;
     animation: pending-review-bell 1.8s ease-in-out infinite;
 }
 
 @keyframes pending-review-pulse {
-    50% { box-shadow: 0 0 0 5px rgba(225, 29, 72, 0.08); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
 }
 
 @keyframes pending-review-bell {

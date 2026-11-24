@@ -10,11 +10,25 @@ function escapeRegex(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function normalizeIp(rawIp) {
+    if (!rawIp) return '127.0.0.1';
+    let ip = String(rawIp).trim();
+    if (ip.startsWith('::ffff:')) {
+        ip = ip.replace('::ffff:', '');
+    }
+    if (ip === '::1' || ip === 'localhost') {
+        ip = '127.0.0.1';
+    }
+    return ip;
+}
+
 function buildFilter(query) {
     const filter = {};
     const role = String(query.role || '').trim().toUpperCase();
     const actionType = String(query.actionType || '').trim().toUpperCase();
     const search = String(query.search || '').trim().slice(0, 100);
+    const status = String(query.status || '').trim().toUpperCase();
+    const dateRange = String(query.dateRange || '').trim();
 
     if (role) {
         if (!allowedRoles.has(role)) return { error: 'Bộ lọc vai trò không hợp lệ.' };
@@ -24,6 +38,24 @@ function buildFilter(query) {
         if (!allowedActionTypes.has(actionType)) return { error: 'Bộ lọc thao tác không hợp lệ.' };
         filter.actionType = actionType;
     }
+    if (status === 'SUCCESS') {
+        filter.statusCode = { $lt: 400 };
+    } else if (status === 'ERROR') {
+        filter.statusCode = { $gte: 400 };
+    }
+
+    if (dateRange === 'today') {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        filter.createdAt = { $gte: start };
+    } else if (dateRange === '7days') {
+        const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        filter.createdAt = { $gte: start };
+    } else if (dateRange === '30days') {
+        const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        filter.createdAt = { $gte: start };
+    }
+
     if (search) {
         const expression = new RegExp(escapeRegex(search), 'i');
         filter.$or = [
@@ -65,7 +97,7 @@ exports.getActivityLogs = async (req, res) => {
         if (error) return res.status(400).json({ success: false, message: error });
 
         const { page, limit } = getPagination(req.query);
-        const [total, data, roleCounts] = await Promise.all([
+        const [total, rawData, roleCounts] = await Promise.all([
             ActivityLog.countDocuments(filter),
             ActivityLog.find(filter)
                 .select('-metadata')
@@ -83,6 +115,11 @@ exports.getActivityLogs = async (req, res) => {
             stats.total += item.count;
             if (Object.hasOwn(stats, item._id)) stats[item._id] = item.count;
         });
+
+        const data = rawData.map(log => ({
+            ...log,
+            ip: normalizeIp(log.ip)
+        }));
 
         return res.status(200).json({
             success: true,
@@ -141,7 +178,7 @@ exports.exportActivityLogs = async (req, res) => {
                 log.method,
                 log.url,
                 log.statusCode,
-                log.ip
+                normalizeIp(log.ip)
             ];
             if (!res.write(csvRow(row))) await once(res, 'drain');
         }

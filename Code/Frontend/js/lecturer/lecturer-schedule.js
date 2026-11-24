@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("#availabilityModal .btn-close-modal").forEach(button => button.addEventListener("click", () => {
         if (availabilityModal) availabilityModal.style.display = "none";
     }));
+
     async function loadAvailability() {
         if (!availabilityList) return;
         try {
@@ -134,13 +135,22 @@ document.addEventListener("DOMContentLoaded", () => {
                         <button type="button" class="availability-action-close" data-availability-action="close" data-slot-id="${slot._id}"><i class="fa-solid fa-xmark"></i> Ngừng mở</button>
                     </div>
                 </div>`;
-            }).join("") : '<p class="availability-empty-hint">Chưa có khung giờ nào đang mở.</p>';
+            }).join("") : `
+                <div class="availability-empty-box">
+                    <div class="availability-empty-icon"><i class="fa-solid fa-clock"></i></div>
+                    <h4 class="availability-empty-title">Chưa có khung giờ nào đang mở</h4>
+                    <p class="availability-empty-desc">Sinh viên chỉ có thể đặt lịch hẹn vào các khung giờ bạn đã công khai.</p>
+                    <button type="button" class="btn-open-availability-empty" onclick="document.getElementById('openAvailabilityModalBtn').click()">
+                        <i class="fa-solid fa-plus"></i> Mở giờ rảnh ngay
+                    </button>
+                </div>`;
         } catch (error) {
             console.error("Lỗi tải khung giờ rảnh:", error);
             if (availabilityList) availabilityList.innerHTML = '<p class="availability-empty-hint">Không thể tải danh sách khung giờ. Vui lòng thử tải lại trang.</p>';
             showAppNotification(error.message || "Không thể tải khung giờ rảnh.", "error", false);
         }
     }
+
     if (availabilityList) availabilityList.addEventListener("click", async event => {
         const button = event.target.closest("[data-availability-action]");
         if (!button) return;
@@ -193,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
             confirmCloseAvailabilityBtn.innerHTML = "Ngừng mở";
         }
     });
+
     if (availabilityForm) availabilityForm.addEventListener("submit", async event => {
         event.preventDefault();
         try {
@@ -229,6 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
             showAppNotification("Không thể kết nối máy chủ để lưu khung giờ.", "error", false);
         }
     });
+
     loadAvailability();
 
     // =========================================================
@@ -267,11 +279,61 @@ document.addEventListener("DOMContentLoaded", () => {
         const elApproved = document.getElementById("approvedMeetingsCount");
         const elCompleted = document.getElementById("completedMeetingsCount");
 
-        if (elTotal) elTotal.innerHTML = `${total} <small>buổi</small>`;
-        if (elPending) elPending.innerHTML = `${pending} <small>yêu cầu</small>`;
-        if (elApproved) elApproved.innerHTML = `${approved} <small>buổi</small>`;
-        if (elCompleted) elCompleted.innerHTML = `${completed} <small>buổi</small>`;
+        if (elTotal) animateCount(elTotal, total, "buổi");
+        if (elPending) {
+            animateCount(elPending, pending, "yêu cầu");
+            const orangeBox = elPending.closest(".stat-box");
+            if (orangeBox) {
+                if (pending > 0) orangeBox.classList.add("has-pending");
+                else orangeBox.classList.remove("has-pending");
+            }
+        }
+        if (elApproved) animateCount(elApproved, approved, "buổi");
+        if (elCompleted) animateCount(elCompleted, completed, "buổi");
     }
+
+    function animateCount(element, target, unit = "") {
+        const currentText = element.textContent || "0";
+        const start = parseInt(currentText, 10) || 0;
+        if (start === target) {
+            element.innerHTML = `${target} <small>${unit}</small>`;
+            return;
+        }
+        const duration = 300;
+        const stepTime = 30;
+        const steps = Math.ceil(duration / stepTime);
+        const increment = (target - start) / steps;
+        let current = start;
+        let stepCount = 0;
+
+        const timer = setInterval(() => {
+            stepCount++;
+            current += increment;
+            if (stepCount >= steps) {
+                clearInterval(timer);
+                element.innerHTML = `${target} <small>${unit}</small>`;
+            } else {
+                element.innerHTML = `${Math.round(current)} <small>${unit}</small>`;
+            }
+        }, stepTime);
+    }
+
+    // Bấm vào thẻ thống kê để lọc
+    document.querySelectorAll(".schedule-stats-bar .stat-box[data-filter]").forEach(box => {
+        box.addEventListener("click", () => {
+            const filterVal = box.getAttribute("data-filter");
+            const targetChip = document.querySelector(`.view-filter .filter-chip[data-filter="${filterVal}"]`);
+            if (targetChip) {
+                targetChip.click();
+            } else if (filterVal === "APPROVED") {
+                filterChips.forEach(c => c.classList.remove("active"));
+                renderMeetingCards(allMeetings.filter(m => m.status === "APPROVED"));
+            } else if (filterVal === "COMPLETED") {
+                filterChips.forEach(c => c.classList.remove("active"));
+                renderMeetingCards(allMeetings.filter(m => m.status === "COMPLETED"));
+            }
+        });
+    });
 
     function renderMeetingCards(meetings) {
         const container = document.getElementById("meetingCardsContainer");
@@ -279,9 +341,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!meetings || meetings.length === 0) {
             container.innerHTML = `
-                <p style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 32px;">
-                    Chưa có lịch hẹn nào được tạo hoặc chờ duyệt.
-                </p>`;
+                <div style="grid-column: 1/-1; text-align: center; padding: 48px 20px; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1;">
+                    <div style="width: 56px; height: 56px; border-radius: 50%; background: #eff6ff; color: #2563eb; display: grid; place-items: center; font-size: 24px; margin: 0 auto 14px;">
+                        <i class="fa-regular fa-calendar-xmark"></i>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #0f172a; margin: 0 0 6px;">Chưa có lịch hẹn nào</h3>
+                    <p style="font-size: 14px; color: #64748b; margin: 0 0 16px; max-width: 420px; margin-left: auto; margin-right: auto;">
+                        Lịch hẹn do sinh viên đặt sẽ hiển thị tại đây. Hãy mở khung giờ rảnh để sinh viên có thể đăng ký lịch.
+                    </p>
+                    <button type="button" class="btn-open-availability-empty" onclick="document.getElementById('openAvailabilityModalBtn').click()">
+                        <i class="fa-solid fa-clock"></i> Mở giờ rảnh ngay
+                    </button>
+                </div>`;
             return;
         }
 
@@ -291,41 +362,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Xử lý định dạng ngày và giờ
             const dateObj = new Date(item.meeting_date);
-            const dateStr = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+            const dayNum = String(dateObj.getDate()).padStart(2, '0');
+            const monthNum = dateObj.getMonth() + 1;
+            const yearNum = dateObj.getFullYear();
             const timeRangeStr = `${item.time_start} - ${item.time_end}`;
 
-            // Hiển thị tên Nhóm (nếu có từ populate) hoặc Mã SV
-            const groupDisplay = item.topic_id?.group_code 
-                ? `Nhóm ${item.topic_id.group_code}` 
-                : `SV: ${item.student_code}`;
+            // Hiển thị Tên sinh viên (nếu có) hoặc Tên nhóm / Mã SV
+            const studentDisplayName = item.student_name || item.student_code || "";
+            const groupDisplay = studentDisplayName 
+                ? `SV: ${studentDisplayName}` 
+                : (item.topic_id?.group_code ? `Nhóm ${item.topic_id.group_code}` : "Sinh viên");
 
             // --- THẺ YÊU CẦU ĐẶT LỊCH CHỜ DUYỆT (PENDING) ---
             if (isPending) {
                 return `
-                    <div class="meeting-card pending-card" data-status="PENDING" data-type="${item.type}" style="border-left: 4px solid #f59e0b; background: #fffbeb;">
-                        <div class="meeting-time-badge" style="background: #fef3c7; color: #b45309;">
-                            <span class="date">${dateStr}</span>
-                            <span class="time">${timeRangeStr}</span>
+                    <div class="meeting-card pending-card" data-status="PENDING" data-type="${item.type}">
+                        <div class="meeting-time-badge">
+                            <div class="calendar-date-header">
+                                <span class="calendar-day date">${dayNum}</span>
+                                <span class="calendar-month">Tháng ${monthNum}, ${yearNum}</span>
+                            </div>
+                            <div class="calendar-time-chip time">
+                                <i class="fa-regular fa-clock"></i> ${timeRangeStr}
+                            </div>
                         </div>
                         <div class="meeting-content">
                             <div class="meeting-top">
-                                <span class="badge-group">${groupDisplay}</span>
-                                <span class="badge-status-pending" style="color: #d97706; font-weight: 600; font-size: 13px;">
-                                    <i class="fa-solid fa-clock"></i> Sinh viên đề xuất
+                                <span class="badge-group"><i class="fa-solid fa-users"></i> ${groupDisplay}</span>
+                                <span class="meeting-type" style="background: #fef3c7; color: #d97706;">
+                                    <i class="fa-solid fa-clock"></i> Chờ duyệt
                                 </span>
                             </div>
                             <h3>${item.title}</h3>
                             <p class="meeting-desc">
-                                Hình thức: <strong>${isOnline ? 'Online (Meet)' : 'Offline'}</strong> | Địa điểm: ${item.location}
+                                Hình thức: <strong>${isOnline ? 'Online (Meet)' : 'Offline'}</strong> | Địa điểm: ${item.location || 'Chưa xác định'}
                                 ${item.notes ? `<br><em>Ghi chú: ${item.notes}</em>` : ''}
                             </p>
                             
-                            <div class="meeting-actions-row" style="margin-top: 12px; display: flex; gap: 8px;">
-                                <button class="btn-approve-request" data-id="${item._id}" data-group="${groupDisplay}" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;">
-                                    <i class="fa-solid fa-check"></i> Đồng ý lịch
+                            <div class="meeting-actions-row">
+                                <button class="btn-approve-request" data-id="${item._id}" data-group="${groupDisplay}">
+                                    <i class="fa-solid fa-check"></i> Đồng ý
                                 </button>
-                                <button class="btn-reject-request" data-id="${item._id}" data-group="${groupDisplay}" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;">
-                                    <i class="fa-solid fa-xmark"></i> Từ chối / Báo bận
+                                <button class="btn-reject-request" data-id="${item._id}" data-group="${groupDisplay}">
+                                    <i class="fa-solid fa-xmark"></i> Từ chối
                                 </button>
                             </div>
                         </div>
@@ -337,14 +416,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const isCompleted = item.status === "COMPLETED";
 
             return `
-                <div class="meeting-card ${isOnline ? 'online' : 'offline'}" data-status="${item.status}" data-type="${item.type}" style="${isCompleted ? 'opacity: 0.75;' : ''}">
+                <div class="meeting-card ${isOnline ? 'online' : 'offline'}" data-status="${item.status}" data-type="${item.type}" style="${isCompleted ? 'opacity: 0.8;' : ''}">
                     <div class="meeting-time-badge">
-                        <span class="date">${dateStr}</span>
-                        <span class="time">${timeRangeStr}</span>
+                        <div class="calendar-date-header">
+                            <span class="calendar-day date">${dayNum}</span>
+                            <span class="calendar-month">Tháng ${monthNum}, ${yearNum}</span>
+                        </div>
+                        <div class="calendar-time-chip time">
+                            <i class="fa-regular fa-clock"></i> ${timeRangeStr}
+                        </div>
                     </div>
                     <div class="meeting-content">
                         <div class="meeting-top">
-                            <span class="badge-group">${groupDisplay}</span>
+                            <span class="badge-group"><i class="fa-solid fa-users"></i> ${groupDisplay}</span>
                             <div class="meeting-top-right">
                                 <span class="meeting-type ${isOnline ? 'type-online' : 'type-offline'}">
                                     <i class="fa-solid ${isOnline ? 'fa-video' : 'fa-location-dot'}"></i> ${isOnline ? 'Google Meet' : 'Phòng học'}
@@ -353,18 +437,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <div class="card-action-dropdown">
                                     <button class="btn-more-options" aria-label="Tùy chọn lịch"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                                     <div class="dropdown-menu-small">
-                                        ${!isCompleted ? `<button class="action-complete-meeting" data-id="${item._id}"><i class="fa-solid fa-check-double"></i> Đánh dấu Hoàn thành</button>` : ''}
+                                        ${!isCompleted ? `<button class="action-complete-meeting" data-id="${item._id}"><i class="fa-solid fa-circle-check"></i> Đánh dấu Hoàn thành</button>` : ''}
                                         <button class="action-cancel-meeting" data-id="${item._id}" data-group="${groupDisplay}"><i class="fa-solid fa-trash"></i> Xóa buổi họp</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <h3>${item.title} ${isCompleted ? '<span style="color: #10b981; font-size: 14px;">(Đã hoàn thành)</span>' : ''}</h3>
+                        <h3>${item.title} ${isCompleted ? '<span style="color: #16a34a; font-size: 13px; font-weight: normal;">(Đã hoàn thành)</span>' : ''}</h3>
                         <p class="meeting-desc">${item.notes || 'Lịch hướng dẫn định kỳ.'}</p>
                         <div class="meeting-footer">
                             ${isOnline 
-                                ? `<a href="${item.location.startsWith('http') ? item.location : 'https://' + item.location}" target="_blank" class="btn-meet-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Vào phòng Meet</a>` 
-                                : `<span class="location-note"><i class="fa-solid fa-building-columns"></i> ${item.location}</span>`
+                                ? `<a href="${item.location && item.location.startsWith('http') ? item.location : 'https://' + (item.location || 'meet.google.com')}" target="_blank" class="btn-meet-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Vào phòng Meet</a>` 
+                                : `<span class="location-note"><i class="fa-solid fa-building-columns"></i> ${item.location || 'Phòng gặp'}</span>`
                             }
                         </div>
                     </div>
@@ -494,7 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const data = await res.json();
                         if (data.success) {
                             showAppNotification(data.message);
-                            loadMeetings(); // Load lại từ DB sau khi xóa
+                            loadMeetings();
                         } else {
                             showAppNotification("Lỗi khi xóa: " + data.message);
                         }
@@ -529,7 +613,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             if (data.success) {
                 showAppNotification(data.message);
-                loadMeetings(); // Load lại dữ liệu từ DB
+                loadMeetings();
             } else {
                 showAppNotification("Lỗi: " + data.message);
             }
@@ -616,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="${emptyRowColspan}" style="text-align: center; color: #64748b; padding: 24px;">
+                        <td colspan="${emptyRowColspan}" style="text-align: center; color: #64748b; padding: 32px;">
                             Chưa có đề tài nào được phê duyệt hoặc đang hướng dẫn.
                         </td>
                     </tr>`;
@@ -625,7 +709,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Lỗi khi tải ma trận tiến độ:", err);
             tbody.innerHTML = `
                 <tr>
-                        <td colspan="${4 + progressMilestones.length}" style="text-align: center; color: #ef4444; padding: 24px;">
+                    <td colspan="${4 + progressMilestones.length}" style="text-align: center; color: #ef4444; padding: 32px;">
                         Không thể kết nối với máy chủ để lấy ma trận tiến độ!
                     </td>
                 </tr>`;
@@ -652,7 +736,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return `
                         <td style="text-align: center;">
                             <a href="${downloadPath}" target="_blank" title="Tải file: ${mData.file_name || 'Bài nộp'}" 
-                               style="display: inline-block; padding: 4px 8px; background: #dcfce7; color: #15803d; border-radius: 4px; font-size: 12px; font-weight: 600; text-decoration: none;">
+                               style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #dcfce7; color: #15803d; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
                                 <i class="fa-solid fa-file-arrow-down"></i> Đã nộp
                             </a>
                         </td>`;
@@ -660,14 +744,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     activeFound = true;
                     return `
                         <td style="text-align: center;">
-                            <span style="padding: 4px 8px; background: #fef3c7; color: #b45309; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #fef3c7; color: #b45309; border-radius: 6px; font-size: 12px; font-weight: 600;">
                                 <i class="fa-solid fa-spinner fa-spin"></i> Đang làm
                             </span>
                         </td>`;
                 } else {
                     return `
                         <td style="text-align: center;">
-                            <span style="color: #94a3b8; font-size: 12px;">
+                            <span style="color: #94a3b8; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
                                 <i class="fa-solid fa-lock"></i> Chưa mở
                             </span>
                         </td>`;
@@ -675,23 +759,25 @@ document.addEventListener("DOMContentLoaded", () => {
             }).join('');
 
             // Badge trạng thái tổng quan tiến độ đề tài
-            let statusBadge = '<span class="badge badge-success">Đúng tiến độ</span>';
+            let statusBadge = '<span class="matrix-badge-pill badge-on-track"><span class="badge-dot"></span>Đúng tiến độ</span>';
             if (progressMilestones.length === 0) {
-                statusBadge = '<span class="badge">Chưa cấu hình mốc</span>';
+                statusBadge = '<span class="matrix-badge-pill badge-unconfigured"><span class="badge-dot"></span>Chưa cấu hình mốc</span>';
             } else if (completedCount === 0 && activeFound) {
-                statusBadge = '<span class="badge badge-warning" style="background:#fef3c7; color:#b45309; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Cần nhắc nhở</span>';
+                statusBadge = '<span class="matrix-badge-pill badge-warning"><span class="badge-dot"></span>Cần nhắc nhở</span>';
             } else if (completedCount === progressMilestones.length) {
-                statusBadge = '<span class="badge badge-success" style="background:#10b981; color:white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Hoàn thành</span>';
+                statusBadge = '<span class="matrix-badge-pill badge-completed"><span class="badge-dot"></span>Hoàn thành</span>';
             }
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td><strong>${topic.topic_code}</strong></td>
-                <td>${topic.title}</td>
+                <td class="col-code"><span class="matrix-code-badge"><i class="fa-solid fa-hashtag"></i> ${topic.topic_code || "N/A"}</span></td>
+                <td class="col-title">${topic.title || ""}</td>
                 ${milestoneCells}
                 <td style="text-align: center;">${statusBadge}</td>
                 <td style="text-align: center;">
-                    <a href="lecturer-progress-detail.html?topicId=${topic._id}" class="btn-link" style="color: #2563eb; font-weight: 500; text-decoration: none;">Chi tiết</a>
+                    <a href="lecturer-progress-detail.html?topicId=${topic._id}" class="btn-table-action">
+                        <span>Chi tiết</span> <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </td>
             `;
             tbody.appendChild(tr);

@@ -3,7 +3,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
@@ -18,19 +18,29 @@ body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
 .brand-logo .logo-icon { font-size: 22px; color: #2563eb; }
 .brand-logo h2 { font-size: 13px; font-weight: 800; color: #1d4ed8; line-height: 1.2; }
 
-.sidebar-menu ul { list-style: none; padding: 12px; }
-.menu-item { margin-bottom: 3px; }
+.sidebar-menu ul { list-style: none; padding: 16px 12px; }
+.menu-item { margin-bottom: 6px; }
 .menu-item a {
-    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-    border-radius: 8px; text-decoration: none; color: #475569;
-    font-size: 13px; font-weight: 500; transition: all 0.2s;
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-radius: 12px; text-decoration: none; color: #64748b;
+    font-size: 13.5px; font-weight: 600; transition: all 0.2s;
 }
-.menu-item a:hover { background-color: #f1f5f9; color: #1e293b; }
+.menu-item a .icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.menu-item a:hover { background-color: #eff6ff; color: #2563eb; }
 .menu-item.active a {
-    background-color: #2563eb; color: #ffffff; font-weight: 600;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; font-weight: 600;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
 }
 .sidebar-bottom { padding: 15px; text-align: center; }
+.sidebar-illustration { display: none !important; }
 .sidebar-footer p { font-size: 11px; color: #94a3b8; margin-top: 8px; }
 
 .main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -101,57 +111,85 @@ body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
 /* DOCUMENT GRID */
 .document-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
 }
 
 .doc-card {
     background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px;
     padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
     transition: all 0.25s ease; position: relative;
+    max-width: 380px; width: 100%; box-sizing: border-box;
 }
 .doc-card:hover {
     border-color: #93c5fd;
     box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
-    transform: translateY(-3px);
+    transform: translateY(-4px);
 }
 
 .doc-file-icon {
     width: 48px; height: 48px; border-radius: 12px; display: flex;
-    align-items: center; justify-content: center; font-size: 24px; margin-bottom: 14px;
+    align-items: center; justify-content: center; font-size: 22px; margin-bottom: 14px;
+    flex-shrink: 0;
 }
-.doc-file-icon.pdf { background-color: #fee2e2; color: #e11d48; }
+.doc-file-icon.pdf { background-color: #fee2e2; color: #dc2626; }
 .doc-file-icon.docx { background-color: #dbeafe; color: #2563eb; }
+.doc-file-icon.xlsx { background-color: #dcfce7; color: #16a34a; }
 .doc-file-icon.pptx { background-color: #ffedd5; color: #ea580c; }
+.doc-file-icon.zip { background-color: #f1f5f9; color: #64748b; }
+.doc-file-icon.image { background-color: #f3e8ff; color: #9333ea; }
+.doc-file-icon.other { background-color: #f1f5f9; color: #64748b; }
+
+.doc-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
 
 .doc-category {
     display: inline-block; font-size: 11px; font-weight: 700;
     padding: 3px 10px; border-radius: 6px; margin-bottom: 8px;
+    align-self: flex-start;
 }
 .doc-category.regulation { background: #f3e8ff; color: #7e22ce; }
 .doc-category.report { background: #dbeafe; color: #1d4ed8; }
 .doc-category.slide { background: #ffedd5; color: #c2410c; }
 
 .doc-title {
-    font-size: 15px; font-weight: 700; color: #0f172a;
+    font-size: 16px; font-weight: 600; color: #0f172a;
     line-height: 1.4; margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: calc(1.4em * 2);
 }
 .doc-desc {
     font-size: 13px; color: #64748b; line-height: 1.5;
-    margin-bottom: 16px; flex-grow: 1;
+    margin-bottom: 14px;
 }
 .doc-meta {
-    display: flex; gap: 16px; font-size: 12px; color: #94a3b8;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    font-size: 13px; color: #475569;
     border-top: 1px solid #f1f5f9; padding-top: 12px; margin-bottom: 16px;
 }
-.doc-meta span { display: flex; align-items: center; gap: 6px; }
+.doc-meta span {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: #475569; font-size: 13px;
+}
+.doc-meta span i {
+    color: #64748b; font-size: 13px;
+}
 
-.doc-actions { display: flex; gap: 10px; }
+.doc-actions { display: flex; gap: 10px; margin-top: auto; width: 100%; }
 .btn-preview {
     flex: 1; background: #f8fafc; border: 1px solid #cbd5e1;
     padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
     color: #475569; cursor: pointer; transition: 0.2s;
     display: flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap;
 }
 .btn-preview:hover { background: #f1f5f9; color: #1e293b; }
 
@@ -160,8 +198,13 @@ body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
     padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
     color: #ffffff; cursor: pointer; transition: 0.2s;
     display: flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap;
 }
 .btn-download:hover { background: #1d4ed8; }
+.btn-download.btn-download-full {
+    flex: 1 1 100%;
+    width: 100%;
+}
 
 /* NO RESULT BOX */
 .no-result-box {

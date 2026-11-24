@@ -28,6 +28,8 @@
 
 ### Sinh viên
 
+- Xem đề tài giảng viên đề xuất và nhóm đang tuyển thành viên.
+- Công khai nhóm trước khi đăng ký đề tài; sinh viên khác gửi yêu cầu tham gia bằng tài khoản đang đăng nhập, trưởng nhóm quyết định chấp nhận hoặc từ chối.
 - Đăng ký đề tài và thành viên nhóm.
 - Theo dõi đề tài, giảng viên hướng dẫn và tiến độ thực hiện.
 - Xem lịch làm việc, lịch hẹn, thông báo và tài liệu hướng dẫn.
@@ -147,7 +149,7 @@ TTTN_MIS_01_S3/
    ollama pull qwen2.5:3b
    ```
 
-   Mô hình này tải khoảng 2 GB và không dùng chế độ suy nghĩ của Qwen3. Backend mặc định kết nối tới `http://127.0.0.1:11434` và dùng `qwen2.5:3b`; có thể đổi `OLLAMA_BASE_URL` hoặc `OLLAMA_MODEL` trong `.env` nếu cần. Cấu hình `OLLAMA_MODEL=qwen3:4b` cũ sẽ tự chuyển sang `qwen2.5:3b`. Ollama phải chạy trên chính máy đang chạy backend. Để giảm thời gian nạp mô hình lại, Ollama giữ mô hình trong bộ nhớ 10 phút sau mỗi câu hỏi; trợ lý cũng chỉ gửi tối đa 8 đề tài phù hợp và 4 tin nhắn lịch sử vào prompt.
+   Mô hình này tải khoảng 2 GB và không dùng chế độ suy nghĩ của Qwen3. Backend mặc định kết nối tới `http://127.0.0.1:11434` và dùng `qwen2.5:3b`; có thể đổi `OLLAMA_BASE_URL` hoặc `OLLAMA_MODEL` trong `.env` nếu cần. Cấu hình `OLLAMA_MODEL=qwen3:4b` cũ sẽ tự chuyển sang `qwen2.5:3b`. Ollama phải chạy trên chính máy đang chạy backend. Để giảm thời gian nạp mô hình lại, Ollama giữ mô hình trong bộ nhớ 30 phút sau mỗi câu hỏi; trợ lý cũng chỉ gửi tối đa 8 đề tài phù hợp và 4 tin nhắn lịch sử vào prompt.
 
 Không cần chỉnh các thiết lập cookie để chạy cục bộ. Không gửi hoặc commit file `.env`; chỉ commit `.env.example`. Nếu đổi `FRONTEND_API_BASE_URL`, xem bước cập nhật cấu hình frontend ở mục 6.3.
 

@@ -1,8 +1,9 @@
 function getOllamaConfig() {
     const baseUrl = String(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').trim().replace(/\/+$/, '');
     const configuredModel = String(process.env.OLLAMA_MODEL || '').trim();
+    // Mặc định chuyển sang qwen2.5:1.5b (nhẹ, nhanh gấp 3-4 lần so với 3b/4b trên CPU)
     const model = !configuredModel || configuredModel === 'qwen3:4b'
-        ? 'qwen2.5:3b'
+        ? (process.env.OLLAMA_MODEL || 'qwen2.5:1.5b')
         : configuredModel;
     return { baseUrl, model };
 }
@@ -38,10 +39,10 @@ async function getOllamaChatCompletion(messages) {
                 messages,
                 stream: false,
                 think: false,
-                keep_alive: '10m',
-                options: { temperature: 0.4, num_predict: 192 }
+                keep_alive: '60m',
+                options: { temperature: 0.4, num_predict: 160 }
             }),
-            signal: AbortSignal.timeout(120000)
+            signal: AbortSignal.timeout(60000)
         });
     } catch (error) {
         console.error('Không thể kết nối Ollama:', error.message);

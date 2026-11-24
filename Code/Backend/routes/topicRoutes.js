@@ -76,6 +76,8 @@ const {
     getGroupJoinRequests,
     updateGroupJoinRequest,
     getMyTopic, 
+    publishGroupRecruitment,
+    closeGroupRecruitment,
     updateTopic,
     cancelTopic,
     uploadMilestone,
@@ -132,6 +134,8 @@ router.patch('/admin/assign-lecturer/:topic_id', authMiddleware, requireAdminRol
 router.get('/pool', authMiddleware, requireStudentRole, getLecturerPoolTopics);
 router.get('/available', authMiddleware, requireStudentRole, getLecturerPoolTopics);
 router.get('/marketplace', authMiddleware, requireStudentRole, getStudentTopicMarketplace);
+router.post('/group-recruitment', authMiddleware, requireStudentRole, publishGroupRecruitment);
+router.delete('/group-recruitment/:leader_code', authMiddleware, requireStudentOwnCode, closeGroupRecruitment);
 
 // Sinh viên chọn đăng ký 1 đề tài từ Kho
 router.post('/register-pool', authMiddleware, requireStudentRole, registerPoolTopic);

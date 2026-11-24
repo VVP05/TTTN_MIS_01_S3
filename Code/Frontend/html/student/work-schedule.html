@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý TTTN | Lịch làm việc</title>
+    <title>Hệ Thống Quản Lý TTTN | Lịch làm việc & Tiến độ</title>
     
+    <!-- Google Fonts: Be Vietnam Pro & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/student/work-schedule.css">
+    <link rel="stylesheet" href="../../css/common/student-sidebar-brand.css">
     <link rel="stylesheet" href="../../css/common/chat-emoji-picker.css">
     <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,7 +29,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ</h2>
+                        <span>THỰC TẬP TỐT NGHIỆP</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -51,13 +60,6 @@
             </div>
 
             <div class="sidebar-bottom">
-                <div class="sidebar-illustration">
-                    <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 90 Q 100 60 190 90 L 190 100 L 10 100 Z" fill="#2563eb" opacity="0.15"/>
-                        <rect x="70" y="40" width="60" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
-                        <polygon points="100,15 60,45 140,45" fill="#2563eb" opacity="0.5"/>
-                    </svg>
-                </div>
                 <div class="sidebar-footer">
                     <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
                 </div>
@@ -70,16 +72,18 @@
             <!-- TOPBAR -->
             <header class="top-navbar">
                 <div class="navbar-left">
-                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                    <button class="btn-menu-toggle" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
                 </div>
                 <div class="navbar-right">
                     <div class="user-profile">
                         <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
-                        <span id="userName" class="user-name">Đang tải...</span>
-                        <span id="userCode" class="user-badge">...</span>
+                        <div class="user-details">
+                            <span id="userName" class="user-name">Đang tải...</span>
+                            <span id="userCode" class="user-badge">...</span>
+                        </div>
                     </div>
                     <button id="logoutBtn" class="btn-logout">
-                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                        <i class="fa-solid fa-right-from-bracket"></i> <span>Đăng xuất</span>
                     </button>
                 </div>
             </header>
@@ -89,78 +93,126 @@
 
                 <!-- HEADER TRANG -->
                 <div class="page-header-row">
-                    <div>
-                        <h1>Lịch làm việc & Tiến độ thực tập</h1>
-                        <p>Quản lý lịch họp với Giảng viên hướng dẫn và theo dõi kế hoạch từng tuần.</p>
+                    <div class="page-header-left">
+                        <div class="breadcrumb-trail">
+                            <a href="student-dashboard.html"><i class="fa-solid fa-house"></i> Trang chủ</a>
+                            <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+                            <span class="current-crumb">Lịch làm việc & Tiến độ</span>
+                        </div>
+                        <h1 class="page-title">Lịch làm việc & Tiến độ thực tập</h1>
+                        <p class="page-subtitle">Quản lý lịch họp với Giảng viên hướng dẫn và theo dõi kế hoạch thực tập từng tuần.</p>
                     </div>
-                    <div>
-                        <button id="btnOpenBookingModal" class="btn-primary">
-                            <i class="fa-solid fa-calendar-plus"></i> Đăng ký lịch hẹn GVHD
+                    <div class="page-header-right">
+                        <button id="btnOpenBookingModal" class="btn-primary btn-booking">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                            <span>Đăng ký lịch hẹn GVHD</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- STATS CARDS -->
-                <div class="stats-grid margin-top-20">
-                    <div class="stat-card">
-                        <div class="stat-icon blue"><i class="fa-solid fa-calendar-check"></i></div>
+                <!-- 3 THẺ THỐNG KÊ (STATS CARDS) -->
+                <div class="stats-grid">
+                    <!-- THẺ 1: LỊCH HẸN SẮP TỚI -->
+                    <div class="stat-card stat-card-blue">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                        </div>
                         <div class="stat-info">
                             <span class="stat-label">Lịch hẹn sắp tới</span>
-                            <h3 id="statUpcomingMeetings" class="stat-value">00 buổi</h3>
+                            <div class="stat-value-row">
+                                <h3 id="statUpcomingMeetings" class="stat-value">00 buổi</h3>
+                            </div>
+                            <div class="stat-footer-text" id="statUpcomingNote">
+                                <span id="statUpcomingDetailText">Chưa có lịch họp sắp tới</span>
+                                <a href="javascript:void(0)" onclick="document.getElementById('btnOpenBookingModal')?.click()" class="stat-link">Đặt lịch <i class="fa-solid fa-arrow-right"></i></a>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon purple"><i class="fa-solid fa-layer-group"></i></div>
+
+                    <!-- THẺ 2: TIẾN ĐỘ THỰC TẬP -->
+                    <div class="stat-card stat-card-purple">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        </div>
                         <div class="stat-info">
                             <span class="stat-label">Tiến độ kỳ thực tập</span>
-                            <h3 id="statWeekProgress" class="stat-value">Đang tải...</h3>
+                            <div class="stat-value-row">
+                                <h3 id="statWeekProgress" class="stat-value">Đang tải...</h3>
+                                <span id="statWeekPercentBadge" class="stat-pill purple">0%</span>
+                            </div>
+                            <div class="stat-progress-track">
+                                <div id="statWeekProgressBar" class="stat-progress-fill purple" style="width: 0%;"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green"><i class="fa-solid fa-check"></i></div>
+
+                    <!-- THẺ 3: CÔNG VIỆC HOÀN THÀNH -->
+                    <div class="stat-card stat-card-green">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
                         <div class="stat-info">
                             <span class="stat-label">Công việc hoàn thành</span>
-                            <h3 id="statTodoProgress" class="stat-value">0 <small>/ 0</small></h3>
+                            <div class="stat-value-row">
+                                <h3 id="statTodoProgress" class="stat-value">0 <small>/ 0</small></h3>
+                                <span id="statTodoPercentBadge" class="stat-pill green">0%</span>
+                            </div>
+                            <div class="stat-progress-track">
+                                <div id="statTodoProgressBar" class="stat-progress-fill green" style="width: 0%;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- MAIN GRID -->
-                <div class="schedule-grid margin-top-24">
+                <!-- MAIN GRID: 2 CỘT (Cột trái 2fr, Cột phải 1fr) -->
+                <div class="schedule-grid">
                     
-                    <!-- CỘT TRÁI (70%) -->
+                    <!-- CỘT TRÁI (CHÍNH) -->
                     <div class="left-column">
                         
                         <!-- 1. DANH SÁCH LỊCH HẸN VỚI GVHD -->
-                        <div class="card-box todo-card">
+                        <div class="card-box meeting-card-box">
                             <div class="card-header">
-                                <h3><i class="fa-solid fa-users text-blue"></i> Lịch họp / Báo cáo với Giảng viên</h3>
-                                <span id="activeSemesterLabel" class="badge-filter">Học kỳ đang áp dụng</span>
+                                <div class="card-header-title">
+                                    <span class="header-icon blue"><i class="fa-solid fa-handshake"></i></span>
+                                    <div>
+                                        <h3>Lịch họp / Báo cáo với Giảng viên</h3>
+                                        <p class="card-header-sub">Danh sách các buổi gặp báo cáo tiến độ và hướng dẫn</p>
+                                    </div>
+                                </div>
+                                <span id="activeSemesterLabel" class="badge-semester"><i class="fa-regular fa-clock"></i> Học kỳ đang áp dụng</span>
                             </div>
 
                             <!-- Khối chứa danh sách lịch họp do JS render -->
                             <div id="meetingsListContainer" class="meeting-list">
-                                <p style="text-align: center; color: #64748b; padding: 20px;">Đang tải dữ liệu...</p>
+                                <div class="loading-state">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <span>Đang tải dữ liệu lịch họp...</span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- 2. CHAT NHÓM -->
-                        <div class="card-box chat-card margin-top-20">
+                        <div class="card-box chat-card">
                             <div class="chat-header">
                                 <div class="chat-heading">
                                     <span class="chat-heading-icon"><i class="fa-solid fa-comments"></i></span>
                                     <div>
-                                        <h3>Chat nhóm</h3>
+                                        <h3>Trao đổi & Chat nhóm</h3>
                                         <p id="chatSubtitle">Trao đổi nhanh với thành viên trong nhóm</p>
                                     </div>
+                                </div>
+                                <div class="chat-live-badge">
+                                    <span class="live-dot"></span>
+                                    <span>Trực tuyến</span>
                                 </div>
                             </div>
                             <div class="chat-tabs" role="tablist">
                                 <button type="button" class="chat-tab active" data-chat-room="INTERNAL">
-                                    <i class="fa-solid fa-users"></i> Thành viên<span id="internalChatBadge" class="chat-unread-badge" hidden></span>
+                                    <i class="fa-solid fa-users"></i> <span>Thành viên</span><span id="internalChatBadge" class="chat-unread-badge" hidden></span>
                                 </button>
                                 <button type="button" id="lecturerChatTab" class="chat-tab" data-chat-room="LECTURER">
-                                    <i class="fa-solid fa-chalkboard-user"></i> Giảng viên<span id="lecturerChatBadge" class="chat-unread-badge" hidden></span>
+                                    <i class="fa-solid fa-chalkboard-user"></i> <span>Giảng viên</span><span id="lecturerChatBadge" class="chat-unread-badge" hidden></span>
                                 </button>
                             </div>
                             <div id="chatMessages" class="chat-messages">
@@ -174,42 +226,92 @@
                                     </button>
                                     <div id="chatEmojiPicker" class="chat-emoji-picker" hidden aria-label="Biểu tượng cảm xúc"></div>
                                 </div>
-                                <button type="submit" aria-label="Gửi tin nhắn"><i class="fa-solid fa-paper-plane"></i></button>
+                                <button type="submit" id="btnSendChat" aria-label="Gửi tin nhắn" title="Gửi tin nhắn (Enter)"><i class="fa-solid fa-paper-plane"></i></button>
                             </form>
                         </div>
 
                     </div>
 
-                    <!-- CỘT PHẢI (30%) -->
+                    <!-- CỘT PHẢI (SIDE COLUMN) -->
                     <div class="right-column">
                         
-                        <!-- WIDGET CHECKLIST -->
-                        <div class="card-box">
+                        <!-- WIDGET CHECKLIST: VIỆC CẦN LÀM TUẦN NÀY -->
+                        <div class="card-box todo-box">
                             <div class="card-header">
-                                <h3><i class="fa-solid fa-list-check text-blue"></i> Việc cần làm tuần này</h3>
-                                <span id="todoCounter" class="task-count">0/0</span>
+                                <div class="card-header-title">
+                                    <span class="header-icon green"><i class="fa-solid fa-list-check"></i></span>
+                                    <div>
+                                        <h3>Việc cần làm tuần này</h3>
+                                        <div class="todo-mini-progress">
+                                            <div id="todoMiniProgressBar" class="todo-mini-progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span id="todoCounter" class="task-count-pill">0/0 việc</span>
                             </div>
+
                             <!-- Khối chứa To-do list do JS render -->
                             <div class="todo-list" id="todoList">
-                                <p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 10px 0;">Đang tải...</p>
+                                <div class="loading-state-sm">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <span>Đang tải danh sách việc...</span>
+                                </div>
                             </div>
-                            <div class="todo-add">
-                                <input type="text" id="newTodoInput" placeholder="Thêm việc mới...">
-                                <input type="date" id="todoDueDate" aria-label="Ngày hạn công việc" title="Chọn ngày hạn">
-                                <select id="todoAssignee" aria-label="Người phụ trách">
-                                    <option value="">Cả nhóm</option>
-                                </select>
-                                <button id="btnAddTodo"><i class="fa-solid fa-plus"></i></button>
+
+                            <!-- FORM THÊM VIỆC MỚI (TÁCH 2 HÀNG RÕ RÀNG) -->
+                            <div class="todo-add-container">
+                                <div class="todo-add-row1">
+                                    <input type="text" id="newTodoInput" placeholder="Nhập tên công việc cần làm..." maxlength="255">
+                                </div>
+                                <div class="todo-add-row2">
+                                    <div class="todo-date-field" title="Hạn hoàn thành">
+                                        <i class="fa-regular fa-calendar input-icon"></i>
+                                        <input type="date" id="todoDueDate" aria-label="Ngày hạn công việc">
+                                    </div>
+                                    <div class="todo-assignee-field" title="Người phụ trách">
+                                        <i class="fa-solid fa-user-tag input-icon"></i>
+                                        <select id="todoAssignee" aria-label="Người phụ trách">
+                                            <option value="">Cả nhóm</option>
+                                        </select>
+                                    </div>
+                                    <button id="btnAddTodo" class="btn-add-todo" title="Thêm công việc vào danh sách">
+                                        <i class="fa-solid fa-plus"></i> <span>Thêm</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- WIDGET THÔNG TIN HỖ TRỢ -->
-                        <div class="card-box margin-top-20 tip-box">
+                        <!-- WIDGET THÔNG TIN HỖ TRỢ: LƯU Ý TỪ KHOA CNTT -->
+                        <div class="card-box tip-box" id="facultyTipBox">
+                            <button type="button" class="tip-dismiss-btn" onclick="document.getElementById('facultyTipBox').style.display='none'" aria-label="Đóng thông báo" title="Đóng thông báo">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                             <div class="tip-header">
-                                <i class="fa-solid fa-lightbulb"></i>
+                                <span class="tip-icon"><i class="fa-solid fa-lightbulb"></i></span>
                                 <h4>Lưu ý từ Khoa CNTT</h4>
                             </div>
-                            <p>Sinh viên cần chủ động liên hệ Giảng viên hướng dẫn <strong>ít nhất 1 lần/2 tuần</strong> để báo cáo tiến độ. Mọi buổi họp online/offline cần ghi lại biên bản làm việc.</p>
+                            <p>Sinh viên cần chủ động liên hệ Giảng viên hướng dẫn <strong>ít nhất 1 lần / 2 tuần</strong> để báo cáo tiến độ. Mọi buổi họp online/offline đều cần ghi lại biên bản làm việc.</p>
+                        </div>
+
+                        <!-- WIDGET TIẾN ĐỘ 15 TUẦN THỰC TẬP -->
+                        <div class="card-box internship-weeks-box">
+                            <div class="card-header">
+                                <div class="card-header-title">
+                                    <span class="header-icon purple"><i class="fa-solid fa-calendar-week"></i></span>
+                                    <div>
+                                        <h3>Lộ trình 15 tuần thực tập</h3>
+                                        <p class="card-header-sub">Tổng quan các giai đoạn thực tập</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="weeks-grid" id="weeksGridContainer">
+                                <!-- 15 tuần dots sinh động được render bằng script -->
+                            </div>
+                            <div class="weeks-legend">
+                                <div class="legend-item"><span class="legend-dot done"></span> Đã hoàn thành</div>
+                                <div class="legend-item"><span class="legend-dot active"></span> Tuần hiện tại</div>
+                                <div class="legend-item"><span class="legend-dot upcoming"></span> Sắp tới</div>
+                            </div>
                         </div>
 
                     </div>
@@ -217,7 +319,7 @@
                 </div>
 
                 <footer class="page-footer">
-                    © 2026 Khoa CNTT - All rights reserved.
+                    <p>© 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp</p>
                 </footer>
 
             </main>
@@ -228,8 +330,14 @@
     <div id="bookingModal" class="modal-overlay">
         <div class="modal-box large">
             <div class="modal-header">
-                <h3>Đăng ký lịch họp / Báo cáo với GVHD</h3>
-                <button id="btnCloseModal" class="btn-close">&times;</button>
+                <div class="modal-header-left">
+                    <div class="modal-header-icon"><i class="fa-solid fa-calendar-plus"></i></div>
+                    <div>
+                        <h3>Đăng ký lịch họp / Báo cáo GVHD</h3>
+                        <p class="modal-subtitle">Gửi yêu cầu đặt lịch hẹn báo cáo tiến độ tới giảng viên hướng dẫn</p>
+                    </div>
+                </div>
+                <button id="btnCloseModal" class="btn-close" aria-label="Đóng">&times;</button>
             </div>
             <form id="bookingForm" class="modal-body">
                 <div class="form-group">
@@ -241,7 +349,7 @@
                     <select id="bookingAvailability" required>
                         <option value="">-- Chọn khung giờ rảnh --</option>
                     </select>
-                    <small id="availabilityHint" class="form-hint">Giảng viên chưa công khai khung giờ rảnh.</small>
+                    <small id="availabilityHint" class="form-hint">Ngày và giờ sẽ tự cập nhật theo khung giờ đã chọn.</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -250,11 +358,11 @@
                     </div>
                     <div class="form-group">
                         <label>Giờ bắt đầu <span class="text-red">*</span></label>
-                        <input type="time" id="bookingTimeStart" value="09:00" required readonly>
+                        <input type="time" id="bookingTimeStart" required readonly>
                     </div>
                     <div class="form-group">
                         <label>Giờ kết thúc <span class="text-red">*</span></label>
-                        <input type="time" id="bookingTimeEnd" value="10:00" required readonly>
+                        <input type="time" id="bookingTimeEnd" required readonly>
                     </div>
                 </div>
                 <div class="form-group">

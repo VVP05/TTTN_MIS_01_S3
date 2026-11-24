@@ -3,343 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Đăng nhập | Hệ thống Quản lý TTTN</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- CSS -->
     <link rel="stylesheet" href="../../css/auth/style.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
-    <link rel="stylesheet" href="../../css/responsive.css">
 </head>
 
 <body>
 
-    <!-- ===== BACKGROUND ===== -->
-    <div class="background-decoration" aria-hidden="true">
-        <span class="sky-blue-haze"></span>
-        <svg class="sky-bird sky-bird-one sky-bird-from-left" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-two sky-bird-from-right" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-three sky-bird-from-left" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-four sky-bird-from-right" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-five sky-bird-from-left" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-six sky-bird-from-right" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-seven sky-bird-from-left" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="sky-bird sky-bird-eight sky-bird-from-right" viewBox="0 0 44 26">
-            <path class="bird-wing bird-wing-left" d="M22 17 C16 12 10 8 2 9 C8 12 15 17 20 22 L22 23Z" />
-            <path class="bird-wing bird-wing-right" d="M22 17 C28 12 34 8 42 9 C36 12 29 17 24 22 L22 23Z" />
-        </svg>
-        <svg class="campus-life" viewBox="0 0 1717 916" preserveAspectRatio="xMidYMax slice">
-            <g class="campus-clock" aria-hidden="true">
-                <line class="clock-hand clock-hour" data-clock-hand="hour" x1="303" y1="570" x2="300" y2="564" />
-                <line class="clock-hand clock-minute" data-clock-hand="minute" x1="303" y1="570" x2="303" y2="562" />
-                <line class="clock-hand clock-second" data-clock-hand="second" x1="303" y1="570" x2="303" y2="560" />
-                <circle class="clock-center" cx="303" cy="570" r="1.3" />
-            </g>
-            <g transform="translate(574 651)">
-                <g class="falling-leaf leaf-one">
-                    <path d="M0 0 C4 -7 11 -8 15 -6 C13 1 7 5 0 0Z M1 0 L13 -6" />
-                </g>
-            </g>
-            <g transform="translate(1533 615)">
-                <g class="falling-leaf leaf-two">
-                    <path d="M0 0 C4 -7 11 -8 15 -6 C13 1 7 5 0 0Z M1 0 L13 -6" />
-                </g>
-            </g>
-            <g transform="translate(1574 658)">
-                <g class="falling-leaf leaf-three">
-                    <path d="M0 0 C4 -7 11 -8 15 -6 C13 1 7 5 0 0Z M1 0 L13 -6" />
-                </g>
-            </g>
-            <g transform="translate(1050 675)">
-                <g class="falling-leaf leaf-four">
-                    <path d="M0 0 C4 -7 11 -8 15 -6 C13 1 7 5 0 0Z M1 0 L13 -6" />
-                </g>
-            </g>
-            <g transform="translate(1310 630)">
-                <g class="falling-leaf leaf-five">
-                    <path d="M0 0 C4 -7 11 -8 15 -6 C13 1 7 5 0 0Z M1 0 L13 -6" />
-                </g>
-            </g>
-            <g transform="translate(730 640)">
-                <g class="falling-leaf leaf-six">
-                    <path d="M0 0 C4 -7 11 -8 15 -6 C13 1 7 5 0 0Z M1 0 L13 -6" />
-                </g>
-            </g>
-        </svg>
-        <div class="wave wave-1"></div>
-        <div class="wave wave-2"></div>
-        <div class="wave wave-3"></div>
-    </div>
+    <!-- ===== LOGIN CARD ===== -->
+    <main class="auth-card" role="main">
 
+        <!-- Header -->
+        <header class="auth-card-header">
+            <div class="auth-logo-wrap" aria-hidden="true">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h1 class="auth-title">Hệ thống quản lý<br>thực tập tốt nghiệp</h1>
+        </header>
 
-    <!-- ===== LOGIN PAGE ===== -->
-    <main class="login-page">
+        <!-- Form -->
+        <form id="loginForm" class="auth-form" autocomplete="on" novalidate>
 
-        <!-- ===== LOGIN CARD ===== -->
-        <div class="login-container">
-
-            <!-- Logo -->
-            <div class="login-header">
-
-                <div class="logo-circle">
-                    🎓
+            <!-- Mã định danh -->
+            <div class="auth-field">
+                <label for="userCode">Mã định danh</label>
+                <div class="auth-input-wrap">
+                    <i class="fa-regular fa-user auth-input-icon" aria-hidden="true"></i>
+                    <input
+                        type="text"
+                        id="userCode"
+                        name="username"
+                        placeholder="Nhập MSSV / Mã GV"
+                        autocomplete="username"
+                        autofocus
+                        required
+                    />
                 </div>
-
-                <h2>
-                    QUẢN LÝ THỰC TẬP TỐT NGHIỆP
-                </h2>
-
-                <p>
-                    
-                </p>
-
             </div>
 
-
-            <!-- ===== LOGIN FORM ===== -->
-            <form id="loginForm" class="login-form" autocomplete="on">
-
-                <!-- Mã định danh -->
-                <div class="form-group">
-
-                    <label for="userCode">
-                        Mã định danh
-                    </label>
-
-                    <div class="input-wrapper">
-
-                        <span class="input-icon">
-                        
-                        </span>
-
-                        <input
-                            type="text"
-                            id="userCode"
-                            name="username"
-                            placeholder="Nhập MSSV / Mã GV "
-                            autocomplete="username"
-                            required
-                        />
-
-                    </div>
-
+            <!-- Mật khẩu -->
+            <div class="auth-field">
+                <label for="password">Mật khẩu</label>
+                <div class="auth-input-wrap">
+                    <i class="fa-solid fa-lock auth-input-icon" aria-hidden="true"></i>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="••••••••••"
+                        autocomplete="current-password"
+                        required
+                    />
+                    <button
+                        type="button"
+                        id="togglePassword"
+                        class="password-toggle"
+                        aria-label="Hiện mật khẩu"
+                        title="Hiện mật khẩu"
+                    >
+                        <svg class="password-icon eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+                            <circle cx="12" cy="12" r="2.5"></circle>
+                        </svg>
+                        <svg class="password-icon eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m3 3 18 18"></path>
+                            <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.5 0 10 6 10 6a18.7 18.7 0 0 1-3.1 3.7M6.7 6.7C3.7 8.5 2 12 2 12s3.5 6 10 6a10.8 10.8 0 0 0 3.4-.6"></path>
+                            <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+                        </svg>
+                    </button>
                 </div>
-
-
-                <!-- Mật khẩu -->
-                <div class="form-group">
-
-                    <label for="password">
-                        Mật khẩu
-                    </label>
-
-                    <div class="input-wrapper">
-
-                        <span class="input-icon">
-                    
-                        </span>
-
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            placeholder="••••••••••"
-                            autocomplete="current-password"
-                            required
-                        />
-
-                        <button
-                            type="button"
-                            id="togglePassword"
-                            class="password-toggle"
-                            aria-label="Hiện mật khẩu"
-                            title="Hiện mật khẩu"
-                        >
-                            <svg class="password-icon eye-open" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
-                                <circle cx="12" cy="12" r="2.5"></circle>
-                            </svg>
-                            <svg class="password-icon eye-off" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m3 3 18 18"></path>
-                                <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.5 0 10 6 10 6a18.7 18.7 0 0 1-3.1 3.7M6.7 6.7C3.7 8.5 2 12 2 12s3.5 6 10 6a10.8 10.8 0 0 0 3.4-.6"></path>
-                                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
-                            </svg>
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Thông báo lỗi -->
-                <div
-                    id="errorMessage"
-                    class="error-message">
-                </div>
-
-                <!-- Quên mật khẩu -->
-                <div class="forgot-password-link">
-                    <a href="#" id="openForgotPasswordBtn">Quên mật khẩu?</a>
-                </div>
-
-                <!-- Nút đăng nhập -->
-                <button
-                    type="submit"
-                    id="submitBtn"
-                    class="btn-submit">
-
-                    <span>
-                        Đăng nhập hệ thống
-                    </span>
-
-                </button>
-
-            </form>
-
-
-            <!-- ===== FOOTER ===== -->
-            <div class="login-footer">
-
-                <p>
-                   
+                <!-- Cảnh báo Caps Lock -->
+                <p id="capsLockWarning" class="caps-lock-warn" hidden aria-live="polite">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Caps Lock đang bật
                 </p>
-
             </div>
 
-        </div>
+            <!-- Quên mật khẩu -->
+            <div class="auth-forgot-row">
+                <a href="#" id="openForgotPasswordBtn" class="auth-forgot-link">Quên mật khẩu?</a>
+            </div>
+
+            <!-- Thông báo lỗi inline phía trên nút -->
+            <div id="errorMessage" class="auth-error-banner" role="alert" aria-live="polite" hidden></div>
+
+            <!-- Nút đăng nhập -->
+            <button type="submit" id="submitBtn" class="auth-btn-submit">
+                <span class="btn-spinner" hidden aria-hidden="true"></span>
+                <span class="btn-text">Đăng nhập hệ thống</span>
+            </button>
+
+            <!-- Dòng trợ giúp -->
+            <p class="auth-help-text">Gặp vấn đề khi đăng nhập? Liên hệ <strong>Văn phòng Khoa</strong></p>
+
+        </form>
 
     </main>
 
-
     <!-- ===== MODAL QUÊN MẬT KHẨU ===== -->
-    <div id="forgotPasswordModal" class="fp-modal-overlay">
+    <div id="forgotPasswordModal" class="fp-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="fpModalTitle">
         <div class="fp-modal-box">
-            <button type="button" id="closeForgotPasswordBtn" class="fp-modal-close">&times;</button>
+            <button type="button" id="closeForgotPasswordBtn" class="fp-modal-close" aria-label="Đóng">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
 
-            <h3>Khôi phục mật khẩu</h3>
+            <div class="fp-modal-icon" aria-hidden="true">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <h2 id="fpModalTitle" class="fp-modal-title">Khôi phục mật khẩu</h2>
             <p class="fp-modal-desc">
                 Nhập Mã định danh và Email đã đăng ký. Nếu thông tin khớp, hệ thống sẽ gửi liên kết đặt lại mật khẩu đến email đó. Liên kết có hiệu lực trong 15 phút.
             </p>
 
             <form id="forgotPasswordForm" novalidate>
-                <div class="form-group">
+                <div class="auth-field">
                     <label for="fpUserCode">Mã định danh</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="fpUserCode" placeholder="Nhập MSSV / Mã GV" autocomplete="off" required />
+                    <div class="auth-input-wrap">
+                        <i class="fa-regular fa-user auth-input-icon" aria-hidden="true"></i>
+                        <input type="text" id="fpUserCode" placeholder="Nhập MSSV / Mã GV" autocomplete="off" required/>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="auth-field">
                     <label for="fpEmail">Email đã đăng ký</label>
-                    <div class="input-wrapper">
-                        <input type="email" id="fpEmail" placeholder="Nhập email đã đăng ký" autocomplete="off" required />
+                    <div class="auth-input-wrap">
+                        <i class="fa-regular fa-envelope auth-input-icon" aria-hidden="true"></i>
+                        <input type="email" id="fpEmail" placeholder="Nhập email đã đăng ký" autocomplete="off" required/>
                     </div>
                 </div>
 
-                <div id="forgotPasswordMessage" class="fp-message"></div>
+                <div id="forgotPasswordMessage" class="fp-message" aria-live="polite"></div>
 
-                <button type="submit" id="fpSubmitBtn" class="btn-submit">
-                    <span>Xác nhận khôi phục</span>
+                <button type="submit" id="fpSubmitBtn" class="auth-btn-submit" style="margin-top: 4px;">
+                    <span class="btn-spinner" hidden aria-hidden="true"></span>
+                    <span class="btn-text">Xác nhận khôi phục</span>
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- Overlay loading toàn trang -->
     <div id="loginLoadingOverlay" class="login-loading-overlay" hidden role="status" aria-label="Đang đăng nhập" aria-live="polite">
         <span class="login-loading-spinner" aria-hidden="true"></span>
     </div>
 
-    <!-- ===== STYLE RIÊNG CHO MODAL QUÊN MẬT KHẨU ===== -->
-    <style>
-        .forgot-password-link {
-            text-align: right;
-            margin: -8px 0 16px;
-        }
-        .forgot-password-link a {
-            font-size: 0.9rem;
-            color: #2563eb;
-            text-decoration: none;
-        }
-        .forgot-password-link a:hover {
-            text-decoration: underline;
-        }
-        .fp-modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.55);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .fp-modal-overlay.active {
-            display: flex;
-        }
-        .fp-modal-box {
-            background: #fff;
-            width: 90%;
-            max-width: 420px;
-            border-radius: 14px;
-            padding: 28px 24px;
-            position: relative;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
-        }
-        .fp-modal-box h3 {
-            margin: 0 0 8px;
-            font-size: 1.25rem;
-        }
-        .fp-modal-desc {
-            font-size: 0.88rem;
-            color: #64748b;
-            margin-bottom: 18px;
-            line-height: 1.5;
-        }
-        .fp-modal-close {
-            position: absolute;
-            top: 14px;
-            right: 16px;
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            line-height: 1;
-            cursor: pointer;
-            color: #64748b;
-        }
-        .fp-message {
-            font-size: 0.85rem;
-            margin: 4px 0 14px;
-            line-height: 1.5;
-        }
-        .fp-message.error { color: #ef4444; }
-        .fp-message.success { color: #10b981; }
-    </style>
-
-
     <!-- ===== JAVASCRIPT ===== -->
     <script src="../../js/config.js"></script>
     <script src="../../js/auth/login.js"></script>
-
     <script src="../../js/common/app-notifications.js"></script>
+
+    <!-- Caps Lock detection -->
+    <script>
+        (function () {
+            const pw = document.getElementById('password');
+            const warn = document.getElementById('capsLockWarning');
+            if (!pw || !warn) return;
+            const toggle = (e) => {
+                if (typeof e.getModifierState === 'function') {
+                    warn.hidden = !e.getModifierState('CapsLock');
+                }
+            };
+            pw.addEventListener('keydown', toggle);
+            pw.addEventListener('keyup', toggle);
+        })();
+    </script>
 </body>
 </html>

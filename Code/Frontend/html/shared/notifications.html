@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý TTTN | Thông báo</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- CSS & FontAwesome -->
     <link rel="stylesheet" href="../../css/common/notifications.css">
+    <link rel="stylesheet" href="../../css/common/student-sidebar-brand.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
     <link rel="stylesheet" href="../../css/common/student-logout-modal.css">
@@ -20,7 +25,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ</h2>
+                        <span>THỰC TẬP TỐT NGHIỆP</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -48,13 +56,6 @@
             </div>
 
             <div class="sidebar-bottom">
-                <div class="sidebar-illustration">
-                    <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 90 Q 100 60 190 90 L 190 100 L 10 100 Z" fill="#2563eb" opacity="0.15"/>
-                        <rect x="70" y="40" width="60" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
-                        <polygon points="100,15 60,45 140,45" fill="#2563eb" opacity="0.5"/>
-                    </svg>
-                </div>
                 <div class="sidebar-footer">
                     <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
                 </div>
@@ -85,34 +86,51 @@
             <main class="content-body">
                 
                 <!-- HEADER TRANG -->
-                <div class="page-header-row">
-                    <div>
-                        <h1>Thông báo hệ thống & Giảng viên</h1>
-                        <p>Cập nhật tiến độ duyệt đề tài, lịch họp và các thông báo chính thức từ Khoa CNTT.</p>
+                <div class="notif-page-header">
+                    <div class="header-left">
+                        <h1>Thông báo dành cho Sinh viên</h1>
+                        <p>Cập nhật đề tài, lịch họp và các thông báo chính thức từ Khoa CNTT.</p>
                     </div>
-                    <div>
-                        <button id="btnMarkAllRead" class="btn-secondary">
+                    <div class="header-right">
+                        <button id="btnMarkAllRead" class="btn-mark-all" disabled title="Không có thông báo chưa đọc">
                             <i class="fa-solid fa-check-double"></i> Đánh dấu tất cả đã đọc
                         </button>
                     </div>
                 </div>
 
-                <!-- BỘ LỌC TABS -->
-                <div class="filter-tabs margin-top-20">
-                    <button class="tab-btn active" data-filter="ALL">Tất cả <span id="countAll" class="tab-count">0</span></button>
-                    <button class="tab-btn" data-filter="UNREAD">Chưa đọc <span id="countUnread" class="tab-count unread-count">0</span></button>
-                    <button class="tab-btn" data-filter="LECTURER">Từ Giảng viên</button>
-                    <button class="tab-btn" data-filter="FACULTY">Từ Khoa / Hệ thống</button>
+                <!-- BỘ LỌC TABS & TÌM KIẾM -->
+                <div class="notif-toolbar">
+                    <div class="notif-filter-tabs">
+                        <button type="button" class="notif-tab-btn active tab-btn" data-filter="ALL">
+                            Tất cả <span id="countAll" class="notif-tab-count tab-count">0</span>
+                        </button>
+                        <button type="button" class="notif-tab-btn tab-btn" data-filter="UNREAD">
+                            Chưa đọc <span id="countUnread" class="notif-tab-count unread-badge unread-count">0</span>
+                        </button>
+                        <button type="button" class="notif-tab-btn tab-btn" data-filter="LECTURER">
+                            Từ Giảng viên
+                        </button>
+                        <button type="button" class="notif-tab-btn tab-btn" data-filter="FACULTY">
+                            Từ Khoa / Hệ thống
+                        </button>
+                    </div>
+                    <div class="notif-search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="notifSearchInput" class="notif-search-input" placeholder="Tìm kiếm thông báo...">
+                        <button type="button" id="btnClearSearch" class="notif-clear-search" aria-label="Xóa tìm kiếm">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- DANH SÁCH THÔNG BÁO -->
-                <div class="notifications-wrapper margin-top-16">
+                <div class="notif-main-area notifications-wrapper margin-top-16">
                     
-                    <!-- Khối hiển thị khi chưa có thông báo (Đứng độc lập bên ngoài container card) -->
-                    <div id="emptyNotif" class="empty-state" style="display: none; text-align: center; padding: 50px 20px; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
-                        <i class="fa-regular fa-bell-slash" style="font-size: 48px; color: #94a3b8; margin-bottom: 16px;"></i>
-                        <h3 style="color: #334155; font-size: 18px; margin-bottom: 8px;">Chưa có thông báo nào</h3>
-                        <p style="color: #64748b; font-size: 14px;">Bạn sẽ nhận được thông báo khi có cập nhật mới từ Giảng viên hoặc Khoa.</p>
+                    <!-- Khối hiển thị khi chưa có thông báo -->
+                    <div id="emptyNotif" class="notif-empty-state" style="display: none;">
+                        <i class="fa-regular fa-bell-slash empty-icon"></i>
+                        <h3>Chưa có thông báo nào</h3>
+                        <p>Bạn sẽ nhận được thông báo khi có cập nhật mới từ Giảng viên hoặc Khoa.</p>
                     </div>
 
                     <!-- Container danh sách card thông báo thật do JS Render -->

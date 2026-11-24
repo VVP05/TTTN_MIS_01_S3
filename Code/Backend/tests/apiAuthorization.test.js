@@ -19,6 +19,7 @@ const ChatReadState = require('../models/ChatReadState');
 const { AvailabilitySlot, Meeting, Todo } = require('../models/Schedule');
 const LecturerTopic = require('../models/LecturerTopic');
 const GroupJoinRequest = require('../models/GroupJoinRequest');
+const GroupRecruitment = require('../models/GroupRecruitment');
 const Semester = require('../models/Semester');
 const {
     submitMilestoneDraft,
@@ -455,6 +456,30 @@ async function requestExcelUpload(path, { role, userCode, fileName, fileBuffer }
     return fetch(`${baseUrl}${path}`, { method: 'POST', headers, body: formData });
 }
 
+test('student can read the name of their assigned lecturer', async t => {
+    t.mock.method(User, 'findOne', () => ({
+        select: async () => ({
+            user_code: 'GV01',
+            full_name: 'TS. Nguyễn Văn An',
+            role: 'LECTURER'
+        })
+    }));
+    t.mock.method(Topic, 'exists', async filter => {
+        assert.equal(filter.lecturer_code.test('GV01'), true);
+        assert.equal(filter.$or.some(item => item.leader_code?.test('SV01')), true);
+        return { _id: 'topic-1' };
+    });
+
+    const response = await request('/api/auth/users/GV01', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.full_name, 'TS. Nguyễn Văn An');
+});
+
 test('lecturer quota counts only active assigned groups and blocks at the limit', async t => {
     t.mock.method(User, 'findOne', () => ({
         select: () => ({ lean: async () => ({ user_code: 'GV01', max_quota: 2 }) })
@@ -888,6 +913,139 @@ test('student topic marketplace is restricted to authenticated students', async 
     assert.equal(lecturer.status, 403);
 });
 
+test('a student can publish a pre-registration group without creating a topic first', async t => {
+    const now = new Date();
+    let upsertedGroup;
+    t.mock.method(Semester, 'findOne', () => ({
+        lean: async () => ({
+            is_active: true,
+            registration_start_date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+            registration_end_date: new Date(now.getTime() + 24 * 60 * 60 * 1000)
+        })
+    }));
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupJoinRequest, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(GroupRecruitment, 'findOneAndUpdate', async (filter, update) => {
+        upsertedGroup = { filter, update };
+        return { leader_code: filter.leader_code, status: update.$set.status };
+    });
+
+    const response = await request('/api/topics/group-recruitment', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.success, true);
+    assert.equal(upsertedGroup.filter.leader_code, 'SV01');
+    assert.equal(upsertedGroup.update.$set.status, 'OPEN');
+});
+
+test('leader with an accepted member cannot join another public group', async t => {
+    t.mock.method(LecturerTopic, 'find', () => ({
+        sort() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        sort() { return this; },
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupRecruitment, 'find', () => ({
+        sort() { return this; },
+        lean: async () => [{ _id: 'recruitment-sv02', leader_code: 'SV02' }]
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupJoinRequest, 'find', () => ({
+        lean: async () => [{
+            leader_code: 'SV01',
+            member_code: 'SV03',
+            status: 'ACCEPTED'
+        }]
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => [
+            { user_code: 'SV01', full_name: 'Sinh viên Một' },
+            { user_code: 'SV02', full_name: 'Sinh viên Hai' }
+        ]
+    }));
+
+    const response = await request('/api/topics/marketplace', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.data.groupTopics.length, 1);
+    assert.equal(result.data.groupTopics[0].can_join, false);
+    assert.match(result.data.groupTopics[0].cannot_join_reason, /thành viên xác nhận/i);
+});
+
+test('the marketplace shows public groups before their leaders register a topic', async t => {
+    t.mock.method(LecturerTopic, 'find', () => ({
+        sort() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(Topic, 'find', () => ({
+        sort() { return this; },
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupRecruitment, 'find', () => ({
+        sort() { return this; },
+        lean: async () => [{ _id: 'recruitment-sv01', leader_code: 'SV01' }]
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupJoinRequest, 'find', () => ({
+        lean: async () => []
+    }));
+    t.mock.method(User, 'find', filter => ({
+        select() { return this; },
+        lean: async () => filter.role ? [] : [{ user_code: 'SV01', full_name: 'Sinh viên Một' }]
+    }));
+
+    const response = await request('/api/topics/marketplace', {
+        role: 'STUDENT',
+        userCode: 'SV02'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.data.groupTopics.length, 1);
+    assert.equal(result.data.groupTopics[0].pre_registration, true);
+    assert.equal(result.data.groupTopics[0].leader_name, 'Sinh viên Một');
+    assert.equal(result.data.groupTopics[0].open_slots, 2);
+    assert.equal(result.data.groupTopics[0].can_join, true);
+});
+
 test('lecturer topic reads are restricted to the signed-in lecturer', async () => {
     const lecturer = await request('/api/topics/lecturer/GV02', { role: 'LECTURER', userCode: 'GV01' });
     assert.equal(lecturer.status, 403);
@@ -990,6 +1148,80 @@ test('direct pool registration rejects students who already have an active topic
     assert.match(result.message, /đã có đề tài đang hoạt động/);
 });
 
+test('leaders with accepted members cannot request to join another group', async t => {
+    const now = new Date();
+    t.mock.method(Topic, 'findOne', async () => null);
+    t.mock.method(User, 'find', () => ({
+        select: async () => [{ user_code: 'SV01' }, { user_code: 'SV03' }]
+    }));
+    t.mock.method(Semester, 'findOne', () => ({
+        lean: async () => ({
+            is_active: true,
+            registration_start_date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+            registration_end_date: new Date(now.getTime() + 24 * 60 * 60 * 1000)
+        })
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', async filter => {
+        if (String(filter.leader_code || '').toUpperCase().includes('SV01')) {
+            return { leader_code: 'SV01', member_code: 'SV02', status: 'ACCEPTED' };
+        }
+        return null;
+    });
+
+    const response = await request('/api/topics/register', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            registration_role: 'MEMBER',
+            leader_code: 'SV03',
+            member2_code: 'SV01',
+            member3_code: null
+        }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(result.message, /nhóm của bạn đã có thành viên xác nhận/i);
+});
+
+test('accepted members cannot request to join another group', async t => {
+    const now = new Date();
+    t.mock.method(Topic, 'findOne', async () => null);
+    t.mock.method(User, 'find', () => ({
+        select: async () => [{ user_code: 'SV01' }, { user_code: 'SV03' }]
+    }));
+    t.mock.method(Semester, 'findOne', () => ({
+        lean: async () => ({
+            is_active: true,
+            registration_start_date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+            registration_end_date: new Date(now.getTime() + 24 * 60 * 60 * 1000)
+        })
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', async filter => {
+        if (filter.member_code) {
+            return { leader_code: 'SV02', member_code: 'SV01', status: 'ACCEPTED' };
+        }
+        return null;
+    });
+
+    const response = await request('/api/topics/register', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            registration_role: 'MEMBER',
+            leader_code: 'SV03',
+            member2_code: 'SV01',
+            member3_code: null
+        }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(result.message, /không thể xin vào nhóm khác/i);
+});
+
 test('students can request to join an active registered group', async t => {
     const now = new Date();
     const group = {
@@ -1039,6 +1271,81 @@ test('students can request to join an active registered group', async t => {
     assert.deepEqual(createdRequest, { leader_code: 'SV02', member_code: 'SV01' });
 });
 
+test('students can request to join a public group before its leader registers a topic', async t => {
+    const now = new Date();
+    let createdRequest;
+    t.mock.method(User, 'find', () => ({
+        select: async () => [{ user_code: 'SV01' }, { user_code: 'SV02' }]
+    }));
+    t.mock.method(Topic, 'findOne', async () => null);
+    t.mock.method(Semester, 'findOne', () => ({
+        lean: async () => ({
+            is_active: true,
+            registration_start_date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+            registration_end_date: new Date(now.getTime() + 24 * 60 * 60 * 1000)
+        })
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', async () => null);
+    t.mock.method(GroupJoinRequest, 'find', () => ({
+        select() { return this; },
+        lean: async () => []
+    }));
+    t.mock.method(GroupJoinRequest, 'create', async request => {
+        createdRequest = request;
+        return { ...request, _id: 'pre-registration-request' };
+    });
+    t.mock.method(Notification, 'findOneAndUpdate', async () => ({}));
+
+    const response = await request('/api/topics/register', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            registration_role: 'MEMBER',
+            leader_code: 'SV02',
+            member2_code: 'SV01',
+            member3_code: null
+        }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.pending, true);
+    assert.deepEqual(createdRequest, { leader_code: 'SV02', member_code: 'SV01' });
+});
+
+test('a leader can accept a member before registering the group topic', async t => {
+    let updatedRequest;
+    t.mock.method(GroupJoinRequest, 'findOne', async () => null);
+    t.mock.method(GroupJoinRequest, 'findOneAndUpdate', async (filter, update) => {
+        updatedRequest = { filter, update };
+        return {
+            _id: 'pre-registration-request',
+            leader_code: 'SV02',
+            member_code: 'SV01',
+            status: 'ACCEPTED'
+        };
+    });
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(Notification, 'findOneAndUpdate', async () => ({}));
+
+    const response = await request('/api/topics/join-requests/SV02/pre-registration-request', {
+        method: 'PATCH',
+        role: 'STUDENT',
+        userCode: 'SV02',
+        body: { status: 'ACCEPTED' }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.success, true);
+    assert.equal(updatedRequest.filter.leader_code, 'SV02');
+    assert.equal(updatedRequest.update.$set.status, 'ACCEPTED');
+});
+
 test('accepting a join request adds the student to an already registered topic', async t => {
     const topic = {
         _id: 'topic-sv03',
@@ -1053,9 +1360,7 @@ test('accepting a join request adds the student to an already registered topic',
         leader_code: 'SV03',
         member_code: 'SV04'
     }));
-    t.mock.method(GroupJoinRequest, 'findOne', () => ({
-        select: () => ({ lean: async () => null })
-    }));
+    t.mock.method(GroupJoinRequest, 'findOne', async () => null);
     t.mock.method(Topic, 'findOne', filter => ({
         select: () => ({
             lean: async () => filter.leader_code ? { _id: topic._id } : null
@@ -1280,7 +1585,7 @@ test('student AI advisor uses local Ollama and only sends available pool topics 
     assert.equal(ollamaBody.model, 'qwen2.5:3b');
     assert.equal(ollamaBody.stream, false);
     assert.equal(ollamaBody.think, false);
-    assert.equal(ollamaBody.keep_alive, '10m');
+    assert.equal(ollamaBody.keep_alive, '30m');
     assert.equal(ollamaBody.options.num_predict, 192);
     assert.equal(ollamaBody.messages.length, 6);
     assert.ok(ollamaBody.messages.slice(1, -1).every(item => item.content.length <= 600));
@@ -1873,6 +2178,18 @@ test('lecturers can view their own availability and students can view their supe
     });
     assert.equal(studentResponse.status, 200);
     assert.ok(topicFilter.$or.some(condition => Object.values(condition)[0].test('SV02')));
+});
+
+test('students must choose a lecturer availability slot to request a meeting', async () => {
+    const response = await request('/api/schedule/meetings/create', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: { topic_id: 'topic-1', title: 'Báo cáo tiến độ' }
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).message, 'Vui lòng chọn khung giờ rảnh do giảng viên công khai.');
 });
 
 test('students cannot update another student profile or cancel another group', async () => {

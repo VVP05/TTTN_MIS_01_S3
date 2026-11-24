@@ -3,31 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý sinh viên - QUẢN LÝ TTTN</title>
+    <title>Danh Sách Sinh Viên | Cổng Quản Trị Viên</title>
     
-    <!-- Link Font & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/admin-students.css">
     <link rel="stylesheet" href="../../css/common/confirm-dialog.css">
     <link rel="stylesheet" href="../../css/admin/user-import.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/responsive.css">
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- SIDEBAR (Khớp 100% theo ảnh) -->
+    <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <i class="fa-solid fa-graduation-cap logo-icon"></i>
-                <span class="brand-name">QUẢN LÝ TTTN</span>
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <span>CỔNG QUẢN TRỊ VIÊN</span>
+                </div>
             </div>
 
             <div class="sidebar-menu-wrapper">
                 <ul class="menu-list">
                     <li class="menu-item">
                         <a href="admin-dashboard.html">
-                            <i class="fa-solid fa-layer-group"></i>
+                            <i class="fa-solid fa-border-all"></i>
                             <span>Tổng quan</span>
                         </a>
                     </li>
@@ -71,7 +80,7 @@
                     </li>
                     <li class="menu-item">
                         <a href="admin-notifications.html">
-                            <i class="fa-bullhorn fa-solid"></i>
+                            <i class="fa-solid fa-bullhorn"></i>
                             <span>Thông báo hệ thống</span>
                         </a>
                     </li>
@@ -90,38 +99,37 @@
         </aside>
 
         <!-- MAIN WRAPPER -->
-        <div class="main-content">
+        <div class="main-wrapper">
             
-            <!-- TOPBAR (Khớp chuẩn theo ảnh) -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="btn-toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+            <!-- TOPBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle btn-toggle-sidebar" aria-label="Mở menu"><i class="fa-solid fa-bars"></i></button>
                 </div>
-                <div class="topbar-right">
-                    <div class="semester-pill">
+                <div class="navbar-right">
+                    <div class="semester-filter">
                         <i class="fa-solid fa-graduation-cap"></i>
-                        <select class="semester-select">
-                            <option>Học kỳ 2 (2025 - 2026)</option>
-                            <option>Học kỳ 1 (2025 - 2026)</option>
+                        <select id="semesterSelect" class="select-clean" aria-label="Lọc theo học kỳ">
+                            <option value="">Đang tải học kỳ...</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </div>
 
-                    <div class="user-info">
-                        <i class="fa-solid fa-circle-user avatar"></i>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
                         <span class="user-name">Quản Trị Viên</span>
-                        <span class="role-badge">ADMIN</span>
+                        <span class="user-badge">ADMIN</span>
                     </div>
 
-                    <button class="btn-logout-top" id="openLogoutBtn">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    <button class="btn-logout" id="openLogoutBtn" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                     </button>
                 </div>
             </header>
 
-            <!-- CONTAINER NỘI DUNG QUẢN LÝ SINH VIÊN -->
-            <main class="page-body">
+            <!-- NỘI DUNG CHÍNH -->
+            <main class="content-body">
                 
+                <!-- HEADER TRANG -->
                 <div class="page-title-box">
                     <div>
                         <h2>Danh sách Sinh viên</h2>
@@ -129,8 +137,43 @@
                     </div>
                     <div class="action-buttons">
                         <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-export"></i> Xuất Excel</button>
-                        <button class="btn btn-outline btn-success-light" id="openImportBtn"><i class="fa-solid fa-file-excel"></i> Import Excel</button>
+                        <button class="btn btn-success-light" id="openImportBtn"><i class="fa-solid fa-file-excel"></i> Import Excel</button>
                         <button class="btn btn-primary" id="openAddBtn"><i class="fa-solid fa-plus"></i> Thêm sinh viên</button>
+                    </div>
+                </div>
+
+                <!-- HÀNG 4 THẺ THỐNG KÊ NHANH -->
+                <div class="student-stats-grid">
+                    <div class="stat-card-mini blue" data-quick-status="ALL" title="Xem tất cả sinh viên">
+                        <div class="stat-icon-wrap"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="stat-content-mini">
+                            <span class="stat-value-mini" id="statTotalStudents">0</span>
+                            <span class="stat-label-mini">Tổng sinh viên</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-mini green" data-quick-status="APPROVED" title="Lọc sinh viên đã có đề tài">
+                        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="stat-content-mini">
+                            <span class="stat-value-mini" id="statApprovedStudents">0</span>
+                            <span class="stat-label-mini">Đã có đề tài</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-mini orange" data-quick-status="PENDING" title="Lọc sinh viên đang chờ phê duyệt">
+                        <div class="stat-icon-wrap"><i class="fa-solid fa-clock"></i></div>
+                        <div class="stat-content-mini">
+                            <span class="stat-value-mini" id="statPendingStudents">0</span>
+                            <span class="stat-label-mini">Chờ phê duyệt</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-mini gray" data-quick-status="NONE" title="Lọc sinh viên chưa có nhóm">
+                        <div class="stat-icon-wrap"><i class="fa-solid fa-user-group"></i></div>
+                        <div class="stat-content-mini">
+                            <span class="stat-value-mini" id="statNoneStudents">0</span>
+                            <span class="stat-label-mini">Chưa có nhóm</span>
+                        </div>
                     </div>
                 </div>
 
@@ -139,35 +182,54 @@
                     <div class="filter-bar">
                         <div class="search-input-group">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm theo MSSV, Họ và tên...">
+                            <input type="text" id="searchInput" placeholder="Tìm theo MSSV, Họ và tên, Email...">
                         </div>
 
                         <div class="filter-controls">
-                            <select id="classFilter" class="select-box">
-                                <option value="">Tất cả Lớp</option>
-                                <option value="IT1">IT1 - Kỹ thuật phần mềm</option>
-                                <option value="IT2">IT2 - Hệ thống thông tin</option>
-                            </select>
+                            <div class="select-box-wrap">
+                                <select id="classFilter" class="select-box">
+                                    <option value="">Tất cả Lớp</option>
+                                    <option value="IT1">IT1 - Kỹ thuật phần mềm</option>
+                                    <option value="IT2">IT2 - Hệ thống thông tin</option>
+                                </select>
+                            </div>
 
-                            <select id="statusFilter" class="select-box">
-                                <option value="">Trạng thái Đề tài</option>
-                                <option value="APPROVED">Đã có đề tài</option>
-                                <option value="PENDING">Chờ phê duyệt</option>
-                                <option value="NONE">Chưa có nhóm</option>
-                            </select>
+                            <div class="select-box-wrap">
+                                <select id="statusFilter" class="select-box">
+                                    <option value="">Tất cả trạng thái Đề tài</option>
+                                    <option value="APPROVED">Đã có đề tài</option>
+                                    <option value="PENDING">Chờ phê duyệt</option>
+                                    <option value="NONE">Chưa có nhóm</option>
+                                </select>
+                            </div>
 
-                            <button id="resetFilterBtn" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                            <button id="resetFilterBtn" class="btn btn-outline" title="Đặt lại bộ lọc"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
                         </div>
                     </div>
+
+                    <!-- CHIPS BỘ LỌC ĐANG BẬT -->
+                    <div id="activeFilterChips" class="active-filters-row" style="display: none;"></div>
                 </div>
 
                 <!-- BẢNG DỮ LIỆU -->
                 <div class="card-panel margin-top-16">
+                    <!-- THANH HÀNH ĐỘNG HÀNG LOẠT -->
+                    <div id="bulkActionsToolbar" class="bulk-actions-toolbar" style="display: none;">
+                        <div class="bulk-actions-left">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span id="bulkCountText">Đã chọn 0 sinh viên</span>
+                        </div>
+                        <div class="bulk-actions-right">
+                            <button type="button" id="btnDeselectAll" class="btn-deselect-all">Bỏ chọn</button>
+                            <button type="button" id="btnBulkDelete" class="btn-bulk-delete"><i class="fa-solid fa-trash-can"></i> Xóa đã chọn</button>
+                        </div>
+                    </div>
+
                     <div class="table-container">
                         <table class="custom-table">
                             <thead>
                                 <tr>
-                                    <th width="40"><input type="checkbox" id="checkAll"></th>
+                                    <th width="40"><input type="checkbox" id="checkAll" aria-label="Chọn tất cả sinh viên trên trang này"></th>
                                     <th>MSSV</th>
                                     <th>Họ và Tên</th>
                                     <th>Lớp</th>
@@ -178,42 +240,56 @@
                                 </tr>
                             </thead>
                             <tbody id="studentTableBody">
-                                <!-- JS render vào đây -->
+                                <!-- Dữ liệu sinh viên render vào đây -->
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- PHÂN TRANG -->
+                    <!-- CHÂN BẢNG & PHÂN TRANG -->
                     <div class="table-footer">
-                        <span class="pagination-text" id="paginationInfo">Hiển thị 1 - 5 trên tổng số 5 sinh viên</span>
+                        <div class="footer-left-info">
+                            <span class="pagination-text" id="paginationInfo">Đang tải dữ liệu...</span>
+                            <div class="page-size-selector">
+                                <span>Hiển thị:</span>
+                                <select id="pageSizeSelect" class="page-size-select" aria-label="Chọn số dòng mỗi trang">
+                                    <option value="10">10 dòng</option>
+                                    <option value="20">20 dòng</option>
+                                    <option value="50">50 dòng</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="pagination-btns" id="studentsPagination" aria-label="Phân trang danh sách sinh viên"></div>
                     </div>
                 </div>
+
+                <footer class="page-footer">
+                    © 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp.
+                </footer>
 
             </main>
         </div>
     </div>
 
     <!-- MODAL THÊM / SỬA SINH VIÊN -->
-    <div id="studentModal" class="modal-overlay">
+    <div id="studentModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-card">
             <div class="modal-head">
                 <h3 id="modalTitle">Thêm Sinh viên mới</h3>
-                <span class="close-modal" id="closeStudentModal">&times;</span>
+                <span class="close-modal" id="closeStudentModal" aria-label="Đóng popup">&times;</span>
             </div>
             <form id="studentForm">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Mã Sinh Viên (MSSV) *</label>
-                        <input type="text" id="studentIdInput" placeholder="SV220101" required>
+                        <label>Mã Sinh Viên (MSSV) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="studentIdInput" placeholder="VD: SV220101" required>
                     </div>
                     <div class="form-group">
-                        <label>Họ và Tên *</label>
-                        <input type="text" id="studentNameInput" placeholder="Nguyễn Văn A" required>
+                        <label>Họ và Tên <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="studentNameInput" placeholder="VD: Nguyễn Văn A" required>
                     </div>
                     <div class="form-group">
-                        <label>Lớp học *</label>
-                        <input type="text" id="studentClassInput" placeholder="IT1" required>
+                        <label>Lớp học <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="studentClassInput" placeholder="VD: IT1" required>
                     </div>
                     <div class="form-group">
                         <label>Chuyên ngành</label>
@@ -221,10 +297,12 @@
                             <option value="Kỹ thuật Phần mềm">Kỹ thuật Phần mềm</option>
                             <option value="Hệ thống Thông tin">Hệ thống Thông tin</option>
                             <option value="Mạng máy tính">Mạng máy tính</option>
+                            <option value="Trí tuệ Nhân tạo">Trí tuệ Nhân tạo</option>
+                            <option value="Khoa học Dữ liệu">Khoa học Dữ liệu</option>
                         </select>
                     </div>
                     <div class="form-group col-span-2">
-                        <label>Email *</label>
+                        <label>Email <span style="color: var(--danger);">*</span></label>
                         <input type="email" id="studentEmailInput" placeholder="student@st.vnu.edu.vn" required>
                     </div>
                 </div>
@@ -236,7 +314,8 @@
         </div>
     </div>
 
-    <div id="userImportModal" class="modal-overlay" data-kind="students" style="display:none;">
+    <!-- MODAL IMPORT EXCEL -->
+    <div id="userImportModal" class="modal-overlay" data-kind="students" style="display:none;" role="dialog" aria-modal="true">
         <div class="modal-card import-modal-card">
             <div class="modal-head">
                 <h3>Import danh sách sinh viên</h3>
@@ -262,18 +341,21 @@
     </div>
 
     <!-- MODAL ĐĂNG XUẤT -->
-    <div id="logoutModal" class="modal-overlay">
+    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-card modal-sm text-center">
-            <div class="modal-icon-red"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
-            <h3>Xác nhận đăng xuất</h3>
-            <p class="margin-top-8">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
-            <div class="modal-foot center margin-top-16">
-                <button class="btn btn-outline" id="cancelLogout">Hủy</button>
-                <button class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
+            <div class="modal-icon-red" style="font-size: 36px; color: var(--danger); margin-bottom: 12px;">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Xác nhận đăng xuất</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
+            <div class="modal-foot center" style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" class="btn btn-outline" id="cancelLogout">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
             </div>
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="../../js/config.js"></script>
     <script src="../../js/common/confirm-dialog.js"></script>
     <script src="../../js/common/admin-pagination.js"></script>
@@ -282,5 +364,6 @@
     <script src="../../js/admin/admin-user-export.js"></script>
     <script src="../../js/admin/admin-sidebar.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
+    <script src="../../js/common/sidebar-toggle.js"></script>
 </body>
 </html>

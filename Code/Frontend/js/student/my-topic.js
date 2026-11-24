@@ -169,9 +169,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 // =========================================================
 // HÀM CHUYỂN ĐỔI MSSV -> "HỌ VÀ TÊN (MSSV)"
 // =========================================================
-async function getUserDisplayName(userCode) {
+async function getUserDisplayName(userCode, includeCode = true) {
     if (!userCode || userCode === "N/A" || userCode === "null") {
-        return "Không có (Làm cá nhân)";
+        return includeCode ? "Không có" : "Giảng viên hướng dẫn";
     }
     
     try {
@@ -185,14 +185,75 @@ async function getUserDisplayName(userCode) {
         if (res.ok) {
             const data = await res.json();
             if (data && data.full_name) {
-                return `${data.full_name} (${userCode})`;
+                return includeCode ? `${data.full_name} (${userCode})` : data.full_name;
             }
         }
     } catch (err) {
         console.error("Lỗi khi lấy thông tin người dùng:", err);
     }
     
-    return userCode;
+    return includeCode ? userCode : "Giảng viên hướng dẫn";
+}
+
+// =========================================================
+// HÀM ĐỊNH DẠNG HÀNG THÀNH VIÊN / GIẢNG VIÊN ĐỒNG BỘ
+// =========================================================
+function formatMemberItem(rowElId, avatarElId, valueElId, displayText, roleType) {
+    const rowEl = document.getElementById(rowElId);
+    const avatarEl = document.getElementById(avatarElId);
+    const valueEl = document.getElementById(valueElId);
+    if (!valueEl) return;
+
+    const trimmed = String(displayText || "").trim();
+    const isNone = !trimmed || trimmed === "--" || trimmed.includes("Không có") || trimmed === "Chưa đăng ký" || trimmed === "null" || trimmed === "N/A";
+
+    if (isNone) {
+        if (rowEl) {
+            rowEl.classList.add("is-empty-placeholder");
+            rowEl.classList.remove("is-filled");
+        }
+        if (avatarEl) {
+            avatarEl.innerHTML = '<i class="fa-solid fa-user-slash"></i>';
+            avatarEl.className = "member-avatar avatar-empty";
+        }
+        valueEl.innerHTML = `<span class="member-empty-text">${escapeHtml(trimmed || "Không có")}</span>`;
+        return;
+    }
+
+    if (rowEl) {
+        rowEl.classList.remove("is-empty-placeholder");
+        rowEl.classList.add("is-filled");
+    }
+
+    // Tách "Họ và Tên (Mã SV / GV)"
+    const match = trimmed.match(/^(.*?)(?:\s*\(([^)]+)\))?$/);
+    const fullName = match && match[1] ? match[1].trim() : trimmed;
+    const code = match && match[2] ? match[2].trim() : "";
+
+    // Ký tự đại diện Avatar (chữ cái đầu của từ cuối)
+    const words = fullName.split(/\s+/).filter(Boolean);
+    const lastWord = words.length > 0 ? words[words.length - 1] : fullName;
+    const initial = lastWord ? lastWord.charAt(0).toUpperCase() : "?";
+
+    if (avatarEl) {
+        if (roleType === "lecturer") {
+            avatarEl.className = "member-avatar avatar-purple";
+            avatarEl.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i>';
+        } else if (roleType === "leader") {
+            avatarEl.className = "member-avatar avatar-gold";
+            avatarEl.innerHTML = `<span class="avatar-initial">${escapeHtml(initial)}</span>`;
+        } else {
+            avatarEl.className = "member-avatar avatar-blue";
+            avatarEl.innerHTML = `<span class="avatar-initial">${escapeHtml(initial)}</span>`;
+        }
+    }
+
+    let codeHtml = "";
+    if (code) {
+        codeHtml = `<span class="member-code-badge font-mono">${escapeHtml(code)}</span>`;
+    }
+
+    valueEl.innerHTML = `<span class="member-fullname">${escapeHtml(fullName)}</span> ${codeHtml}`;
 }
 
 // =========================================================
@@ -223,7 +284,6 @@ async function loadMyTopic(userCode) {
             currentTopicData = data;
             await loadStudentMilestones();
             await loadMilestoneSubmissionHistory(data._id);
-            syncMilestoneCards();
 
             if (document.getElementById("topicTitle")) 
                 document.getElementById("topicTitle").textContent = data.title || "Chưa đặt tên đề tài";
@@ -239,18 +299,31 @@ async function loadMyTopic(userCode) {
                 getUserDisplayName(leaderCode),
                 getUserDisplayName(data.member2_code),
                 getUserDisplayName(data.member3_code),
-                getUserDisplayName(data.lecturer_code)
+                getUserDisplayName(data.lecturer_code, false)
             ]);
 
-            if (document.getElementById("topicLeader")) document.getElementById("topicLeader").textContent = leaderName;
-            if (document.getElementById("topicMember2")) document.getElementById("topicMember2").textContent = member2Name;
-            if (document.getElementById("topicMember3")) document.getElementById("topicMember3").textContent = member3Name;
-            if (document.getElementById("topicLecturer")) document.getElementById("topicLecturer").textContent = lecturerName;
+            currentTopicData.lecturer_name = lecturerName;
+            syncMilestoneCards();
 
-            if (document.getElementById("topicFeedback")) {
-                document.getElementById("topicFeedback").innerHTML = data.feedback 
-                    ? `<i class="fa-regular fa-comment-dots"></i> ${data.feedback}` 
-                    : `<i class="fa-regular fa-comment-dots"></i> Chưa có nhận xét mới từ giảng viên.`;
+            formatMemberItem("rowLecturer", "avatarLecturer", "topicLecturer", lecturerName, "lecturer");
+            formatMemberItem("rowLeader", "avatarLeader", "topicLeader", leaderName, "leader");
+            formatMemberItem("rowMember2", "avatarMember2", "topicMember2", member2Name, "member");
+            formatMemberItem("rowMember3", "avatarMember3", "topicMember3", member3Name, "member");
+
+            const feedbackContainer = document.getElementById("topicFeedback");
+            const feedbackText = document.getElementById("topicFeedbackText");
+            const feedbackVal = String(data.feedback || "").trim();
+
+            if (feedbackText) {
+                feedbackText.textContent = feedbackVal || "Chưa có nhận xét mới từ giảng viên hướng dẫn.";
+            } else if (feedbackContainer) {
+                feedbackContainer.innerHTML = feedbackVal 
+                    ? `<i class="fa-regular fa-comment-dots"></i> ${escapeHtml(feedbackVal)}` 
+                    : `<i class="fa-regular fa-comment-dots"></i> Chưa có nhận xét mới từ giảng viên hướng dẫn.`;
+            }
+
+            if (feedbackContainer) {
+                feedbackContainer.classList.toggle("is-approved", data.status === "APPROVED");
             }
 
             if (data.createdAt) {
@@ -268,7 +341,7 @@ async function loadMyTopic(userCode) {
             if (banner) {
                 if (data.status === "APPROVED") {
                     banner.className = "status-banner approved";
-                    banner.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Trạng thái: <strong>Đã phê duyệt</strong></span>';
+                    banner.innerHTML = '<span class="status-dot"></span> <span class="status-banner-text">Trạng thái: <strong>Đã phê duyệt</strong></span>';
                     
                     if (btnCancel) btnCancel.style.display = "none";
 
@@ -277,19 +350,20 @@ async function loadMyTopic(userCode) {
 
                 } else if (data.status === "PENDING") {
                     banner.className = "status-banner pending";
-                    banner.innerHTML = '<i class="fa-solid fa-clock"></i> <span>Trạng thái: <strong>Chờ phê duyệt</strong></span>';
+                    banner.innerHTML = '<span class="status-dot"></span> <span class="status-banner-text">Trạng thái: <strong>Chờ phê duyệt</strong></span>';
                     
                     if (btnCancel) btnCancel.style.display = "inline-flex";
                     disableAllMilestones("Đề tài đang chờ phê duyệt");
 
                 } else if (data.status === "REJECTED") {
                     banner.className = "status-banner rejected";
-                    banner.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <span>Trạng thái: <strong>Bị từ chối</strong></span>';
+                    banner.innerHTML = '<span class="status-dot"></span> <span class="status-banner-text">Trạng thái: <strong>Bị từ chối</strong></span>';
                     
                     if (btnCancel) btnCancel.style.display = "none";
                     disableAllMilestones("Đề tài bị từ chối");
                 }
             }
+            updateProgressStepper(data);
         } else if (data?.status?.startsWith("JOIN_")) {
             await renderJoinRequestState(data);
         } else {
@@ -308,11 +382,12 @@ async function renderJoinRequestState(data) {
     const banner = document.getElementById("topicStatusBanner");
     if (banner) {
         banner.className = "status-banner pending";
-        banner.textContent = isAccepted
+        const bannerMsg = isAccepted
             ? "Trưởng nhóm đã chấp nhận yêu cầu. Đang chờ trưởng nhóm đăng ký đề tài."
             : data.status === "JOIN_REJECTED"
                 ? "Yêu cầu tham gia nhóm đã bị từ chối."
                 : "Yêu cầu tham gia nhóm đang chờ trưởng nhóm xác nhận.";
+        banner.innerHTML = `<span class="status-dot"></span> <span class="status-banner-text">Trạng thái: <strong>${escapeHtml(bannerMsg)}</strong></span>`;
     }
 
     if (document.getElementById("topicTitle")) {
@@ -324,15 +399,16 @@ async function renderJoinRequestState(data) {
         document.getElementById("topicDesc").textContent = `Mã trưởng nhóm: ${data.leader_code || "Chưa xác định"}.`;
     }
     if (document.getElementById("topicCode")) document.getElementById("topicCode").textContent = "--";
-    if (document.getElementById("topicLeader")) {
-        document.getElementById("topicLeader").textContent = await getUserDisplayName(data.leader_code);
-    }
-    if (document.getElementById("topicMember2")) document.getElementById("topicMember2").textContent = "--";
-    if (document.getElementById("topicMember3")) document.getElementById("topicMember3").textContent = "--";
-    if (document.getElementById("topicLecturer")) document.getElementById("topicLecturer").textContent = "Chưa đăng ký";
+    const leaderDisplayName = await getUserDisplayName(data.leader_code);
+    formatMemberItem("rowLecturer", "avatarLecturer", "topicLecturer", "Chưa phân công", "lecturer");
+    formatMemberItem("rowLeader", "avatarLeader", "topicLeader", leaderDisplayName, "leader");
+    formatMemberItem("rowMember2", "avatarMember2", "topicMember2", "--", "member");
+    formatMemberItem("rowMember3", "avatarMember3", "topicMember3", "--", "member");
+
     const cancelButton = document.getElementById("btnCancelTopic");
     if (cancelButton) cancelButton.style.display = "none";
     disableAllMilestones("Đề tài sẽ hiển thị sau khi trưởng nhóm đăng ký.");
+    updateProgressStepper(data);
 }
 
 async function loadMilestoneSubmissionHistory(topicId) {
@@ -387,38 +463,48 @@ function syncMilestoneCards() {
             card.innerHTML = `
                 <div class="milestone-header">
                     <div class="m-title">
-                        <span class="m-badge gray" id="statusBadge${step}"><i class="fa-solid fa-lock"></i> Chưa mở</span>
-                        <h4></h4>
+                        <h4>Mốc ${step}: ${escapeHtml(milestone.name)}</h4>
+                        <span class="m-badge-pill pill-gray" id="statusBadge${step}"><i class="fa-solid fa-lock"></i> Chưa mở</span>
                     </div>
-                    <span class="m-deadline"></span>
+                    <span class="m-deadline"><i class="fa-regular fa-clock"></i> Hạn nộp: ${new Date(milestone.endDate).toLocaleString("vi-VN")}</span>
                 </div>
-                <p class="milestone-description"></p>
+                <p class="milestone-description">${escapeHtml(milestone.desc || "")}</p>
                 <div class="milestone-body" id="milestoneBody${step}"></div>
             `;
-            card.querySelector(".m-title h4").textContent = `Mốc ${step}: ${milestone.name}`;
-
             const deadline = card.querySelector(".m-deadline");
             deadline.classList.toggle("text-red", new Date(milestone.endDate) < new Date());
-            const clockIcon = document.createElement("i");
-            clockIcon.className = "fa-regular fa-clock";
-            deadline.replaceChildren(clockIcon, document.createTextNode(` Hạn nộp: ${new Date(milestone.endDate).toLocaleString("vi-VN")}`));
 
             const description = card.querySelector(".milestone-description");
-            description.textContent = milestone.desc || "";
             description.style.display = milestone.desc ? "" : "none";
             list.appendChild(card);
         });
     }
 
     if (emptyState) {
+        let emptyIcon = '<i class="fa-solid fa-calendar-xmark"></i>';
+        let emptyTitle = "Chưa có mốc tiến độ nộp bài";
+        let emptySub = "Các mốc nộp báo cáo tiến độ và hạn nộp sẽ hiển thị tại đây khi đề tài được duyệt.";
+
         if (milestoneLoadError) {
-            emptyState.textContent = "Không thể tải danh sách hạn nộp bài. Vui lòng thử tải lại trang.";
+            emptyIcon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            emptyTitle = "Không thể tải danh sách hạn nộp";
+            emptySub = "Đã xảy ra sự cố khi tải dữ liệu từ máy chủ. Vui lòng thử tải lại trang.";
         } else if (!currentTopicData || currentTopicData.status !== "APPROVED") {
-            emptyState.textContent = "Hạn nộp bài sẽ hiển thị sau khi đề tài được giảng viên phê duyệt.";
+            emptyIcon = '<i class="fa-solid fa-calendar-xmark"></i>';
+            emptyTitle = "Đề tài chưa được phê duyệt";
+            emptySub = "Hạn nộp bài và các mốc tiến độ sẽ kích hoạt sau khi đề tài được Giảng viên phê duyệt.";
         } else {
-            emptyState.textContent = "Giảng viên chưa tạo mốc tiến độ hoặc hạn nộp cho đề tài này.";
+            emptyIcon = '<i class="fa-solid fa-list-check"></i>';
+            emptyTitle = "Giảng viên chưa tạo mốc tiến độ";
+            emptySub = "Hiện tại giảng viên chưa thiết lập mốc nộp bài cho đề tài này. Vui lòng kiểm tra lại sau.";
         }
-        emptyState.style.display = milestones.length ? "none" : "block";
+
+        emptyState.innerHTML = `
+            <div class="empty-icon-wrap">${emptyIcon}</div>
+            <h4 class="empty-title">${escapeHtml(emptyTitle)}</h4>
+            <p class="empty-subtitle">${escapeHtml(emptySub)}</p>
+        `;
+        emptyState.style.display = milestones.length ? "none" : "flex";
     }
 }
 
@@ -488,43 +574,100 @@ function renderSubmissionStatusTable(milestone, {
     const days = Math.floor(remainingSeconds / 86400);
     const hours = Math.floor((remainingSeconds % 86400) / 3600);
     const minutes = Math.floor((remainingSeconds % 3600) / 60);
-    const seconds = remainingSeconds % 60;
-    const timeParts = [];
-    if (days) timeParts.push(`${days} ngày`);
-    if (hours || days) timeParts.push(`${hours} giờ`);
-    if (minutes || hours || days) timeParts.push(`${minutes} phút`);
-    timeParts.push(`${seconds} giây`);
 
     let timeRemaining = "Chưa xác định";
-    let timeClass = "";
+    let chipColorClass = "chip-gray";
+
     if (!Number.isNaN(remainingMs)) {
-        timeClass = submitted ? (remainingMs >= 0 ? "submission-row-success" : "submission-row-overdue") : "";
-        timeRemaining = remainingMs >= 0
-            ? `Còn ${timeParts.join(" ")}`
-            : `Đã quá hạn ${timeParts.join(" ")}${milestone?.allowLate ? " (được phép nộp trễ)" : ""}`;
+        if (remainingMs > 24 * 3600 * 1000) {
+            chipColorClass = "chip-green";
+            const parts = [];
+            if (days) parts.push(`${days} ngày`);
+            if (hours) parts.push(`${hours} giờ`);
+            timeRemaining = `Còn ${parts.join(" ") || "1 ngày"}`;
+        } else if (remainingMs > 0) {
+            chipColorClass = "chip-orange";
+            const parts = [];
+            if (hours) parts.push(`${hours} giờ`);
+            if (minutes) parts.push(`${minutes} phút`);
+            timeRemaining = `Còn ${parts.join(" ") || "ít phút"}`;
+        } else {
+            chipColorClass = "chip-red";
+            const parts = [];
+            if (days) parts.push(`${days} ngày`);
+            if (hours) parts.push(`${hours} giờ`);
+            timeRemaining = `Quá hạn ${parts.join(" ") || "trước đó"}`;
+        }
     }
 
     const storedFileId = fileInfo?.filename || String(fileInfo?.path || "").split(/[\\/]/).pop();
     const fileHref = storedFileId ? `${window.APP_CONFIG.API_BASE_URL}/api/submissions/file/${encodeURIComponent(storedFileId)}` : "";
     const escapedFileName = escapeHtml(fileName);
-    const fileContent = submitted || draft
-        ? `${fileHref
-            ? `<a class="submission-file-link protected-submission-file" href="${escapeHtml(fileHref)}" data-file-name="${escapedFileName}">${escapedFileName}</a>`
-            : escapedFileName} <span class="submission-file-date">${escapeHtml(timeStr)}</span>`
-        : "Chưa có tập tin nào được nộp.";
     const status = reviewStatus || (draft ? "DRAFT" : submitted ? "PENDING_REVIEW" : "NOT_SUBMITTED");
+    const statusLabel = getSubmissionStatusLabel(status);
+
+    const lecturerName = currentTopicData?.lecturer_name || currentTopicData?.lecturer_code || "Giảng viên hướng dẫn";
 
     return `
-        <h3 class="submission-status-heading">Trạng thái bài nộp</h3>
-        <table class="submission-status-table">
-            <tbody>
-                <tr class="${status === "APPROVED" ? "submission-row-success" : ""}"><th>Trạng thái bài nộp</th><td>${escapeHtml(getSubmissionStatusLabel(status))}</td></tr>
-                <tr class="${timeClass}"><th>Thời gian còn lại</th><td>${escapeHtml(timeRemaining)}</td></tr>
-                <tr><th>Chỉnh sửa lần cuối</th><td>${submitted || draft ? escapeHtml(timeStr) : "Chưa nộp lần nào."}</td></tr>
-                <tr class="submission-row-file"><th>Nộp tập tin</th><td>${fileContent}</td></tr>
-                <tr><th>Nhận xét</th><td>${feedback ? escapeHtml(feedback) : "Chưa có nhận xét."}</td></tr>
-            </tbody>
-        </table>
+        <div class="milestone-status-grid">
+            <!-- Ô 1: Trạng thái bài nộp -->
+            <div class="status-grid-item item-status">
+                <div class="grid-item-icon icon-status"><i class="fa-solid fa-file-circle-check"></i></div>
+                <div class="grid-item-content">
+                    <span class="grid-item-label">Trạng thái bài nộp</span>
+                    <div class="grid-item-value font-600">${escapeHtml(statusLabel)}</div>
+                    ${submitted || draft ? `
+                        <div class="grid-item-file">
+                            ${fileHref
+                                ? `<a class="submission-file-link protected-submission-file" href="${escapeHtml(fileHref)}" data-file-name="${escapedFileName}" title="Bấm để tải về file đã nộp"><i class="fa-regular fa-file-lines"></i> ${escapedFileName}</a>`
+                                : `<span class="submission-file-name"><i class="fa-regular fa-file-lines"></i> ${escapedFileName}</span>`}
+                        </div>` : ""}
+                </div>
+            </div>
+
+            <!-- Ô 2: Thời gian còn lại -->
+            <div class="status-grid-item item-countdown">
+                <div class="grid-item-icon icon-time"><i class="fa-regular fa-clock"></i></div>
+                <div class="grid-item-content">
+                    <span class="grid-item-label">Thời gian còn lại</span>
+                    <div class="grid-item-value">
+                        <span class="countdown-chip ${chipColorClass}">${escapeHtml(timeRemaining)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ô 3: Chỉnh sửa lần cuối -->
+            <div class="status-grid-item item-last-modified">
+                <div class="grid-item-icon icon-edit"><i class="fa-regular fa-calendar-check"></i></div>
+                <div class="grid-item-content">
+                    <span class="grid-item-label">Chỉnh sửa lần cuối</span>
+                    <div class="grid-item-value font-600">${submitted || draft ? escapeHtml(timeStr) : "Chưa nộp lần nào"}</div>
+                </div>
+            </div>
+
+            <!-- Ô 4: Nhận xét -->
+            <div class="status-grid-item item-feedback">
+                <div class="grid-item-icon icon-feedback"><i class="fa-regular fa-comment-dots"></i></div>
+                <div class="grid-item-content">
+                    <span class="grid-item-label">Nhận xét</span>
+                    <div class="grid-item-value">
+                        ${feedback ? `
+                            <div class="feedback-bubble-wrap">
+                                <div class="feedback-avatar" title="${escapeHtml(lecturerName)}"><i class="fa-solid fa-chalkboard-user"></i></div>
+                                <div class="feedback-bubble">
+                                    <span class="feedback-author">${escapeHtml(lecturerName)}</span>
+                                    <p class="feedback-text">${escapeHtml(feedback)}</p>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="feedback-empty">
+                                <i class="fa-regular fa-comment"></i> Chưa có nhận xét
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        </div>
         ${renderMilestoneSubmissionHistory(Number(milestone?.step))}`;
 }
 
@@ -587,13 +730,21 @@ function renderMilestoneAwaitingSubmission(mIndex, { canSubmit = false, message 
     const badge = document.getElementById(`statusBadge${mIndex}`);
     const body = document.getElementById(`milestoneBody${mIndex}`);
     const milestone = lecturerMilestones.find(item => Number(item.step) === mIndex);
+    const now = new Date();
+    const isOverdue = milestone && now > new Date(milestone.endDate);
 
     if (card) card.className = `milestone-card ${canSubmit ? "active" : "locked"}`;
     if (badge) {
-        badge.className = `m-badge ${canSubmit ? "orange" : "gray"}`;
-        badge.innerHTML = canSubmit
-            ? '<i class="fa-regular fa-clock"></i> Chưa nộp'
-            : '<i class="fa-solid fa-lock"></i> Chưa mở';
+        if (!canSubmit) {
+            badge.className = "m-badge-pill pill-gray";
+            badge.innerHTML = '<i class="fa-solid fa-lock"></i> Chưa mở';
+        } else if (isOverdue && !milestone.allowLate) {
+            badge.className = "m-badge-pill pill-red";
+            badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Trễ hạn';
+        } else {
+            badge.className = "m-badge-pill pill-gray";
+            badge.innerHTML = '<i class="fa-regular fa-clock"></i> Chờ nộp';
+        }
     }
 
     if (body) {
@@ -621,7 +772,7 @@ function enableMilestoneUpload(mIndex, isEditing = false, existingFileName = "",
 
     if (card) card.className = "milestone-card active";
     if (badge) {
-        badge.className = "m-badge orange";
+        badge.className = "m-badge-pill pill-blue";
         badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang diễn ra';
     }
 
@@ -636,37 +787,34 @@ function enableMilestoneUpload(mIndex, isEditing = false, existingFileName = "",
             })}
             <section class="submission-upload-panel">
                 <header class="submission-upload-header">
-                    <h4><i class="fa-solid fa-chevron-down"></i> ${isEditing ? "Sửa bài nộp" : "Thêm bài nộp"}</h4>
-                    <span>Kích thước tệp tối đa: 25 MB, số lượng tệp tối đa: 1</span>
+                    <h4><i class="fa-solid fa-cloud-arrow-up"></i> ${isEditing ? "Sửa bài nộp" : "Thêm bài nộp"}</h4>
+                    <span>Dung lượng tối đa: 25 MB • Định dạng: PDF, DOC, DOCX, ZIP, RAR</span>
                 </header>
-            <form id="formMilestone${mIndex}" class="upload-form">
-                ${isEditing ? `<p class="editing-submission-note">Đang sửa bài đã nộp: <strong>${escapeHtml(existingFileName)}</strong></p>` : ""}
-                <div class="upload-zone file-manager-zone" id="dropZoneM${mIndex}">
-                    <input type="file" id="fileMilestone${mIndex}" class="input-file" hidden />
-                    <div class="file-manager-toolbar">
-                        <button type="button" class="btn-open-file-picker" id="openFilePickerM${mIndex}">
-                            <i class="fa-regular fa-file"></i> Thêm tệp
-                        </button>
-                        <span class="file-manager-limit">PDF, DOC, DOCX, ZIP hoặc RAR</span>
+                <form id="formMilestone${mIndex}" class="upload-form">
+                    ${isEditing ? `<p class="editing-submission-note">Đang sửa bài đã nộp: <strong>${escapeHtml(existingFileName)}</strong></p>` : ""}
+                    <div class="upload-zone modern-dropzone" id="dropZoneM${mIndex}">
+                        <input type="file" id="fileMilestone${mIndex}" class="input-file" hidden accept=".pdf,.doc,.docx,.zip,.rar" />
+                        <div class="dropzone-content" id="dropzonePromptM${mIndex}">
+                            <div class="dropzone-cloud-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                            <p class="dropzone-text">Kéo thả tệp vào đây hoặc <span class="dropzone-link" id="openFilePickerM${mIndex}">bấm để chọn</span></p>
+                            <span class="dropzone-hint">Hỗ trợ định dạng: PDF, DOC, DOCX, ZIP, RAR (Tối đa 25MB)</span>
+                        </div>
+                        <div id="selectedFileM${mIndex}" class="selected-file-wrapper" style="display: none;"></div>
                     </div>
-                    <div id="selectedFileM${mIndex}" class="file-manager-list">
-                        <div class="file-manager-folder"><i class="fa-regular fa-folder"></i> Tệp</div>
-                        ${isEditing ? `<div class="file-manager-item"><i class="fa-regular fa-file-pdf"></i><span>${escapeHtml(existingFileName)}</span><small>Đã lưu</small></div>` : '<div class="file-manager-empty">Chưa có tệp nào được chọn</div>'}
-                    </div>
-                </div>
 
-                <div class="upload-actions">
-                    <button type="submit" class="btn-submit-changes" id="btnSubmitM${mIndex}" disabled style="opacity: 0.5; cursor: not-allowed;">
-                        Lưu thay đổi
-                    </button>
-                    <button type="button" class="btn-cancel-edit" id="cancelEditM${mIndex}">Hủy bỏ</button>
-                </div>
-            </form>
+                    <div class="upload-actions">
+                        <button type="submit" class="btn-submit-primary" id="btnSubmitM${mIndex}" disabled>
+                            <i class="fa-solid fa-paper-plane"></i> Nộp bài
+                        </button>
+                        <button type="button" class="btn-cancel-outline" id="cancelEditM${mIndex}">Hủy</button>
+                    </div>
+                </form>
             </section>
         `;
 
         initUploadEvents(mIndex);
-        document.getElementById(`openFilePickerM${mIndex}`)?.addEventListener("click", () => {
+        document.getElementById(`openFilePickerM${mIndex}`)?.addEventListener("click", (e) => {
+            e.stopPropagation();
             openMilestoneFilePicker(mIndex);
         });
         document.getElementById(`cancelEditM${mIndex}`)?.addEventListener("click", () => {
@@ -691,7 +839,7 @@ function setMilestoneCompleted(mIndex, fileName, timeStr, fileInfo, milestone) {
     const body = document.getElementById(`milestoneBody${mIndex}`);
     if (card) card.className = "milestone-card completed";
     if (badge) {
-        badge.className = "m-badge green";
+        badge.className = "m-badge-pill pill-green";
         badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Đã duyệt';
     }
     if (body) {
@@ -729,10 +877,10 @@ function setMilestoneCompleted(mIndex, fileName, timeStr, fileInfo, milestone) {
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || "Không thể xóa bài nộp.");
 
-                showAppNotification(result.message || "Đã loại bỏ bài nộp.");
+                showAppNotification(result.message || "Đã loại bỏ bài nộp.", "success");
                 if (auth?.user?.user_code) await loadMyTopic(auth.user.user_code);
             } catch (error) {
-                showAppNotification(error.message || "Không thể xóa bài nộp.");
+                showAppNotification(error.message || "Không thể xóa bài nộp.", "error");
                 button.disabled = false;
             }
         });
@@ -746,26 +894,27 @@ function setMilestoneUnderReview(mIndex, fileName, timeStr, fileInfo, milestone)
     const canChangeSubmission = isMilestoneSubmissionWindowOpen(milestone);
     if (card) card.className = "milestone-card active";
     if (badge) {
-        badge.className = "m-badge warning";
-        badge.textContent = "Chờ nhận xét";
+        badge.className = "m-badge-pill pill-green";
+        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Đã nộp';
     }
     if (body) {
         body.innerHTML = `
             ${canChangeSubmission ? `<div class="submission-actions">
-                <button type="button" class="submission-action-edit" id="replaceSubmissionM${mIndex}">
-                    <i class="fa-solid fa-pen-to-square"></i> Thay file
+                <button type="button" class="btn-resubmit" id="replaceSubmissionM${mIndex}">
+                    <i class="fa-solid fa-rotate-right"></i> Nộp lại
                 </button>
                 <button type="button" class="submission-action-delete" id="withdrawSubmissionM${mIndex}">
                     <i class="fa-solid fa-rotate-left"></i> Rút bài nộp
                 </button>
-            </div>` : '<small class="submission-closed-note">Chỉ có thể thay hoặc rút bài khi còn thời hạn nộp.</small>'}
+            </div>` : '<small class="submission-closed-note">Chỉ có thể nộp lại hoặc rút bài khi còn thời hạn nộp.</small>'}
             ${renderSubmissionStatusTable(milestone, {
-            submitted: true,
-            fileName,
-            fileInfo,
-            timeStr,
-            reviewStatus: "PENDING_REVIEW"
-        })}`;
+                submitted: true,
+                fileName,
+                fileInfo,
+                timeStr,
+                reviewStatus: "PENDING_REVIEW",
+                feedback: fileInfo?.feedback || ""
+            })}`;
 
         document.getElementById(`replaceSubmissionM${mIndex}`)?.addEventListener("click", () => {
             enableMilestoneUpload(mIndex, true, fileName, fileInfo, timeStr);
@@ -791,10 +940,10 @@ function setMilestoneUnderReview(mIndex, fileName, timeStr, fileInfo, milestone)
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || "Không thể rút bài nộp.");
-                showAppNotification(result.message || "Đã rút bài nộp.");
+                showAppNotification(result.message || "Đã rút bài nộp.", "success");
                 if (auth?.user?.user_code) await loadMyTopic(auth.user.user_code);
             } catch (error) {
-                showAppNotification(error.message || "Không thể rút bài nộp.");
+                showAppNotification(error.message || "Không thể rút bài nộp.", "error");
                 button.disabled = false;
             }
         });
@@ -814,8 +963,8 @@ function setMilestoneWithdrawn(mIndex, fileName, timeStr, fileInfo, milestone) {
     const body = document.getElementById(`milestoneBody${mIndex}`);
     if (card) card.className = "milestone-card locked";
     if (badge) {
-        badge.className = "m-badge gray";
-        badge.textContent = "Đã rút bài";
+        badge.className = "m-badge-pill pill-gray";
+        badge.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Đã rút bài';
     }
     if (body) {
         body.innerHTML = `
@@ -837,14 +986,14 @@ function setMilestoneRevisionRequested(mIndex, fileName, timeStr, fileInfo, mile
     const canResubmit = Boolean(milestone);
     if (card) card.className = "milestone-card active";
     if (badge) {
-        badge.className = "m-badge warning";
-        badge.textContent = "Cần nộp lại";
+        badge.className = "m-badge-pill pill-red";
+        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cần nộp lại';
     }
     if (!body) return;
 
     body.innerHTML = `
         <div class="submission-actions">
-            <button type="button" class="submission-action-submit" id="resubmitM${mIndex}" ${canResubmit ? "" : "disabled"}>
+            <button type="button" class="btn-resubmit" id="resubmitM${mIndex}" ${canResubmit ? "" : "disabled"}>
                 <i class="fa-solid fa-rotate-right"></i> Nộp lại báo cáo
             </button>
         </div>
@@ -876,14 +1025,14 @@ function setMilestoneDraft(mIndex, fileName, timeStr, fileInfo, milestone) {
 
     if (card) card.className = "milestone-card active";
     if (badge) {
-        badge.className = "m-badge orange";
+        badge.className = "m-badge-pill pill-blue";
         badge.innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Bản nháp';
     }
     if (!body) return;
 
     body.innerHTML = `
         <div class="submission-actions">
-            <button type="button" class="submission-action-submit" id="submitDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-paper-plane"></i> Nộp bài</button>
+            <button type="button" class="submission-action-submit btn-submit-primary" id="submitDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-paper-plane"></i> Nộp bài</button>
             <button type="button" class="submission-action-edit" id="editDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-pen-to-square"></i> Sửa bài nộp</button>
             <button type="button" class="submission-action-delete" id="deleteDraftM${mIndex}" ${canEditSubmission ? "" : "disabled"}><i class="fa-solid fa-trash-can"></i> Xóa bản nháp</button>
         </div>
@@ -901,10 +1050,10 @@ function setMilestoneDraft(mIndex, fileName, timeStr, fileInfo, milestone) {
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || "Không thể nộp bài.");
-            showAppNotification(result.message || "Đã nộp bài chính thức.");
+            showAppNotification(result.message || "Đã nộp bài chính thức.", "success");
             if (auth?.user?.user_code) await loadMyTopic(auth.user.user_code);
         } catch (error) {
-            showAppNotification(error.message || "Không thể nộp bài.");
+            showAppNotification(error.message || "Không thể nộp bài.", "error");
             button.disabled = false;
         }
     });
@@ -932,10 +1081,10 @@ function setMilestoneDraft(mIndex, fileName, timeStr, fileInfo, milestone) {
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || "Không thể xóa bản nháp.");
-            showAppNotification(result.message || "Đã xóa bản nháp.");
+            showAppNotification(result.message || "Đã xóa bản nháp.", "success");
             if (auth?.user?.user_code) await loadMyTopic(auth.user.user_code);
         } catch (error) {
-            showAppNotification(error.message || "Không thể xóa bản nháp.");
+            showAppNotification(error.message || "Không thể xóa bản nháp.", "error");
             button.disabled = false;
         }
     });
@@ -950,11 +1099,139 @@ function closeMilestone(mIndex, msg) {
     const badge = document.getElementById(`statusBadge${mIndex}`);
 
     renderMilestoneAwaitingSubmission(mIndex, { message: msg });
-    if (badge) badge.innerHTML = '<i class="fa-solid fa-lock"></i> Đã đóng';
+    if (badge) {
+        badge.className = "m-badge-pill pill-red";
+        badge.innerHTML = '<i class="fa-solid fa-lock"></i> Đã đóng';
+    }
 }
 
 function disableAllMilestones(reasonMsg) {
     lecturerMilestones.forEach(milestone => lockMilestone(Number(milestone.step), reasonMsg));
+}
+
+function updateProgressStepper(topicData) {
+    const badge = document.getElementById("stepperOverallBadge");
+    const lineFill = document.getElementById("stepperLineFill");
+    const node1 = document.getElementById("stepNode1");
+    const node2 = document.getElementById("stepNode2");
+    const node3 = document.getElementById("stepNode3");
+    const node4 = document.getElementById("stepNode4");
+    const node5 = document.getElementById("stepNode5");
+    const status1 = document.getElementById("stepStatus1");
+    const status2 = document.getElementById("stepStatus2");
+    const status3 = document.getElementById("stepStatus3");
+    const status4 = document.getElementById("stepStatus4");
+    const status5 = document.getElementById("stepStatus5");
+
+    if (!node1) return;
+
+    const setNodeState = (node, statusEl, state, statusText, iconClass) => {
+        if (!node) return;
+        node.className = `stepper-node ${state}`;
+        if (statusEl) statusEl.textContent = statusText;
+        const iconContainer = node.querySelector(".node-circle i");
+        if (iconContainer && iconClass) {
+            iconContainer.className = `fa-solid ${iconClass}`;
+        }
+    };
+
+    if (!topicData || !topicData._id || topicData.status === "NONE") {
+        if (badge) {
+            badge.className = "stepper-progress-badge";
+            badge.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Chưa đăng ký';
+        }
+        if (lineFill) lineFill.style.width = "8%";
+        setNodeState(node1, status1, "current", "Đang chọn đề tài", "fa-file-signature");
+        setNodeState(node2, status2, "upcoming", "Chưa duyệt", "fa-clipboard-check");
+        setNodeState(node3, status3, "upcoming", "Chưa bắt đầu", "fa-chart-line");
+        setNodeState(node4, status4, "upcoming", "Chưa bắt đầu", "fa-file-lines");
+        setNodeState(node5, status5, "upcoming", "Chưa bắt đầu", "fa-award");
+        return;
+    }
+
+    if (String(topicData.status || "").startsWith("JOIN_")) {
+        if (badge) {
+            badge.className = "stepper-progress-badge is-pending";
+            badge.innerHTML = '<i class="fa-solid fa-users"></i> Chờ duyệt nhóm';
+        }
+        if (lineFill) lineFill.style.width = "15%";
+        setNodeState(node1, status1, "current", "Đang xin vào nhóm", "fa-user-clock");
+        setNodeState(node2, status2, "upcoming", "Chưa duyệt", "fa-clipboard-check");
+        setNodeState(node3, status3, "upcoming", "Chưa bắt đầu", "fa-chart-line");
+        setNodeState(node4, status4, "upcoming", "Chưa bắt đầu", "fa-file-lines");
+        setNodeState(node5, status5, "upcoming", "Chưa bắt đầu", "fa-award");
+        return;
+    }
+
+    if (topicData.status === "PENDING") {
+        if (badge) {
+            badge.className = "stepper-progress-badge is-pending";
+            badge.innerHTML = '<i class="fa-solid fa-clock"></i> Chờ GVHD phê duyệt';
+        }
+        if (lineFill) lineFill.style.width = "30%";
+        setNodeState(node1, status1, "completed", "Đã đăng ký", "fa-check");
+        setNodeState(node2, status2, "current", "Đang chờ duyệt", "fa-hourglass-half");
+        setNodeState(node3, status3, "upcoming", "Chưa bắt đầu", "fa-chart-line");
+        setNodeState(node4, status4, "upcoming", "Chưa bắt đầu", "fa-file-lines");
+        setNodeState(node5, status5, "upcoming", "Chưa bắt đầu", "fa-award");
+        return;
+    }
+
+    if (topicData.status === "REJECTED") {
+        if (badge) {
+            badge.className = "stepper-progress-badge";
+            badge.style.background = "#fef2f2";
+            badge.style.color = "#dc2626";
+            badge.style.borderColor = "#fecaca";
+            badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cần chọn lại';
+        }
+        if (lineFill) lineFill.style.width = "25%";
+        setNodeState(node1, status1, "completed", "Đã đăng ký", "fa-check");
+        setNodeState(node2, status2, "rejected", "Bị từ chối", "fa-xmark");
+        setNodeState(node3, status3, "upcoming", "Chưa bắt đầu", "fa-chart-line");
+        setNodeState(node4, status4, "upcoming", "Chưa bắt đầu", "fa-file-lines");
+        setNodeState(node5, status5, "upcoming", "Chưa bắt đầu", "fa-award");
+        return;
+    }
+
+    if (topicData.status === "APPROVED") {
+        const approvedSubmissions = (milestoneSubmissionHistory || []).filter(s => getSubmissionReviewStatus(s) === "APPROVED");
+        const hasApprovedM1 = approvedSubmissions.some(s => Number(s.milestone || s.milestone_step) === 1);
+        const hasApprovedM2 = approvedSubmissions.some(s => Number(s.milestone || s.milestone_step) === 2);
+        const hasApprovedM3 = approvedSubmissions.some(s => Number(s.milestone || s.milestone_step) === 3);
+
+        setNodeState(node1, status1, "completed", "Đã hoàn thành", "fa-check");
+        setNodeState(node2, status2, "completed", "Đã phê duyệt", "fa-check");
+
+        if (hasApprovedM3 || hasApprovedM2) {
+            if (badge) {
+                badge.className = "stepper-progress-badge is-completed";
+                badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Sẵn sàng bảo vệ';
+            }
+            if (lineFill) lineFill.style.width = "90%";
+            setNodeState(node3, status3, "completed", "Đã nghiệm thu", "fa-check");
+            setNodeState(node4, status4, "completed", "Đã nộp đủ", "fa-check");
+            setNodeState(node5, status5, "current", "Sẵn sàng bảo vệ", "fa-award");
+        } else if (hasApprovedM1) {
+            if (badge) {
+                badge.className = "stepper-progress-badge is-completed";
+                badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Báo cáo cuối kỳ';
+            }
+            if (lineFill) lineFill.style.width = "68%";
+            setNodeState(node3, status3, "completed", "Đã xong giữa kỳ", "fa-check");
+            setNodeState(node4, status4, "current", "Đang thực hiện", "fa-file-lines");
+            setNodeState(node5, status5, "upcoming", "Chưa bắt đầu", "fa-award");
+        } else {
+            if (badge) {
+                badge.className = "stepper-progress-badge is-completed";
+                badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang thực hiện';
+            }
+            if (lineFill) lineFill.style.width = "48%";
+            setNodeState(node3, status3, "current", "Đang thực hiện", "fa-chart-line");
+            setNodeState(node4, status4, "upcoming", "Chưa bắt đầu", "fa-file-lines");
+            setNodeState(node5, status5, "upcoming", "Chưa bắt đầu", "fa-award");
+        }
+    }
 }
 
 function renderEmptyState() {
@@ -963,19 +1240,21 @@ function renderEmptyState() {
     lecturerMilestones = [];
     milestoneLoadError = false;
     syncMilestoneCards();
+    updateProgressStepper(null);
     const banner = document.getElementById("topicStatusBanner");
     if (banner) {
         banner.className = "status-banner none";
-        banner.innerHTML = 'Trạng thái: <strong style="color: #ef4444;"><i class="fa-solid fa-circle" style="color: #ef4444; font-size: 10px; vertical-align: middle; margin-right: 4px;"></i> Chưa đăng ký</strong>';
+        banner.innerHTML = '<span class="status-dot"></span> <span class="status-banner-text">Trạng thái: <strong>Chưa đăng ký</strong></span>';
     }
 
     if (document.getElementById("topicTitle")) document.getElementById("topicTitle").textContent = "Bạn chưa đăng ký đề tài nào";
     if (document.getElementById("topicDesc")) document.getElementById("topicDesc").innerHTML = 'Bạn hiện chưa có thông tin đề tài. Vui lòng sang trang <a href="student-dashboard.html" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Đăng ký đề tài</a> để tiến hành đăng ký.';
     if (document.getElementById("topicCode")) document.getElementById("topicCode").textContent = "--";
-    if (document.getElementById("topicLecturer")) document.getElementById("topicLecturer").textContent = "Chưa phân công";
-    if (document.getElementById("topicLeader")) document.getElementById("topicLeader").textContent = "--";
-    if (document.getElementById("topicMember2")) document.getElementById("topicMember2").textContent = "--";
-    if (document.getElementById("topicMember3")) document.getElementById("topicMember3").textContent = "--";
+    
+    formatMemberItem("rowLecturer", "avatarLecturer", "topicLecturer", "Chưa phân công", "lecturer");
+    formatMemberItem("rowLeader", "avatarLeader", "topicLeader", "--", "leader");
+    formatMemberItem("rowMember2", "avatarMember2", "topicMember2", "--", "member");
+    formatMemberItem("rowMember3", "avatarMember3", "topicMember3", "--", "member");
 
     const dateElement = document.getElementById("topicCreatedDate") || document.getElementById("topicDate");
     if (dateElement) dateElement.textContent = "--";
@@ -1067,30 +1346,34 @@ function openMilestoneFilePicker(mIndex) {
 function initUploadEvents(mIndex) {
     const fileInput = document.getElementById(`fileMilestone${mIndex}`);
     const dropZone = document.getElementById(`dropZoneM${mIndex}`);
+    const promptBox = document.getElementById(`dropzonePromptM${mIndex}`);
     const previewBox = document.getElementById(`selectedFileM${mIndex}`);
     const btnSubmit = document.getElementById(`btnSubmitM${mIndex}`);
     const formEl = document.getElementById(`formMilestone${mIndex}`);
 
     if (!fileInput || !dropZone) return;
 
+    // Bấm vào vùng dropzone để mở bộ chọn file (ngoại trừ nút xóa file và link picker)
+    dropZone.addEventListener("click", (e) => {
+        if (e.target.closest(".btn-remove-file") || e.target.closest(`#openFilePickerM${mIndex}`)) return;
+        fileInput.click();
+    });
+
     fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
     dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#2563eb";
-        dropZone.style.backgroundColor = "#eff6ff";
+        dropZone.classList.add("dragover");
     });
 
     dropZone.addEventListener("dragleave", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#cbd5e1";
-        dropZone.style.backgroundColor = "#ffffff";
+        dropZone.classList.remove("dragover");
     });
 
     dropZone.addEventListener("drop", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#cbd5e1";
-        dropZone.style.backgroundColor = "#ffffff";
+        dropZone.classList.remove("dragover");
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             fileInput.files = e.dataTransfer.files;
             pendingMilestoneFiles[mIndex] = { file: e.dataTransfer.files[0], uploadName: e.dataTransfer.files[0].name };
@@ -1099,10 +1382,18 @@ function initUploadEvents(mIndex) {
     });
 
     previewBox?.addEventListener("click", event => {
-        if (event.target.closest(".btn-remove-file")) {
+        const removeBtn = event.target.closest(".btn-remove-file");
+        if (removeBtn) {
+            event.stopPropagation();
             fileInput.value = "";
             delete pendingMilestoneFiles[mIndex];
-            previewBox.innerHTML = '<div class="file-manager-folder"><i class="fa-regular fa-folder"></i> Tệp</div><div class="file-manager-empty">Chưa có tệp nào được chọn</div>';
+            if (previewBox) {
+                previewBox.innerHTML = "";
+                previewBox.style.display = "none";
+            }
+            if (promptBox) {
+                promptBox.style.display = "flex";
+            }
             if (btnSubmit) {
                 btnSubmit.disabled = true;
                 btnSubmit.style.opacity = "0.5";
@@ -1118,7 +1409,7 @@ function initUploadEvents(mIndex) {
             const milestone = lecturerMilestones.find(item => Number(item.step) === mIndex);
             const now = new Date();
             if (!milestone || now < new Date(milestone.startDate)) {
-                showAppNotification("Chưa đến thời gian bắt đầu nộp bài cho mốc này.");
+                showAppNotification("Chưa đến thời gian bắt đầu nộp bài cho mốc này.", "warning");
                 return;
             }
             const latestOfficialSubmission = milestoneSubmissionHistory
@@ -1126,19 +1417,19 @@ function initUploadEvents(mIndex) {
                 .sort((a, b) => new Date(b.submitted_at || b.createdAt) - new Date(a.submitted_at || a.createdAt))[0];
             const resubmissionRequested = getSubmissionReviewStatus(latestOfficialSubmission) === "REVISION_REQUESTED";
             if (now > new Date(milestone.endDate) && !milestone.allowLate && !resubmissionRequested) {
-                showAppNotification("Đã quá hạn nộp bài cho mốc này.");
+                showAppNotification("Đã quá hạn nộp bài cho mốc này.", "error");
                 return;
             }
             
             const selectedUpload = pendingMilestoneFiles[mIndex];
             const file = selectedUpload?.file || fileInput.files?.[0];
             if (!file) {
-                showAppNotification("Vui lòng chọn file báo cáo trước khi nộp!");
+                showAppNotification("Vui lòng chọn file báo cáo trước khi nộp!", "warning");
                 return;
             }
 
             if (!currentTopicData || !currentTopicData._id) {
-                showAppNotification("Chưa lấy được thông tin đề tài. Vui lòng tải lại trang!");
+                showAppNotification("Chưa lấy được thông tin đề tài. Vui lòng tải lại trang!", "error");
                 return;
             }
 
@@ -1146,10 +1437,12 @@ function initUploadEvents(mIndex) {
             const token = studentAuth?.token;
             const user = studentAuth?.user || {};
 
-            // Disable nút nộp bài tránh click nhiều lần
+            // Hiển thị spinner và disable nút nộp bài
             btnSubmit.disabled = true;
-            btnSubmit.style.opacity = "0.7";
-            btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi dữ liệu...';
+            btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nộp bài...';
+
+            const progressBar = document.getElementById(`uploadProgressBarM${mIndex}`);
+            if (progressBar) progressBar.style.width = "45%";
 
             try {
                 const formData = new FormData();
@@ -1157,6 +1450,8 @@ function initUploadEvents(mIndex) {
                 formData.append("milestoneIndex", mIndex);
                 formData.append("milestone", mIndex);
                 formData.append("isDraft", "true");
+
+                if (progressBar) progressBar.style.width = "75%";
 
                 // Gửi request đến Endpoint backend
                 const res = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/${currentTopicData._id}/upload-milestone/${mIndex}`, {
@@ -1167,7 +1462,8 @@ function initUploadEvents(mIndex) {
                     body: formData
                 });
 
-                // Nếu Backend phản hồi lỗi HTTP (404, 500,...)
+                if (progressBar) progressBar.style.width = "100%";
+
                 if (!res.ok) {
                     let errMsg = "Không thể lưu file báo cáo!";
                     try {
@@ -1176,55 +1472,91 @@ function initUploadEvents(mIndex) {
                     } catch (e) {
                         errMsg = `Lỗi hệ thống (${res.status}). Vui lòng kiểm tra lại Route ở Backend.`;
                     }
-                    showAppNotification(`Nộp bài thất bại: ${errMsg}`);
+                    showAppNotification(`Nộp bài thất bại: ${errMsg}`, "error");
                     
                     btnSubmit.disabled = false;
-                    btnSubmit.style.opacity = "1";
-                    btnSubmit.innerHTML = "Lưu thay đổi";
+                    btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Nộp bài';
                     return;
                 }
 
                 const result = await res.json();
                 delete pendingMilestoneFiles[mIndex];
-                showAppNotification(result.message || `Nộp thành công Mốc ${mIndex}: "${file.name}".`);
+                
+                // Toast xanh thành công theo yêu cầu
+                showAppNotification(result.message || `Đã nộp bài Mốc ${mIndex} thành công!`, "success");
 
-                // Đồng bộ lại dữ liệu thực tế từ MongoDB
+                // Đồng bộ lại dữ liệu thực tế từ MongoDB - Card chuyển sang "Đã nộp" kèm tên tệp, giờ nộp, nút "Nộp lại" nếu còn hạn
                 await loadMyTopic(user.user_code);
 
             } catch (err) {
                 console.error("Lỗi kết nối khi nộp mốc:", err);
-                showAppNotification("Không thể kết nối đến máy chủ! Vui lòng kiểm tra lại Backend server.");
+                showAppNotification("Không thể kết nối đến máy chủ! Vui lòng kiểm tra lại Backend server.", "error");
                 
                 btnSubmit.disabled = false;
-                btnSubmit.style.opacity = "1";
-                btnSubmit.innerHTML = "Lưu thay đổi";
+                btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Nộp bài';
             }
         });
+    }
+
+    function getFileTypeInfo(filename) {
+        const ext = (filename || "").split(".").pop().toLowerCase();
+        if (ext === "pdf") {
+            return { icon: "fa-file-pdf", colorClass: "icon-pdf" };
+        } else if (["doc", "docx"].includes(ext)) {
+            return { icon: "fa-file-word", colorClass: "icon-doc" };
+        } else if (["zip", "rar", "7z"].includes(ext)) {
+            return { icon: "fa-file-zipper", colorClass: "icon-zip" };
+        }
+        return { icon: "fa-file-lines", colorClass: "icon-generic" };
     }
 
     function handleFiles(files) {
         if (!files || files.length === 0) return;
         const file = files[0];
         if (file.size > 25 * 1024 * 1024) {
-            showAppNotification("File vượt quá kích thước tối đa 25MB!");
+            showAppNotification("File vượt quá kích thước tối đa 25MB!", "error");
             fileInput.value = "";
             delete pendingMilestoneFiles[mIndex];
-            if (previewBox) previewBox.innerHTML = '<div class="file-manager-folder"><i class="fa-regular fa-folder"></i> Tệp</div><div class="file-manager-empty">Chưa có tệp nào được chọn</div>';
-            if (btnSubmit) btnSubmit.disabled = true;
+            if (previewBox) {
+                previewBox.innerHTML = "";
+                previewBox.style.display = "none";
+            }
+            if (promptBox) promptBox.style.display = "flex";
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.style.opacity = "0.5";
+                btnSubmit.style.cursor = "not-allowed";
+            }
             return;
         }
+
+        const uploadName = pendingMilestoneFiles[mIndex]?.uploadName || file.name;
+        pendingMilestoneFiles[mIndex] = { file, uploadName };
+        const fileType = getFileTypeInfo(uploadName);
+        const fileSizeStr = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+        if (promptBox) promptBox.style.display = "none";
+
         if (previewBox) {
-            const uploadName = pendingMilestoneFiles[mIndex]?.uploadName || file.name;
-            pendingMilestoneFiles[mIndex] = { file, uploadName };
+            previewBox.style.display = "block";
             previewBox.innerHTML = `
-                <div class="file-manager-folder"><i class="fa-regular fa-folder"></i> Tệp</div>
-                <div class="file-manager-item">
-                    <i class="fa-regular fa-file-lines"></i>
-                    <span>${escapeHtml(uploadName)}</span>
-                    <small>${(file.size / (1024 * 1024)).toFixed(2)} MB</small>
-                    <button type="button" class="btn-remove-file" title="Loại bỏ tệp" aria-label="Loại bỏ tệp"><i class="fa-solid fa-xmark"></i></button>
+                <div class="selected-file-card">
+                    <div class="file-card-icon ${fileType.colorClass}">
+                        <i class="fa-solid ${fileType.icon}"></i>
+                    </div>
+                    <div class="file-card-info">
+                        <div class="file-card-name" title="${escapeHtml(uploadName)}">${escapeHtml(uploadName)}</div>
+                        <div class="file-card-size">${fileSizeStr}</div>
+                        <div class="upload-progress-wrap" id="uploadProgressWrapM${mIndex}">
+                            <div class="upload-progress-bar" id="uploadProgressBarM${mIndex}" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remove-file" title="Xóa tệp" aria-label="Xóa tệp">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>`;
         }
+
         if (btnSubmit) {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = "1";

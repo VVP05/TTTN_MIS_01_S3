@@ -224,7 +224,12 @@ exports.forgotPassword = async (req, res) => {
         await user.save();
 
         try {
-            await passwordResetEmail.sendPasswordResetEmail({ to: user.email, token });
+            await passwordResetEmail.sendPasswordResetEmail({
+                to: user.email,
+                token,
+                userName: user.full_name,
+                userCode: user.user_code
+            });
         } catch (error) {
             user.passwordResetTokenHash = undefined;
             user.passwordResetExpiresAt = undefined;
@@ -704,7 +709,7 @@ exports.getStudents = async (req, res) => {
 exports.getUserByCode = async (req, res) => {
     try {
         const { user_code } = req.params;
-        const user = await User.findOne({ user_code }).select('user_code full_name role email phone class major');
+        const user = await User.findOne({ user_code }).select('user_code full_name role email phone class major degree dept max_quota');
 
         if (!user) {
             return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
@@ -732,6 +737,11 @@ exports.getUserByCode = async (req, res) => {
                         { leader_code: userCodePattern, member_code: codeRegex(requesterCode) }
                     ]
                 }));
+            } else if (requesterRole === 'STUDENT' && user.role === 'LECTURER') {
+                related = Boolean(await Topic.exists({
+                    lecturer_code: userCodePattern,
+                    ...topicMemberFilter(requesterCode)
+                }));
             } else if (requesterRole === 'LECTURER' && user.role === 'STUDENT') {
                 related = Boolean(await Topic.exists({
                     lecturer_code: codeRegex(requesterCode),
@@ -757,7 +767,10 @@ exports.getUserByCode = async (req, res) => {
             email: user.email || '',
             phone: user.phone || '',
             class: user.class || '',
-            major: user.major || ''
+            major: user.major || '',
+            degree: user.degree || '',
+            dept: user.dept || '',
+            max_quota: Number.isInteger(user.max_quota) ? user.max_quota : (user.max_quota ?? 10)
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi máy chủ khi tìm người dùng!', error: error.message });
@@ -795,6 +808,56 @@ exports.updateStudentProfile = async (req, res) => {
         });
     } catch (error) {
         console.error('Lỗi cập nhật hồ sơ sinh viên:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi cập nhật hồ sơ.' });
+    }
+};
+
+// Giảng viên tự cập nhật email và số điện thoại của tài khoản
+exports.updateLecturerProfile = async (req, res) => {
+    try {
+        const user_code = String(req.user?.user_code || '').trim();
+        if (String(req.user?.role || '').toUpperCase() !== 'LECTURER' || !user_code ||
+            user_code.toUpperCase() !== String(req.params.user_code || '').trim().toUpperCase()) {
+            return res.status(403).json({ success: false, message: 'Bạn chỉ có thể cập nhật hồ sơ của mình.' });
+        }
+        const { email, phone } = req.body;
+        const lecturer = await User.findOne({ user_code, role: 'LECTURER' });
+
+        if (!lecturer) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản giảng viên.' });
+        }
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ success: false, message: 'Vui lòng nhập email hợp lệ.' });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        if (lecturer.email && lecturer.email.toLowerCase() !== normalizedEmail) {
+            const existingUser = await User.findOne({
+                email: normalizedEmail,
+                user_code: { $ne: user_code }
+            });
+            if (existingUser) {
+                return res.status(400).json({ success: false, message: 'Email này đã được sử dụng bởi một tài khoản khác.' });
+            }
+        }
+
+        lecturer.email = email.trim();
+        lecturer.phone = (phone || '').trim();
+        await lecturer.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Cập nhật thông tin liên hệ thành công!',
+            data: {
+                user_code: lecturer.user_code,
+                full_name: lecturer.full_name,
+                email: lecturer.email,
+                phone: lecturer.phone,
+                role: lecturer.role
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi cập nhật hồ sơ giảng viên:', error);
         return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi cập nhật hồ sơ.' });
     }
 };

@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý TTTN | Đề tài của tôi</title>
     
-    <!-- CSS & FONT AWESOME ICONS -->
+    <!-- GOOGLE FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/student/student.css">
     <link rel="stylesheet" href="../../css/student/my-topic.css">
+    <link rel="stylesheet" href="../../css/common/student-sidebar-brand.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
     <link rel="stylesheet" href="../../css/common/student-logout-modal.css">
@@ -22,7 +26,10 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ</h2>
+                        <span>THỰC TẬP TỐT NGHIỆP</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
@@ -50,15 +57,6 @@
             </div>
 
             <div class="sidebar-bottom">
-                <div class="sidebar-illustration">
-                    <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 110 Q 100 80 190 110 L 190 120 L 10 120 Z" fill="#2563eb" opacity="0.15"/>
-                        <rect x="60" y="50" width="80" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
-                        <polygon points="100,20 50,55 150,55" fill="#2563eb" opacity="0.5"/>
-                        <rect x="85" y="70" width="30" height="30" fill="#2563eb" opacity="0.4"/>
-                        <circle cx="100" cy="40" r="8" fill="#1d4ed8"/>
-                    </svg>
-                </div>
                 <div class="sidebar-footer">
                     <p>© 2026 Khoa CNTT<br>All rights reserved.</p>
                 </div>
@@ -91,92 +89,174 @@
                 <!-- HEADER TRANG -->
                 <div class="page-title-card topic-page-title">
                     <div class="topic-page-heading">
-                        <span class="topic-page-icon"><i class="fa-solid fa-book-open-reader"></i></span>
+                        <span class="topic-page-icon"><i class="fa-solid fa-graduation-cap"></i></span>
                         <div class="title-left">
                             <h1>Đề tài Thực tập Tốt nghiệp của tôi</h1>
                             <p>Theo dõi tiến độ, chi tiết đề tài và nộp báo cáo định kỳ cho Giảng viên hướng dẫn.</p>
                         </div>
                     </div>
                     <div class="title-right">
-                        <div class="status-banner pending" id="topicStatusBanner">
-                            <i class="fa-solid fa-circle-notch fa-spin"></i>
-                            <span>Trạng thái: <strong id="topicStatusText">Đang kiểm tra...</strong></span>
+                        <div class="status-banner approved" id="topicStatusBanner">
+                            <span class="status-dot"></span>
+                            <span class="status-banner-text">Trạng thái: <strong id="topicStatusText">Đang kiểm tra...</strong></span>
                         </div>
                     </div>
                 </div>
+
+
                 <!-- KHỐI THÔNG TIN CHI TIẾT (CHUẨN THEO CLASS CSS CÓ SẴN) -->
-                <div class="card-box topic-detail-card margin-top-20">
+                <div class="card-box topic-detail-card margin-top-24">
                     <div class="card-header topic-detail-header">
-                        <h3><i class="fa-solid fa-circle-info text-blue"></i> Thông tin chi tiết</h3>
+                        <div class="header-left">
+                            <span class="header-icon-box"><i class="fa-solid fa-circle-info"></i></span>
+                            <div>
+                                <h3>Thông tin chi tiết đề tài</h3>
+                                <p>Toàn bộ hồ sơ đề tài và nhân sự thực hiện đã được hệ thống ghi nhận.</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="topic-detail-grid">
-                        <!-- Mã đề tài -->
-                        <div class="detail-item">
-                            <span class="label">Mã đề tài:</span>
-                            <span class="value font-bold" id="topicCode">--</span>
+                    <!-- Hàng Mã đề tài & Ngày đăng ký -->
+                    <div class="topic-quick-meta-grid">
+                        <div class="quick-meta-box">
+                            <div class="quick-meta-icon"><i class="fa-solid fa-barcode"></i></div>
+                            <div class="quick-meta-content">
+                                <span class="meta-label">MÃ ĐỀ TÀI</span>
+                                <strong class="meta-value font-mono" id="topicCode">--</strong>
+                            </div>
                         </div>
-
-                        <!-- Ngày đăng ký -->
-                        <div class="detail-item">
-                            <span class="label">Ngày đăng ký:</span>
-                            <span class="value" id="topicCreatedDate">--</span>
+                        <div class="quick-meta-box">
+                            <div class="quick-meta-icon"><i class="fa-regular fa-calendar-check"></i></div>
+                            <div class="quick-meta-content">
+                                <span class="meta-label">NGÀY ĐĂNG KÝ</span>
+                                <strong class="meta-value" id="topicCreatedDate">--</strong>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Tên đề tài chính thức (Chiếm trọn 2 cột) -->
-                        <div class="detail-item full-width">
-                            <span class="label">Tên đề tài chính thức:</span>
-                            <span class="value title-highlight" id="topicTitle">--</span>
+                    <!-- Tên đề tài chính thức (Hero card nổi bật) -->
+                    <div class="topic-hero-card">
+                        <div class="hero-label-row">
+                            <span class="hero-tag"><i class="fa-solid fa-book-bookmark"></i> TÊN ĐỀ TÀI CHÍNH THỨC</span>
                         </div>
+                        <h2 class="hero-topic-title" id="topicTitle">Đang tải đề tài...</h2>
+                    </div>
 
-                        <!-- CỘT 1 (BÊN TRÁI): GIẢNG VIÊN & THÀNH VIÊN NHÓM -->
-                        <div class="detail-item topic-team-details">
-                            <div class="team-members-group">
-                                <div>
-                                    <span class="label">Giảng viên hướng dẫn:</span>
-                                    <div class="value font-bold" id="topicLecturer">--</div>
+                    <!-- Lưới 2 cột cân bằng (Thành viên & Mô tả/Nhận xét) -->
+                    <div class="topic-two-cols-grid">
+                        <!-- CỘT 1 (BÊN TRÁI): THÀNH VIÊN NHÓM -->
+                        <div class="detail-column members-column">
+                            <div class="column-header">
+                                <span class="column-header-icon icon-blue"><i class="fa-solid fa-users"></i></span>
+                                <h4>Nhân sự thực hiện đề tài</h4>
+                            </div>
+                            <div class="members-cards-list">
+                                <!-- Giảng viên hướng dẫn -->
+                                <div class="member-row is-lecturer" id="rowLecturer">
+                                    <div class="member-avatar avatar-purple" id="avatarLecturer"><i class="fa-solid fa-chalkboard-user"></i></div>
+                                    <div class="member-content">
+                                        <div class="member-role-header">
+                                            <span class="member-role-label">GIẢNG VIÊN HƯỚNG DẪN</span>
+                                            <span class="role-pill pill-purple">GVHD</span>
+                                        </div>
+                                        <div class="member-value font-bold" id="topicLecturer">--</div>
+                                    </div>
                                 </div>
-                                <div class="topic-leader-item">
-                                    <span class="label"><i class="fa-solid fa-crown" aria-hidden="true"></i> Trưởng nhóm</span>
-                                    <div class="value" id="topicLeader">--</div>
+
+                                <!-- Trưởng nhóm -->
+                                <div class="member-row is-leader" id="rowLeader">
+                                    <div class="member-avatar avatar-gold" id="avatarLeader"><i class="fa-solid fa-crown"></i></div>
+                                    <div class="member-content">
+                                        <div class="member-role-header">
+                                            <span class="member-role-label">TRƯỞNG NHÓM</span>
+                                            <span class="crown-badge"><i class="fa-solid fa-crown"></i> Đại diện</span>
+                                        </div>
+                                        <div class="member-value font-bold" id="topicLeader">--</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="label">Thành viên cùng làm:</span>
-                                    <div class="value" id="topicMember2">--</div>
+
+                                <!-- Thành viên 2 -->
+                                <div class="member-row is-member" id="rowMember2">
+                                    <div class="member-avatar avatar-blue" id="avatarMember2"><i class="fa-solid fa-user-graduate"></i></div>
+                                    <div class="member-content">
+                                        <div class="member-role-header">
+                                            <span class="member-role-label">THÀNH VIÊN CÙNG LÀM</span>
+                                            <span class="role-pill pill-blue">Thành viên</span>
+                                        </div>
+                                        <div class="member-value" id="topicMember2">--</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="label">Thành viên cùng làm:</span>
-                                    <div class="value" id="topicMember3">--</div>
+
+                                <!-- Thành viên 3 -->
+                                <div class="member-row is-member" id="rowMember3">
+                                    <div class="member-avatar avatar-blue" id="avatarMember3"><i class="fa-solid fa-user-graduate"></i></div>
+                                    <div class="member-content">
+                                        <div class="member-role-header">
+                                            <span class="member-role-label">THÀNH VIÊN CÙNG LÀM</span>
+                                            <span class="role-pill pill-blue">Thành viên</span>
+                                        </div>
+                                        <div class="member-value" id="topicMember3">--</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-        <!-- CỘT 2 (BÊN PHẢI): MÔ TẢ & NHẬN XÉT -->
-        <div class="detail-item topic-description-details">
-            <div class="team-members-group">
-                <div>
-                    <span class="label">Mô tả mục tiêu / Phạm vi đề tài:</span>
-                    <div class="description-box" id="topicDesc">--</div>
-                </div>
-                <div>
-                    <span class="label">Nhận xét / Phản hồi từ GVHD:</span>
-                    <div class="lecturer-feedback" id="topicFeedback">
-                        <i class="fa-regular fa-comment-dots"></i> Chưa có nhận xét mới từ giảng viên.
+                        <!-- CỘT 2 (BÊN PHẢI): MÔ TẢ & NHẬN XÉT -->
+                        <div class="detail-column desc-feedback-column">
+                            <!-- Khối mô tả -->
+                            <div class="desc-card-box">
+                                <div class="column-header">
+                                    <span class="column-header-icon icon-teal"><i class="fa-solid fa-bullseye"></i></span>
+                                    <h4>Mô tả mục tiêu / Phạm vi đề tài</h4>
+                                </div>
+                                <div class="description-content-box" id="topicDesc">
+                                    Đang tải mô tả đề tài...
+                                </div>
+                            </div>
+
+                            <!-- Khối nhận xét dạng bong bóng chat -->
+                            <div class="feedback-card-box">
+                                <div class="column-header">
+                                    <span class="column-header-icon icon-green"><i class="fa-solid fa-comment-dots"></i></span>
+                                    <h4>Nhận xét / Phản hồi từ GVHD</h4>
+                                </div>
+                                <div class="feedback-chat-bubble is-approved" id="topicFeedback">
+                                    <div class="feedback-bubble-header">
+                                        <div class="feedback-avatar"><i class="fa-solid fa-user-tie"></i></div>
+                                        <div class="feedback-meta">
+                                            <strong>Giảng viên hướng dẫn</strong>
+                                            <span>Phản hồi hướng dẫn</span>
+                                        </div>
+                                    </div>
+                                    <div class="feedback-bubble-content">
+                                        <i class="fa-solid fa-quote-left quote-icon"></i>
+                                        <p id="topicFeedbackText">Chưa có nhận xét mới từ giảng viên.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-                <!-- KHU VỰC NỘP BÁO CÁO TIẾN ĐỘ -->
-                <div class="section-header-row topic-milestone-heading margin-top-24">
-                    <h3 class="section-title"><i class="fa-solid fa-list-check text-blue"></i> Tiến độ nộp báo cáo</h3>
-                    <span class="sub-text">Sinh viên cần tuân thủ đúng thời hạn nộp bài của từng mốc.</span>
+                <!-- KHU VỰC NỘP BÁO CÁO TIẾN ĐỘ (CARD RIÊNG) -->
+                <div class="card-box milestone-section-card margin-top-24">
+                    <div class="milestone-section-header">
+                        <div class="title-with-icon">
+                            <span class="section-icon"><i class="fa-solid fa-list-check"></i></span>
+                            <div>
+                                <h3>Tiến độ nộp báo cáo</h3>
+                                <p>Sinh viên cần tuân thủ đúng thời hạn nộp bài của từng mốc theo quy chế đào tạo.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="milestoneEmptyState" class="milestone-empty-state">
+                        <div class="empty-icon-wrap"><i class="fa-solid fa-calendar-xmark"></i></div>
+                        <h4 class="empty-title">Đang tải danh sách mốc nộp bài...</h4>
+                        <p class="empty-subtitle">Các mốc nộp báo cáo tiến độ và hạn nộp sẽ hiển thị tại đây khi đề tài được duyệt.</p>
+                    </div>
+                    <div class="milestone-list margin-top-16" id="milestoneList"></div>
                 </div>
-
-                <p id="milestoneEmptyState" class="milestone-empty-state">Đang tải mốc nộp bài...</p>
-                <div class="milestone-list margin-top-12" id="milestoneList"></div>
 
                 <footer class="page-footer">
                     © 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp

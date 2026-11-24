@@ -3,29 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhật Ký Hoạt Động - QUẢN LÝ TTTN</title>
+    <title>Nhật Ký Hoạt Động Hệ Thống | Cổng Quản Trị Viên</title>
 
-    <!-- Font & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/admin-logs.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
-    <link rel="stylesheet" href="../../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
+    <div class="app-layout">
+        <!-- SIDEBAR BÊN TRÁI -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <i class="fa-solid fa-graduation-cap logo-icon"></i>
-                <span class="brand-name">QUẢN LÝ TTTN</span>
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <span>CỔNG QUẢN TRỊ VIÊN</span>
+                </div>
             </div>
 
             <div class="sidebar-menu-wrapper">
                 <ul class="menu-list">
                     <li class="menu-item">
                         <a href="admin-dashboard.html">
-                            <i class="fa-solid fa-layer-group"></i>
+                            <i class="fa-solid fa-border-all"></i>
                             <span>Tổng quan</span>
                         </a>
                     </li>
@@ -52,19 +60,19 @@
                     <li class="menu-item">
                         <a href="admin-semesters.html">
                             <i class="fa-solid fa-calendar-days"></i>
-                            <span>Học kỳ & đăng ký</span>
+                            <span>Học kỳ &amp; đăng ký</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="admin-teams.html">
                             <i class="fa-solid fa-users-rectangle"></i>
-                            <span>Nhóm & Phân công</span>
+                            <span>Nhóm &amp; Phân công</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="admin-documents.html">
                             <i class="fa-solid fa-file-lines"></i>
-                            <span>Tài liệu & Biểu mẫu</span>
+                            <span>Tài liệu &amp; Biểu mẫu</span>
                         </a>
                     </li>
                     <li class="menu-item">
@@ -87,166 +95,350 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <div class="main-content">
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper" id="mainWrapper">
+
             <!-- TOPBAR -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="btn-toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-menu-toggle btn-toggle-sidebar" id="sidebarToggle" aria-label="Mở menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                 </div>
-                <div class="topbar-right">
-                    <div class="semester-pill">
+                <div class="navbar-right">
+                    <div class="semester-filter">
                         <i class="fa-solid fa-graduation-cap"></i>
-                        <select class="semester-select">
-                            <option>Học kỳ 2 (2025 - 2026)</option>
-                            <option>Học kỳ 1 (2025 - 2026)</option>
+                        <select id="semesterSelect" class="select-clean" aria-label="Lọc theo học kỳ">
+                            <option value="">Đang tải học kỳ...</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </div>
 
-                    <div class="user-info">
-                        <i class="fa-solid fa-circle-user avatar"></i>
-                        <span class="user-name">Quản Trị Viên</span>
-                        <span class="role-badge">ADMIN</span>
+                    <div class="user-profile">
+                        <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
+                        <span id="userName" class="user-name">Quản Trị Viên</span>
+                        <span class="user-badge">ADMIN</span>
                     </div>
 
-                    <button class="btn-logout-top" id="openLogoutBtn">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    <button class="btn-logout" id="openLogoutBtn" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Đăng xuất</span>
                     </button>
                 </div>
             </header>
 
             <!-- PAGE BODY -->
             <main class="page-body">
-                <div class="page-title-box">
-                    <div>
-                        <h2>Nhật Ký Hoạt Động Hệ Thống</h2>
-                        <p class="subtitle">Theo dõi và truy vết tất cả các thao tác của người dùng trên hệ thống.</p>
+
+                <!-- PAGE HEADER ROW -->
+                <div class="page-header-row">
+                    <div class="page-header-left">
+                        <h1 class="page-title">Nhật ký hoạt động hệ thống</h1>
+                        <p class="page-desc">Theo dõi, giám sát và truy vết chi tiết tất cả các thao tác của người dùng trên hệ thống.</p>
                     </div>
-                    <button class="btn btn-outline" id="exportLogBtn">
-                        <i class="fa-solid fa-file-export"></i> Xuất File Log (.CSV)
-                    </button>
+                    <div class="page-header-right header-actions-group">
+                        <div class="auto-refresh-box" title="Tự động tải lại dữ liệu mới nhất mỗi 30 giây">
+                            <label class="switch-toggle" for="autoRefreshCheckbox">
+                                <input type="checkbox" id="autoRefreshCheckbox">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span class="auto-refresh-label">Tự động (30s)</span>
+                        </div>
+
+                        <button class="btn-action btn-outline btn-refresh" id="refreshBtn" title="Làm mới danh sách">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Làm mới</span>
+                        </button>
+
+                        <button class="btn-action btn-outline" id="exportLogBtn" aria-label="Xuất file nhật ký CSV">
+                            <i class="fa-solid fa-file-export"></i>
+                            <span>Xuất log (.CSV)</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- SUMMARY CARDS -->
-                <div class="summary-grid">
-                    <div class="summary-card">
+                <!-- 5 THẺ THỐNG KÊ (CLICK TO FILTER) -->
+                <div class="summary-grid" id="summaryStatsGrid">
+                    <div class="summary-card stat-card-clickable active" data-role="" title="Bấm để xem tất cả nhật ký">
                         <div class="summary-icon blue"><i class="fa-solid fa-list-check"></i></div>
                         <div class="summary-info">
-                            <span class="summary-label">Tổng số thao tác</span>
+                            <span class="summary-label">Tổng thao tác</span>
                             <strong class="summary-value" id="totalLogs">0</strong>
+                            <span class="summary-subtext" id="totalPercent">100% tổng</span>
                         </div>
                     </div>
 
-                    <div class="summary-card">
+                    <div class="summary-card stat-card-clickable" data-role="ADMIN" title="Bấm để lọc thao tác Quản trị viên">
                         <div class="summary-icon green"><i class="fa-solid fa-user-shield"></i></div>
                         <div class="summary-info">
                             <span class="summary-label">Thao tác Admin</span>
                             <strong class="summary-value" id="adminLogs">0</strong>
+                            <span class="summary-subtext" id="adminPercent">0% tổng</span>
                         </div>
                     </div>
 
-                    <div class="summary-card">
+                    <div class="summary-card stat-card-clickable" data-role="LECTURER" title="Bấm để lọc thao tác Giảng viên">
                         <div class="summary-icon purple"><i class="fa-solid fa-chalkboard-user"></i></div>
                         <div class="summary-info">
                             <span class="summary-label">Thao tác Giảng viên</span>
                             <strong class="summary-value" id="lecturerLogs">0</strong>
+                            <span class="summary-subtext" id="lecturerPercent">0% tổng</span>
                         </div>
                     </div>
 
-                    <div class="summary-card">
+                    <div class="summary-card stat-card-clickable" data-role="STUDENT" title="Bấm để lọc thao tác Sinh viên">
                         <div class="summary-icon orange"><i class="fa-solid fa-user-graduate"></i></div>
                         <div class="summary-info">
                             <span class="summary-label">Thao tác Sinh viên</span>
                             <strong class="summary-value" id="studentLogs">0</strong>
+                            <span class="summary-subtext" id="studentPercent">0% tổng</span>
                         </div>
                     </div>
-                    <div class="summary-card">
+
+                    <div class="summary-card stat-card-clickable" data-role="GUEST" title="Bấm để lọc thao tác Khách / Chưa đăng nhập">
                         <div class="summary-icon gray"><i class="fa-solid fa-user-clock"></i></div>
                         <div class="summary-info">
                             <span class="summary-label">Thao tác Khách</span>
                             <strong class="summary-value" id="guestLogs">0</strong>
+                            <span class="summary-subtext" id="guestPercent">0% tổng</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- BẢNG DỮ LIỆU & BỘ LỌC -->
-                <div class="card-panel margin-top-20">
+                <!-- CARD PANEL CHỨA BỘ LỌC VÀ BẢNG -->
+                <div class="card-panel margin-top-24">
+                    <!-- THANH TÌM KIẾM & BỘ LỌC -->
                     <div class="filter-bar">
                         <div class="search-input-group">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" maxlength="100" placeholder="Tìm theo người thực hiện, mã, hành động...">
+                            <input type="text" id="searchInput" maxlength="100" placeholder="Tìm theo người thực hiện, mã, hành động, endpoint..." aria-label="Tìm kiếm nhật ký">
+                            <button type="button" class="btn-clear-search" id="clearSearchBtn" title="Xóa tìm kiếm" hidden>
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
 
                         <div class="filter-controls">
-                            <select id="roleFilter" class="select-box">
-                                <option value="">Tất cả Vai trò</option>
-                                <option value="ADMIN">Admin</option>
-                                <option value="LECTURER">Giảng viên</option>
-                                <option value="STUDENT">Sinh viên</option>
-                                <option value="GUEST">Khách</option>
-                            </select>
+                            <div class="select-wrapper">
+                                <select id="roleFilter" class="select-box" aria-label="Lọc theo vai trò">
+                                    <option value="">Tất cả Vai trò</option>
+                                    <option value="ADMIN">Admin</option>
+                                    <option value="LECTURER">Giảng viên</option>
+                                    <option value="STUDENT">Sinh viên</option>
+                                    <option value="GUEST">Khách</option>
+                                </select>
+                            </div>
 
-                            <select id="actionTypeFilter" class="select-box">
-                                <option value="">Tất cả Thao tác</option>
-                                <option value="CREATE">Tạo mới / Thêm</option>
-                                <option value="UPDATE">Cập nhật / Sửa</option>
-                                <option value="DELETE">Xóa dữ liệu</option>
-                                <option value="READ">Xem dữ liệu</option>
-                                <option value="AUTH">Đăng nhập / Đăng xuất</option>
-                                <option value="OTHER">Khác</option>
-                            </select>
+                            <div class="select-wrapper">
+                                <select id="actionTypeFilter" class="select-box" aria-label="Lọc theo thao tác">
+                                    <option value="">Tất cả Thao tác</option>
+                                    <option value="CREATE">Tạo mới</option>
+                                    <option value="UPDATE">Cập nhật / Sửa</option>
+                                    <option value="DELETE">Xóa dữ liệu</option>
+                                    <option value="AUTH">Đăng nhập / Đăng xuất</option>
+                                    <option value="READ">Xem / Tải dữ liệu</option>
+                                    <option value="OTHER">Khác</option>
+                                </select>
+                            </div>
 
-                            <button id="resetFilterBtn" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                            <div class="select-wrapper">
+                                <select id="dateRangeFilter" class="select-box" aria-label="Lọc theo khoảng ngày">
+                                    <option value="">Tất cả thời gian</option>
+                                    <option value="today">Hôm nay</option>
+                                    <option value="7days">7 ngày qua</option>
+                                    <option value="30days">30 ngày qua</option>
+                                </select>
+                            </div>
+
+                            <div class="select-wrapper">
+                                <select id="statusFilter" class="select-box" aria-label="Lọc theo kết quả HTTP">
+                                    <option value="">Tất cả kết quả</option>
+                                    <option value="SUCCESS">Thành công (2xx, 3xx)</option>
+                                    <option value="ERROR">Lỗi (4xx, 5xx)</option>
+                                </select>
+                            </div>
+
+                            <button id="resetFilterBtn" class="btn btn-outline" type="button" title="Đặt lại toàn bộ bộ lọc">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Đặt lại</span>
+                            </button>
                         </div>
                     </div>
 
+                    <!-- ACTIVE FILTER CHIPS -->
+                    <div class="active-filter-chips" id="activeFilterChips" hidden>
+                        <span class="chips-label">Đang lọc theo:</span>
+                        <div class="chips-list" id="chipsList"></div>
+                    </div>
+
+                    <!-- BẢNG NHẬT KÝ -->
                     <div class="table-container margin-top-16">
-                        <table class="custom-table">
+                        <table class="custom-table" id="logsTable">
                             <thead>
                                 <tr>
-                                    <th width="160">Thời Gian</th>
-                                    <th width="200">Người Thực Hiện</th>
-                                    <th width="120">Vai Trò</th>
-                                    <th width="120">Thao Tác</th>
-                                    <th>Nội Dung Chi Tiết Hành Động</th>
-                                    <th width="90" class="text-center">Mã HTTP</th>
-                                    <th width="130" class="text-center">Địa Chỉ IP</th>
+                                    <th style="width: 150px;">THỜI GIAN</th>
+                                    <th style="width: 210px;">NGƯỜI THỰC HIỆN</th>
+                                    <th style="width: 120px;">VAI TRÒ</th>
+                                    <th style="width: 140px;">THAO TÁC</th>
+                                    <th>NỘI DUNG CHI TIẾT HÀNH ĐỘNG</th>
+                                    <th style="width: 95px;" class="text-center">MÃ HTTP</th>
+                                    <th style="width: 135px;" class="text-center">ĐỊA CHỈ IP</th>
                                 </tr>
                             </thead>
                             <tbody id="logsTableBody">
-                                <!-- JS render -->
+                                <!-- JS render logs rows hoặc skeleton loading -->
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- TRẠNG THÁI TRỐNG / LỖI (KHI KHÔNG CÓ DỮ LIỆU) -->
+                    <div class="empty-state-card" id="emptyState" hidden>
+                        <div class="empty-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+                        <h4 class="empty-title">Không tìm thấy nhật ký phù hợp</h4>
+                        <p class="empty-desc">Không có nhật ký hoạt động nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại.</p>
+                        <button class="btn btn-outline margin-top-12" id="clearEmptyFilterBtn" type="button">
+                            <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+                        </button>
+                    </div>
+
+                    <!-- THANH PHÂN TRANG -->
                     <div class="logs-pagination">
-                        <span id="logsPageInfo">Đang tải nhật ký...</span>
+                        <div class="pagination-left">
+                            <span id="logsPageInfo">Đang tải nhật ký...</span>
+                            <div class="page-size-selector">
+                                <label for="pageSizeSelect">Số dòng:</label>
+                                <select id="pageSizeSelect" class="select-clean">
+                                    <option value="25">25</option>
+                                    <option value="50" selected>50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="logs-pagination-actions">
-                            <button id="previousLogsPage" class="btn btn-outline" type="button" disabled>Trước</button>
-                            <button id="nextLogsPage" class="btn btn-outline" type="button" disabled>Tiếp</button>
+                            <button id="firstLogsPage" class="btn btn-outline btn-page-nav" type="button" title="Trang đầu" disabled>
+                                <i class="fa-solid fa-angles-left"></i>
+                            </button>
+                            <button id="previousLogsPage" class="btn btn-outline btn-page-nav" type="button" title="Trang trước" disabled>
+                                <i class="fa-solid fa-chevron-left"></i>
+                                <span>Trước</span>
+                            </button>
+
+                            <div class="page-numbers-container" id="pageNumbers"></div>
+
+                            <button id="nextLogsPage" class="btn btn-outline btn-page-nav" type="button" title="Trang tiếp" disabled>
+                                <span>Tiếp</span>
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                            <button id="lastLogsPage" class="btn btn-outline btn-page-nav" type="button" title="Trang cuối" disabled>
+                                <i class="fa-solid fa-angles-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
+
             </main>
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG XUẤT -->
-    <div id="logoutModal" class="modal-overlay">
+    <!-- DRAWER / MODAL XEM CHI TIẾT NHẬT KÝ -->
+    <div id="logDetailModal" class="modal-overlay" hidden>
+        <div class="modal-card modal-detail-log" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="detail-header-icon"><i class="fa-solid fa-file-lines"></i></span>
+                    <div>
+                        <h3 id="detailModalTitle">Chi tiết nhật ký hoạt động</h3>
+                        <p class="modal-subtitle" id="detailLogId">ID: -</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal" id="closeDetailModalBtn" aria-label="Đóng cửa sổ">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body-detail">
+                <div class="detail-section">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Thời gian thực hiện</span>
+                            <div class="detail-value" id="detailTimestamp">-</div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Mã phản hồi HTTP</span>
+                            <div class="detail-value" id="detailStatusCode">-</div>
+                        </div>
+
+                        <div class="detail-item full-width">
+                            <span class="detail-label">Người thực hiện</span>
+                            <div class="detail-user-card" id="detailUserCard">
+                                <div class="detail-avatar" id="detailUserAvatar">QT</div>
+                                <div class="detail-user-info">
+                                    <strong id="detailUserName">-</strong>
+                                    <span id="detailUserMeta">-</span>
+                                </div>
+                                <span id="detailUserRole" class="role-pill">-</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Loại thao tác</span>
+                            <div class="detail-value" id="detailActionType">-</div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Địa chỉ IP</span>
+                            <div class="detail-value">
+                                <span class="ip-code ip-clickable" id="detailIp" title="Bấm để sao chép">-</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-item full-width">
+                            <span class="detail-label">Nội dung hành động</span>
+                            <div class="detail-value action-highlight" id="detailActionText">-</div>
+                        </div>
+
+                        <div class="detail-item full-width">
+                            <span class="detail-label">Phương thức &amp; Đường dẫn API</span>
+                            <div class="detail-value monospace-box" id="detailEndpoint">-</div>
+                        </div>
+
+                        <div class="detail-item full-width">
+                            <span class="detail-label">User-Agent (Trình duyệt &amp; Thiết bị)</span>
+                            <div class="detail-value user-agent-box" id="detailUserAgent">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-detail">
+                <button class="btn btn-outline" id="copyLogDetailBtn" type="button">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Sao chép thông tin</span>
+                </button>
+                <button class="btn btn-primary" id="confirmCloseDetailBtn" type="button">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG XUẤT (ĐỒNG BỘ TOÀN HỆ THỐNG) -->
+    <div id="logoutModal" class="modal-overlay" style="display: none;">
         <div class="modal-card modal-sm text-center">
             <div class="modal-icon-red"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
             <h3>Xác nhận đăng xuất</h3>
             <p class="margin-top-8">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
             <div class="modal-foot center margin-top-16">
-                <button class="btn btn-outline" id="cancelLogout">Hủy</button>
-                <button class="btn btn-danger" id="confirmLogout">Đăng xuất</button>
+                <button class="btn btn-outline" id="cancelLogout" type="button">Hủy</button>
+                <button class="btn btn-danger" id="confirmLogout" type="button">Đăng xuất</button>
             </div>
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="../../js/config.js"></script>
-    <script src="../../js/admin/admin-logs.js"></script>
     <script src="../../js/admin/admin-sidebar.js"></script>
     <script src="../../js/common/app-notifications.js"></script>
+    <script src="../../js/admin/admin-logs.js"></script>
 </body>
 </html>

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý TTTN | Cổng Giảng Viên</title>
+    <!-- Google Fonts: Be Vietnam Pro & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/lecturer/lecturer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../css/common/app-notifications.css">
@@ -19,34 +23,37 @@
             <div class="sidebar-top">
                 <div class="brand-logo">
                     <span class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                    <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                    <div class="brand-text">
+                        <h2>HỆ THỐNG QUẢN LÝ TTTN</h2>
+                        <span>CỔNG GIẢNG VIÊN</span>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
                     <ul>
                         <li class="menu-item active">
-                            <a href="#"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                            <a href="lecturer-dashboard.html"><i class="fa-solid fa-border-all"></i> <span>Dashboard</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> Duyệt & Quản lý đề tài</a>
+                            <a href="lecturer-topics.html"><i class="fa-solid fa-book-bookmark"></i> <span>Duyệt & Quản lý đề tài</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> Nhóm SV hướng dẫn</a>
+                            <a href="lecturer-groups.html"><i class="fa-solid fa-user-group"></i> <span>Nhóm SV hướng dẫn</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> Tiến độ & Lịch gặp</a>
+                            <a href="lecturer-schedule.html"><i class="fa-solid fa-list-check"></i> <span>Tiến độ & Lịch gặp</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-milestones.html"><i class="fa-solid fa-calendar-check"></i> Milestone & Hạn nộp</a>
+                            <a href="lecturer-milestones.html"><i class="fa-solid fa-calendar-check"></i> <span>Milestone & Hạn nộp</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> Tài liệu & Biểu mẫu</a>
+                            <a href="lecturer-docs.html"><i class="fa-solid fa-file-pdf"></i> <span>Tài liệu & Biểu mẫu</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-notifications.html"><i class="fa-solid fa-bell"></i> Thông báo<span id="sidebarNotificationBadge" class="sidebar-notification-badge" style="display: none;">0</span></a>
+                            <a href="lecturer-notifications.html"><i class="fa-solid fa-bell"></i> <span>Thông báo</span><span id="sidebarNotificationBadge" class="sidebar-notification-badge" style="display: none;">0</span></a>
                         </li>
                         <li class="menu-item">
-                            <a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> Cài đặt tài khoản</a>
+                            <a href="lecturer-settings.html"><i class="fa-solid fa-gear"></i> <span>Cài đặt tài khoản</span></a>
                         </li>
                     </ul>
                 </nav>
@@ -55,10 +62,10 @@
             <div class="sidebar-bottom">
                 <div class="sidebar-illustration">
                     <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 110 Q 100 80 190 110 L 190 120 L 10 120 Z" fill="#2563eb" opacity="0.15"/>
-                        <rect x="60" y="50" width="80" height="50" rx="4" fill="#3b82f6" opacity="0.3"/>
-                        <polygon points="100,20 50,55 150,55" fill="#2563eb" opacity="0.5"/>
-                        <rect x="85" y="70" width="30" height="30" fill="#2563eb" opacity="0.4"/>
+                        <path d="M10 110 Q 100 80 190 110 L 190 120 L 10 120 Z" fill="#2563eb" opacity="0.12"/>
+                        <rect x="60" y="50" width="80" height="50" rx="6" fill="#3b82f6" opacity="0.25"/>
+                        <polygon points="100,20 50,55 150,55" fill="#2563eb" opacity="0.45"/>
+                        <rect x="85" y="70" width="30" height="30" fill="#2563eb" opacity="0.35"/>
                         <circle cx="100" cy="40" r="8" fill="#1d4ed8"/>
                     </svg>
                 </div>
@@ -73,98 +80,145 @@
             <!-- TOPBAR -->
             <header class="top-navbar">
                 <div class="navbar-left">
-                    <button class="btn-menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                    <button class="btn-menu-toggle" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
                 </div>
                 <div class="navbar-right">
-                    <div class="date-filter">
-                       
-                        
-                        
-                    </div>
                     <div class="user-profile">
                         <span class="avatar-icon"><i class="fa-solid fa-circle-user"></i></span>
-                        <span id="userName" class="user-name">--</span>
-                        <span id="userCode" class="user-badge">--</span>
+                        <div class="user-details">
+                            <span id="userName" class="user-name">Đang tải...</span>
+                            <span id="userCode" class="user-badge">GV</span>
+                        </div>
                     </div>
-                    <button id="logoutBtn" class="btn-logout">
-                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    <button id="logoutBtn" class="btn-logout" aria-label="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span>Đăng xuất</span>
                     </button>
                 </div>
             </header>
 
             <!-- NỘI DUNG CHÍNH -->
             <main class="content-body">
+                <!-- 2. BANNER CHÀO CHUYÊN NGHIỆP -->
                 <div class="welcome-banner">
                     <div class="welcome-copy">
-                        <span class="welcome-wave">👋</span>
-                        <div>
-                            <h1>Xin chào, <span id="welcomeLecturerName">--</span>!</h1>
-                            <p>Đây là tổng quan hoạt động hướng dẫn thực tập tốt nghiệp của bạn.</p>
+                        <div class="welcome-wave-box">
+                            <span class="welcome-wave">👋</span>
+                        </div>
+                        <div class="welcome-text-content">
+                            <h1>Xin chào, <span id="welcomeLecturerName">Giảng viên</span>!</h1>
+                            <p id="welcomeSummaryText">Đang tải dữ liệu tổng quan hoạt động hướng dẫn...</p>
                         </div>
                     </div>
-                    <div class="welcome-art" aria-hidden="true">
-                        <i class=""></i>
-                        <i class=""></i>
+                    <div class="welcome-right">
+                        <div class="welcome-date">
+                            <i class="fa-regular fa-calendar-days"></i>
+                            <span id="currentDateDisplay">--</span>
+                        </div>
+                        <a href="lecturer-topics.html" id="btnHandleNow" class="btn-banner-action" style="display: none;">
+                            <span>Xử lý ngay</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>
-                    <p class="welcome-quote"> <i class=""></i></p>
                 </div>
 
-                <!-- THẺ THỐNG KÊ (KPI CARDS) -->
+                <!-- 3. BỐN THẺ THỐNG KÊ (KPI CARDS) -->
                 <div class="kpi-grid">
-                    <div class="kpi-card card-blue">
-                        <div class="kpi-info">
+                    <div class="kpi-card card-blue" onclick="window.location.href='lecturer-groups.html'">
+                        <div class="kpi-content">
                             <span class="kpi-title">Nhóm được phân công</span>
-                            <h2 id="statAssignedGroups" class="kpi-value">0</h2>
-                            <a href="lecturer-groups.html" class="kpi-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></a>
+                            <div class="kpi-val-row">
+                                <h2 id="statAssignedGroups" class="kpi-value">0</h2>
+                                <span class="kpi-unit">nhóm</span>
+                            </div>
+                            <span class="kpi-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></span>
                         </div>
                         <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
                     </div>
 
-                    <div class="kpi-card card-green">
-                        <div class="kpi-info">
+                    <div class="kpi-card card-green" onclick="window.location.href='lecturer-topics.html'">
+                        <div class="kpi-content">
                             <span class="kpi-title">Đề tài đã phê duyệt</span>
-                            <h2 id="statApprovedTopics" class="kpi-value">0</h2>
-                            <a href="lecturer-topics.html" class="kpi-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></a>
+                            <div class="kpi-val-row">
+                                <h2 id="statApprovedTopics" class="kpi-value">0</h2>
+                                <span class="kpi-unit">đề tài</span>
+                            </div>
+                            <span class="kpi-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></span>
                         </div>
                         <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
                     </div>
 
-                    <div class="kpi-card card-orange">
-                        <div class="kpi-info">
-                            <span class="kpi-title">Đang chờ phê duyệt</span>
-                            <h2 id="statPendingTopics" class="kpi-value">0</h2>
-                            <a href="lecturer-topics.html" class="kpi-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></a>
+                    <div class="kpi-card card-orange" id="kpiCardPending" onclick="window.location.href='lecturer-topics.html'">
+                        <div class="kpi-content">
+                            <span class="kpi-title">
+                                <span>Đang chờ phê duyệt</span>
+                                <span class="kpi-pulse-dot" id="pendingPulseDot" style="display: none;"></span>
+                            </span>
+                            <div class="kpi-val-row">
+                                <h2 id="statPendingTopics" class="kpi-value">0</h2>
+                                <span class="kpi-unit">đề xuất</span>
+                            </div>
+                            <span class="kpi-link">Xử lý ngay <i class="fa-solid fa-arrow-right"></i></span>
                         </div>
-                        <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        <div class="kpi-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
                     </div>
 
-                    <div class="kpi-card card-red">
-                        <div class="kpi-info">
+                    <div class="kpi-card card-red" id="kpiCardLate" onclick="window.location.href='lecturer-groups.html'">
+                        <div class="kpi-content">
                             <span class="kpi-title">Nhóm có milestone trễ</span>
-                            <h2 id="statLateGroups" class="kpi-value">0</h2>
-                            <a href="lecturer-groups.html" class="kpi-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></a>
+                            <div class="kpi-val-row">
+                                <h2 id="statLateGroups" class="kpi-value">0</h2>
+                                <span class="kpi-unit">nhóm</span>
+                            </div>
+                            <span class="kpi-link">Kiểm tra ngay <i class="fa-solid fa-arrow-right"></i></span>
                         </div>
                         <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     </div>
                 </div>
 
-                <!-- BIỂU ĐỒ -->
+                <!-- 8. KHỐI "VIỆC CẦN LÀM NGAY" (NẾU CÓ DỮ LIỆU CẦN XỬ LÝ) -->
+                <div class="urgent-tasks-box" id="urgentTasksBox" style="display: none;">
+                    <div class="urgent-tasks-header">
+                        <div class="urgent-tasks-title">
+                            <span class="urgent-icon"><i class="fa-solid fa-bell-concierge"></i></span>
+                            <div>
+                                <h3>Việc cần xử lý ưu tiên</h3>
+                                <p>Các nhiệm vụ cần giảng viên xem xét hoặc nhắc nhở sinh viên</p>
+                            </div>
+                        </div>
+                        <span id="urgentTasksCount" class="urgent-count-badge">0 việc</span>
+                    </div>
+                    <div class="urgent-tasks-list" id="urgentTasksList"></div>
+                </div>
+
+                <!-- 4 & 5. BIỂU ĐỒ (TIẾN ĐỘ & PHÂN BỐ LĨNH VỰC) -->
                 <div class="grid-2-1 margin-top-24">
                     <div class="chart-card">
                         <div class="card-header">
-                            <h3>Tiến độ nhóm theo milestone</h3>
+                            <div class="card-header-left">
+                                <span class="header-icon blue"><i class="fa-solid fa-chart-column"></i></span>
+                                <div>
+                                    <h3>Tiến độ nhóm theo milestone</h3>
+                                    <p class="card-subtitle">Số lượng nhóm hoàn thành các mốc đánh giá định kỳ</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="progressChart"></canvas>
+                        <div class="chart-container" id="progressChartContainer">
+                            <canvas id="progressChart" aria-label="Biểu đồ tiến độ nhóm theo milestone" role="img"></canvas>
                         </div>
                     </div>
 
                     <div class="chart-card">
                         <div class="card-header">
-                            <h3>Phân bố đề tài theo lĩnh vực</h3>
+                            <div class="card-header-left">
+                                <span class="header-icon purple"><i class="fa-solid fa-chart-pie"></i></span>
+                                <div>
+                                    <h3>Phân bố đề tài theo lĩnh vực</h3>
+                                    <p class="card-subtitle">Tỉ lệ chuyên môn các đề tài đang hướng dẫn</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="chart-container doughnut-wrapper">
-                            <canvas id="categoryChart"></canvas>
+                        <div class="chart-container doughnut-wrapper" id="categoryChartContainer">
+                            <canvas id="categoryChart" aria-label="Biểu đồ phân bố đề tài theo lĩnh vực" role="img"></canvas>
                             <div class="chart-center-text">
                                 <span class="total-num">0</span>
                                 <span class="total-label">đề tài</span>
@@ -174,22 +228,28 @@
                     </div>
                 </div>
 
-                <!-- BẢNG DỮ LIỆU & DEADLINE -->
+                <!-- 6 & 7. BẢNG DỮ LIỆU & DEADLINE SẮP TỚI -->
                 <div class="grid-2-1 margin-top-24">
                     <div class="table-card">
                         <div class="card-header">
-                            <h3>Nhóm và đề tài mới đăng ký</h3>
+                            <div class="card-header-left">
+                                <span class="header-icon green"><i class="fa-solid fa-list-check"></i></span>
+                                <div>
+                                    <h3>Nhóm và đề tài mới đăng ký</h3>
+                                    <p class="card-subtitle">Danh sách đăng ký đề tài sinh viên gần đây</p>
+                                </div>
+                            </div>
                             <a href="lecturer-topics.html" class="link-more">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
                         </div>
                         <div class="table-responsive">
                             <table class="data-table">
                                <thead>
                                    <tr>
-                                       <th>Nhóm</th>
-                                       <th>Đề tài</th>
-                                       <th>Sinh viên trưởng nhóm</th>
-                                       <th>Ngày đăng ký</th>
-                                       <th>Trạng thái</th>
+                                       <th style="width: 100px;">Nhóm</th>
+                                       <th style="min-width: 240px;">Đề tài</th>
+                                       <th style="min-width: 180px;">Sinh viên trưởng nhóm</th>
+                                       <th style="width: 130px;">Ngày đăng ký</th>
+                                       <th style="width: 140px; text-align: center;">Trạng thái</th>
                                    </tr>
                                </thead>
                                <tbody id="recentRegistrationsBody"></tbody>
@@ -199,7 +259,13 @@
 
                     <div class="deadline-card">
                         <div class="card-header">
-                            <h3>Hạn chót & Lịch hẹn sắp tới</h3>
+                            <div class="card-header-left">
+                                <span class="header-icon orange"><i class="fa-solid fa-calendar-day"></i></span>
+                                <div>
+                                    <h3>Hạn chót & Lịch hẹn sắp tới</h3>
+                                    <p class="card-subtitle">Các sự kiện và hạn nộp bài cần chú ý</p>
+                                </div>
+                            </div>
                             <a href="lecturer-schedule.html" class="link-more">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
                         </div>
                         <div class="deadline-list" id="upcomingDeadlinesList"></div>
@@ -207,7 +273,7 @@
                 </div>
 
                 <footer class="page-footer">
-                    Hệ thống quản lý Thực tập tốt nghiệp - Khoa Công nghệ thông tin
+                    <p>© 2026 Khoa Công Nghệ Thông Tin - Hệ Thống Quản Lý Thực Tập Tốt Nghiệp</p>
                 </footer>
             </main>
         </div>

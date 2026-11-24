@@ -40,12 +40,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 2. KHAI BÁO BIẾN TRẠNG THÁI & DOM ELEMENTS
     // =========================================================================
+    let studentHasRegisteredTopic = false;
+    let studentRegisteredTopicData = null;
     let isEditing = false;
     let hasEditedMemberCodes = false;
     let allPoolTopics = [];
     let allLecturers = [];
     let registrationWindowOpen = false;
     let marketplaceData = { lecturerTopics: [], groupTopics: [] };
+    let myRecruitmentOpen = false;
+    let canPublishRecruitment = false;
     let activeMarketplaceTab = "lecturer";
     let marketplacePage = 1;
     const marketplacePageSize = 12;
@@ -92,6 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const marketplaceCategory = document.getElementById("marketplaceCategory");
     const lecturerTopicCount = document.getElementById("lecturerTopicCount");
     const groupTopicCount = document.getElementById("groupTopicCount");
+    const groupRecruitmentBtn = document.getElementById("groupRecruitmentBtn");
 
     // Modal Cancel Elements
     const cancelModal = document.getElementById("cancelModal");
@@ -145,6 +150,9 @@ document.addEventListener("DOMContentLoaded", async () => {
      * Hiển thị hộp thông báo phản hồi người dùng
      */
     function showMessage(type, message, customHTML = null) {
+        if (message && typeof window.showAppNotification === "function") {
+            window.showAppNotification(message, type);
+        }
         if (!msgBox) return;
         msgBox.style.display = "block";
         msgBox.className = `message-box message-${type}`;
@@ -179,34 +187,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const data = result.data || {};
             registrationWindowOpen = data.is_open === true;
+
+            // Thống nhất cách viết Học kỳ & đồng bộ tên học kỳ (ví dụ "Học kỳ 2026-2028")
+            if (data.semester?.name) {
+                const semesterText = document.getElementById("heroSemesterText");
+                if (semesterText) {
+                    let semName = String(data.semester.name).replace(/Học kì/g, "Học kỳ");
+                    semesterText.textContent = semName;
+                }
+            }
+
+            // Gộp banner hạn đăng ký vào hero header (dòng phụ với icon đồng hồ)
             if (registrationWindowNotice) {
+                // Nếu nhóm đã có đề tài và đã được phê duyệt, ẩn hoàn toàn thông báo thời hạn đăng ký
+                if (studentRegisteredTopicData?.status === "APPROVED") {
+                    registrationWindowNotice.hidden = true;
+                    return;
+                }
+
                 const isUpcoming = !registrationWindowOpen && data.state === "upcoming";
                 registrationWindowNotice.hidden = false;
                 registrationWindowNotice.classList.toggle("is-open", registrationWindowOpen);
                 registrationWindowNotice.classList.toggle("is-upcoming", isUpcoming);
                 registrationWindowNotice.classList.toggle("is-closed", !registrationWindowOpen && !isUpcoming);
-                if (registrationWindowOpen) {
-                    const status = document.createElement("span");
-                    status.className = "registration-window-status";
-                    status.textContent = "Đang trong thời hạn";
+
+                if (registrationWindowOpen && data.semester?.registration_end_date) {
                     const endDate = new Date(data.semester.registration_end_date);
                     const endFormat = data.semester.registration_window_has_time
                         ? { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }
                         : { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" };
-                    const details = ` đăng ký đề tài${data.semester?.name ? ` – ${data.semester.name}` : ""}. Hạn cuối: ${endDate.toLocaleString("vi-VN", endFormat)}.`;
-                    registrationWindowNotice.replaceChildren(status, document.createTextNode(details));
-                } else if (isUpcoming) {
-                    const status = document.createElement("span");
-                    status.className = "registration-window-status is-upcoming";
-                    status.textContent = "Chưa đến thời hạn đăng ký";
+                    registrationWindowNotice.innerHTML = `<i class="fa-regular fa-clock" aria-hidden="true"></i> <span>Hạn cuối: <strong>${endDate.toLocaleString("vi-VN", endFormat)}</strong></span>`;
+                } else if (isUpcoming && data.semester?.registration_start_date) {
                     const startDate = new Date(data.semester.registration_start_date);
                     const startFormat = data.semester.registration_window_has_time
                         ? { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }
                         : { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" };
-                    const details = `${data.semester?.name ? ` – ${data.semester.name}` : ""}. Mở đăng ký: ${startDate.toLocaleString("vi-VN", startFormat)}.`;
-                    registrationWindowNotice.replaceChildren(status, document.createTextNode(details));
+                    registrationWindowNotice.innerHTML = `<i class="fa-regular fa-calendar" aria-hidden="true"></i> <span>Mở đăng ký: <strong>${startDate.toLocaleString("vi-VN", startFormat)}</strong></span>`;
                 } else {
-                    registrationWindowNotice.textContent = "Hiện không trong thời hạn đăng ký đề tài. ";
+                    registrationWindowNotice.innerHTML = `<i class="fa-solid fa-lock" aria-hidden="true"></i> <span>Hiện không trong thời hạn đăng ký đề tài</span>`;
                 }
             }
         } catch (error) {
@@ -214,7 +232,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (registrationWindowNotice) {
                 registrationWindowNotice.hidden = false;
                 registrationWindowNotice.classList.add("is-closed");
-                registrationWindowNotice.textContent = "Không thể xác minh thời hạn đăng ký. Vui lòng tải lại trang hoặc liên hệ quản trị viên.";
+                registrationWindowNotice.innerHTML = `<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <span>Không thể xác minh thời hạn đăng ký</span>`;
             }
             console.error("Lỗi tải thời hạn đăng ký học kỳ:", error);
         }
@@ -528,73 +546,243 @@ document.addEventListener("DOMContentLoaded", async () => {
         return item;
     }
 
+    /**
+     * Modal xem nhanh chi tiết đề tài
+     */
+    function showTopicDetailModal(topic) {
+        let modal = document.getElementById("topicDetailModal");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "topicDetailModal";
+            modal.className = "modal-overlay";
+            modal.innerHTML = `
+                <div class="modal-box topic-detail-modal-box" style="width: min(560px, 94vw); text-align: left; padding: 26px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span id="topicDetailCatChip" class="chip-cat" style="font-size: 13px;"></span>
+                        <button type="button" id="closeTopicDetailBtn" class="btn-cancel" style="width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; font-size: 18px; line-height: 1;" aria-label="Đóng">&times;</button>
+                    </div>
+                    <h3 id="topicDetailTitle" style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 12px; line-height: 1.45;"></h3>
+                    <div id="topicDetailLecturer" style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #475569; margin-bottom: 16px;"></div>
+                    <div style="margin-bottom: 14px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Mô tả đề tài</div>
+                        <p id="topicDetailDesc" style="font-size: 14px; color: #334155; line-height: 1.6; white-space: pre-line; margin: 0;"></p>
+                    </div>
+                    <div id="topicDetailReqWrap" style="margin-bottom: 20px; display: none;">
+                        <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Yêu cầu đề tài</div>
+                        <p id="topicDetailReq" style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0;"></p>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #F1F5F9; padding-top: 14px;">
+                        <button type="button" id="confirmCloseTopicDetailBtn" class="btn-cancel" style="flex: unset; padding: 8px 22px;">Đóng</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector("#closeTopicDetailBtn").addEventListener("click", () => modal.style.display = "none");
+            modal.querySelector("#confirmCloseTopicDetailBtn").addEventListener("click", () => modal.style.display = "none");
+            modal.addEventListener("click", (e) => {
+                if (e.target === modal) modal.style.display = "none";
+            });
+        }
+
+        modal.querySelector("#topicDetailTitle").textContent = topic.title || "Chi tiết đề tài";
+        modal.querySelector("#topicDetailDesc").textContent = topic.description || "Chưa có mô tả cho đề tài này.";
+        modal.querySelector("#topicDetailCatChip").textContent = topic.category || "Lĩnh vực khác";
+
+        const lecturerName = topic.lecturer_name || topic.lecturer_code || "Giảng viên";
+        const avatarLetter = (lecturerName.trim().charAt(0) || "G").toUpperCase();
+        modal.querySelector("#topicDetailLecturer").innerHTML = `
+            <span class="lecturer-avatar" style="width: 24px; height: 24px; border-radius: 50%; background: #E2E8F0; color: #1E293B; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">${avatarLetter}</span>
+            <span><strong>Giảng viên hướng dẫn:</strong> ${lecturerName}</span>
+        `;
+
+        const reqWrap = modal.querySelector("#topicDetailReqWrap");
+        if (topic.requirements) {
+            reqWrap.style.display = "block";
+            modal.querySelector("#topicDetailReq").textContent = topic.requirements;
+        } else {
+            reqWrap.style.display = "none";
+        }
+
+        modal.style.display = "flex";
+    }
+
     function createMarketplaceCard(topic, isGroupTopic) {
         const card = document.createElement("article");
-        card.className = "marketplace-card";
 
-        const title = document.createElement("h3");
-        title.textContent = topic.title || "Đề tài chưa có tên";
-        card.appendChild(title);
+        // 1. Phân loại lĩnh vực (Web, AI, Data, Khác)
+        const rawCat = String(topic.category || "").toLowerCase();
+        let catKey = "other";
+        let catIcon = "fa-layer-group";
+        let catLabel = topic.category || "Lĩnh vực khác";
 
-        const description = document.createElement("p");
-        description.textContent = topic.description || "Chưa có mô tả cho đề tài này.";
-        card.appendChild(description);
-
-        const meta = document.createElement("div");
-        meta.className = "marketplace-card-meta";
-        if (topic.category) meta.appendChild(createMarketplaceMeta("fa-layer-group", topic.category));
-        if (isGroupTopic) {
-            meta.appendChild(createMarketplaceMeta("fa-user-tie", `Trưởng nhóm: ${topic.leader_name || topic.leader_code}`));
-            meta.appendChild(createMarketplaceMeta("fa-chalkboard-user", `GVHD: ${topic.lecturer_name || topic.lecturer_code || "Chưa phân công"}`));
-            if (topic.requirements) meta.appendChild(createMarketplaceMeta("fa-list-check", `Yêu cầu: ${topic.requirements}`));
-        } else {
-            meta.appendChild(createMarketplaceMeta("fa-chalkboard-user", topic.lecturer_name || topic.lecturer_code || "Giảng viên"));
-            if (topic.requirements) meta.appendChild(createMarketplaceMeta("fa-list-check", `Yêu cầu: ${topic.requirements}`));
+        if (rawCat.includes("web") || rawCat.includes("ứng dụng") || rawCat.includes("app")) {
+            catKey = "web";
+            catIcon = "fa-globe";
+            catLabel = "Web / Ứng dụng";
+        } else if (rawCat.includes("ai") || rawCat.includes("ml") || rawCat.includes("trí tuệ") || rawCat.includes("máy")) {
+            catKey = "ai";
+            catIcon = "fa-microchip";
+            catLabel = "AI / ML";
+        } else if (rawCat.includes("dữ liệu") || rawCat.includes("data") || rawCat.includes("phân tích")) {
+            catKey = "data";
+            catIcon = "fa-chart-pie";
+            catLabel = "Dữ liệu / Phân tích";
         }
-        card.appendChild(meta);
+        card.className = `marketplace-card cat-${catKey}`;
 
+        // 2. Tiêu đề & mô tả
+        const titleText = topic.pre_registration
+            ? `Nhóm của ${topic.leader_name || "Trưởng nhóm"}`
+            : topic.title || "Đề tài chưa có tên";
+        const descText = topic.pre_registration
+            ? "Nhóm đang tìm thành viên trước khi đăng ký đề tài."
+            : topic.description || "Chưa có mô tả cho đề tài này.";
+
+        const lecturerOrLeaderName = isGroupTopic
+            ? (topic.leader_name || topic.leader_code || "Trưởng nhóm")
+            : (topic.lecturer_name || topic.lecturer_code || "Giảng viên");
+        const avatarLetter = (lecturerOrLeaderName.trim().charAt(0) || "G").toUpperCase();
+
+        // 1. HÀNG ĐẦU: Ô icon lĩnh vực (40px) + chip lĩnh vực cùng một hàng
+        const topRow = document.createElement("div");
+        topRow.className = "card-top-row";
+
+        const iconBox = document.createElement("div");
+        iconBox.className = "card-cat-icon";
+        iconBox.innerHTML = `<i class="fa-solid ${catIcon}" aria-hidden="true"></i>`;
+
+        const chipCat = document.createElement("span");
+        chipCat.className = "chip-cat";
+        chipCat.textContent = catLabel;
+
+        topRow.append(iconBox, chipCat);
+
+        // Badge nếu nhóm tuyển trước đăng ký
+        if (isGroupTopic && topic.pre_registration) {
+            const preBadge = document.createElement("span");
+            preBadge.className = "chip-cat";
+            preBadge.style.background = "#FEF3C7";
+            preBadge.style.color = "#92400E";
+            preBadge.style.borderColor = "#FDE68A";
+            preBadge.textContent = "Tuyển trước đăng ký";
+            topRow.appendChild(preBadge);
+        }
+        card.appendChild(topRow);
+
+        // 2. TIẾP THEO: TÊN ĐỀ TÀI (16px/600, line-clamp 3 dòng, tooltip xem đầy đủ, thẳng mép trái)
+        const titleEl = document.createElement("h3");
+        titleEl.className = "marketplace-card-title";
+        titleEl.textContent = titleText;
+        titleEl.title = titleText;
+        card.appendChild(titleEl);
+
+        // 3. TIẾP THEO: MÔ TẢ (line-clamp 3 dòng, tooltip xem đầy đủ, thẳng mép trái)
+        const descEl = document.createElement("p");
+        descEl.className = "marketplace-card-desc";
+        descEl.textContent = descText;
+        descEl.title = descText;
+        card.appendChild(descEl);
+
+        // Yêu cầu nếu có (phụ trợ)
+        if (topic.requirements) {
+            const reqEl = document.createElement("div");
+            reqEl.className = "card-req-row";
+            reqEl.innerHTML = `<i class="fa-solid fa-list-check" style="margin-right: 6px;"></i><strong>Yêu cầu:</strong> ${topic.requirements}`;
+            reqEl.title = topic.requirements;
+            card.appendChild(reqEl);
+        }
+
+        // 4. TIẾP THEO: DÒNG GIẢNG VIÊN (avatar nhỏ + tên, 13px, thẳng mép trái)
+        const lecturerRow = document.createElement("div");
+        lecturerRow.className = "card-lecturer-row";
+        lecturerRow.innerHTML = `
+            <span class="lecturer-avatar">${avatarLetter}</span>
+            <span class="lecturer-name">${isGroupTopic ? 'Trưởng nhóm: ' : ''}${lecturerOrLeaderName}</span>
+        `;
+        card.appendChild(lecturerRow);
+
+        // 5. TIẾP THEO: SỐ SLOT CÒN LẠI
+        let remSlots = 1;
+        let slotIcon = isGroupTopic ? "fa-user-group" : "fa-users-rectangle";
+
+        if (isGroupTopic && typeof topic.open_slots === "number") {
+            remSlots = Number(topic.open_slots) || 0;
+        } else if (!isGroupTopic) {
+            const regCount = Number(topic.registered_groups) || 0;
+            const totalSlots = Number(topic.max_groups) || 1;
+            remSlots = topic.remaining_groups !== undefined ? Number(topic.remaining_groups) : Math.max(0, totalSlots - regCount);
+        }
+
+        const slotWrap = document.createElement("div");
+        slotWrap.className = "card-slot-wrap";
+        slotWrap.innerHTML = `
+            <span class="card-slot-label"><i class="fa-solid ${slotIcon}"></i>Còn ${remSlots} slot</span>
+        `;
+        card.appendChild(slotWrap);
+
+        // 6. CHÂN THẺ: Trạng thái bên trái; Bên phải nút "Xem chi tiết" (viền nhẹ) khi đã có đăng ký, hoặc nút "Đăng ký" (primary) khi chưa có
         const footer = document.createElement("div");
         footer.className = "marketplace-card-footer";
-        const status = document.createElement("span");
-        status.className = "marketplace-card-status";
-        const action = document.createElement("button");
-        action.type = "button";
-        action.className = "marketplace-card-action";
+
+        const statusEl = document.createElement("span");
+        statusEl.className = "marketplace-card-status";
+
+        const actionBtn = document.createElement("button");
+        actionBtn.type = "button";
+        actionBtn.className = "marketplace-card-action";
+
+        const hasAlreadyRegistered = studentHasRegisteredTopic || (!topic.can_register_as_leader && !isGroupTopic);
 
         if (isGroupTopic) {
-            status.textContent = `Còn ${topic.open_slots} vị trí`;
+            statusEl.textContent = `Còn ${topic.open_slots} vị trí`;
             const requestStatus = String(topic.request_status || "").toUpperCase();
+
             if (requestStatus === "PENDING") {
-                action.textContent = "Đang chờ xác nhận";
-                action.disabled = true;
+                actionBtn.textContent = "Đang chờ xác nhận";
+                actionBtn.disabled = true;
+                footer.append(statusEl, actionBtn);
             } else if (requestStatus === "ACCEPTED") {
-                action.textContent = "Đã được nhận vào nhóm";
-                action.disabled = true;
+                actionBtn.textContent = "Đã vào nhóm";
+                actionBtn.disabled = true;
+                footer.append(statusEl, actionBtn);
             } else if (!topic.can_join) {
-                action.textContent = "Không thể đăng ký lúc này";
-                action.disabled = true;
+                actionBtn.textContent = topic.cannot_join_reason
+                    ? "Không thể tham gia"
+                    : "Không thể đăng ký";
+                actionBtn.disabled = true;
+                footer.append(statusEl, actionBtn);
             } else if (!registrationWindowOpen) {
-                action.textContent = "Đang ngoài hạn đăng ký";
-                action.disabled = true;
+                actionBtn.textContent = "Ngoài hạn";
+                actionBtn.disabled = true;
+                footer.append(statusEl, actionBtn);
             } else {
-                action.textContent = "Xin tham gia nhóm";
-                action.addEventListener("click", () => requestToJoinGroup(topic, action));
+                actionBtn.textContent = "Xin vào nhóm";
+                actionBtn.addEventListener("click", () => requestToJoinGroup(topic, actionBtn));
+                footer.append(statusEl, actionBtn);
             }
         } else {
-            status.textContent = "Đang mở đăng ký";
-            if (!topic.can_register_as_leader) {
-                action.textContent = "Bạn đã có đăng ký";
-                action.disabled = true;
+            statusEl.textContent = "Đang mở đăng ký";
+
+            if (hasAlreadyRegistered) {
+                // Khi sinh viên đã có đăng ký: nút "Xem chi tiết" (viền nhẹ)
+                const detailBtn = document.createElement("button");
+                detailBtn.type = "button";
+                detailBtn.className = "btn-view-detail";
+                detailBtn.innerHTML = `<i class="fa-regular fa-eye"></i> Xem chi tiết`;
+                detailBtn.addEventListener("click", () => showTopicDetailModal(topic));
+                footer.append(statusEl, detailBtn);
             } else if (!registrationWindowOpen) {
-                action.textContent = "Đang ngoài hạn đăng ký";
-                action.disabled = true;
+                actionBtn.textContent = "Ngoài hạn";
+                actionBtn.disabled = true;
+                footer.append(statusEl, actionBtn);
             } else {
-                action.textContent = "Chọn làm trưởng nhóm";
-                action.addEventListener("click", () => chooseLecturerTopic(topic));
+                // Khi chưa có đăng ký: nút "Đăng ký" primary
+                actionBtn.textContent = "Đăng ký";
+                actionBtn.addEventListener("click", () => chooseLecturerTopic(topic));
+                footer.append(statusEl, actionBtn);
             }
         }
 
-        footer.append(status, action);
         card.appendChild(footer);
         return card;
     }
@@ -606,6 +794,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             : marketplaceData.groupTopics;
         const searchTerm = String(marketplaceSearch?.value || "").trim().toLocaleLowerCase("vi");
         const selectedCategory = marketplaceCategory?.value || "";
+
+        // Cập nhật số đếm trên tab chính xác
+        if (lecturerTopicCount) lecturerTopicCount.textContent = String(marketplaceData.lecturerTopics.length);
+        if (groupTopicCount) groupTopicCount.textContent = String(marketplaceData.groupTopics.length);
+
         const filteredTopics = topics.filter(topic => {
             const searchableText = [
                 topic.title,
@@ -619,6 +812,31 @@ document.addEventListener("DOMContentLoaded", async () => {
                 (!selectedCategory || topic.category === selectedCategory);
         });
 
+        // Trạng thái trống: icon lớn + "Chưa có đề tài nào phù hợp" + nút "Xóa bộ lọc"
+        if (filteredTopics.length === 0) {
+            marketplaceCards.innerHTML = `
+                <div class="marketplace-empty-state">
+                    <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+                    <h3>Chưa có đề tài nào phù hợp</h3>
+                    <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn tất cả lĩnh vực.</p>
+                    <button type="button" class="btn-clear-filters" id="clearMarketplaceFiltersBtn">
+                        <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+                    </button>
+                </div>
+            `;
+            const clearBtn = document.getElementById("clearMarketplaceFiltersBtn");
+            if (clearBtn) {
+                clearBtn.addEventListener("click", () => {
+                    if (marketplaceSearch) marketplaceSearch.value = "";
+                    if (marketplaceCategory) marketplaceCategory.value = "";
+                    renderMarketplace();
+                });
+            }
+            if (marketplaceMessage) marketplaceMessage.textContent = "";
+            renderMarketplacePagination(0, 0);
+            return;
+        }
+
         const pageCount = Math.max(1, Math.ceil(filteredTopics.length / marketplacePageSize));
         marketplacePage = Math.min(marketplacePage, pageCount);
         const startIndex = (marketplacePage - 1) * marketplacePageSize;
@@ -629,13 +847,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ));
         renderMarketplacePagination(filteredTopics.length, pageCount);
         if (marketplaceMessage) {
-            marketplaceMessage.textContent = filteredTopics.length
-                ? ""
-                : topics.length
-                    ? "Không tìm thấy đề tài phù hợp với bộ lọc."
-                    : activeMarketplaceTab === "lecturer"
-                        ? "Hiện chưa có đề tài giảng viên nào đang mở đăng ký."
-                        : "Hiện chưa có nhóm nào đang tìm thêm thành viên.";
+            marketplaceMessage.textContent = "";
         }
     }
 
@@ -674,7 +886,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadMarketplace() {
         if (!marketplaceCards) return;
-        if (marketplaceMessage) marketplaceMessage.textContent = "Đang tải danh sách đề tài...";
+
+        // Skeleton loading cho lưới thẻ khi đang tải
+        marketplaceCards.innerHTML = Array.from({ length: 6 }).map(() => `
+            <div class="marketplace-skeleton-card">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div class="skeleton-shimmer" style="width: 40px; height: 40px; border-radius: 10px;"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton-shimmer" style="height: 14px; width: 60%; margin-bottom: 6px;"></div>
+                        <div class="skeleton-shimmer" style="height: 12px; width: 40%;"></div>
+                    </div>
+                </div>
+                <div class="skeleton-shimmer" style="height: 18px; width: 90%; margin-top: 8px;"></div>
+                <div class="skeleton-shimmer" style="height: 14px; width: 100%;"></div>
+                <div class="skeleton-shimmer" style="height: 14px; width: 75%;"></div>
+                <div class="skeleton-shimmer" style="height: 32px; width: 100%; margin-top: auto; border-radius: 8px;"></div>
+            </div>
+        `).join('');
 
         try {
             const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/marketplace`, {
@@ -689,6 +917,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 lecturerTopics: Array.isArray(result.data?.lecturerTopics) ? result.data.lecturerTopics : [],
                 groupTopics: Array.isArray(result.data?.groupTopics) ? result.data.groupTopics : []
             };
+            myRecruitmentOpen = result.data?.my_recruitment === true;
+            canPublishRecruitment = result.data?.can_publish_recruitment === true;
+            renderGroupRecruitmentButton();
             if (lecturerTopicCount) lecturerTopicCount.textContent = String(marketplaceData.lecturerTopics.length);
             if (groupTopicCount) groupTopicCount.textContent = String(marketplaceData.groupTopics.length);
             renderMarketplace();
@@ -697,6 +928,46 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (marketplaceMessage) marketplaceMessage.textContent =
                 error.message || "Không thể tải danh sách đề tài. Vui lòng thử lại.";
             marketplaceCards.replaceChildren();
+        }
+    }
+
+    function renderGroupRecruitmentButton() {
+        if (!groupRecruitmentBtn) return;
+        if (myRecruitmentOpen) {
+            groupRecruitmentBtn.disabled = false;
+            groupRecruitmentBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ngừng công khai nhóm';
+            return;
+        }
+
+        groupRecruitmentBtn.disabled = !registrationWindowOpen || !canPublishRecruitment;
+        groupRecruitmentBtn.innerHTML = registrationWindowOpen && canPublishRecruitment
+            ? '<i class="fa-solid fa-bullhorn"></i> Công khai nhóm'
+            : '<i class="fa-solid fa-bullhorn"></i> Chưa thể công khai nhóm';
+    }
+
+    async function toggleGroupRecruitment() {
+        if (!groupRecruitmentBtn) return;
+        groupRecruitmentBtn.disabled = true;
+        try {
+            const recruitmentUrl = myRecruitmentOpen
+                ? `${window.APP_CONFIG.API_BASE_URL}/api/topics/group-recruitment/${encodeURIComponent(user.user_code)}`
+                : `${window.APP_CONFIG.API_BASE_URL}/api/topics/group-recruitment`;
+            const response = await apiFetch(
+                recruitmentUrl,
+                {
+                    method: myRecruitmentOpen ? "DELETE" : "POST",
+                    headers: { "Authorization": `Bearer ${token}` }
+                }
+            );
+            const result = await response.json();
+            if (!response.ok || result.success !== true) {
+                throw new Error(result.message || "Không thể cập nhật trạng thái tuyển thành viên.");
+            }
+            showMessage("success", result.message);
+            await Promise.all([loadMarketplace(), loadJoinRequests()]);
+        } catch (error) {
+            showMessage("error", error.message || "Không thể cập nhật trạng thái tuyển thành viên.");
+            renderGroupRecruitmentButton();
         }
     }
 
@@ -772,12 +1043,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         form?.scrollIntoView({ behavior: "smooth", block: "start" });
         topicTitleInput?.focus({ preventScroll: true });
     });
+    groupRecruitmentBtn?.addEventListener("click", toggleGroupRecruitment);
 
     // =========================================================================
     // 6. KIỂM TRA TRẠNG THÁI ĐĂNG KÝ ĐỀ TÀI CỦA SINH VIÊN
     // =========================================================================
+    function updateStepper(status) {
+        // Đã xóa bỏ Stepper 3 bước để giao diện thoáng gọn hơn
+    }
+
     const resetToUnregisteredState = () => {
         isEditing = false;
+        studentHasRegisteredTopic = false;
+        studentRegisteredTopicData = null;
+
+        const registeredBanner = document.getElementById("registeredTopicBanner");
+        if (registeredBanner) registeredBanner.hidden = true;
+
+        updateStepper("");
+
         if (statusEl) {
             statusEl.className = "status-text status-none";
             statusEl.innerHTML = `<i class="fa-solid fa-circle"></i> Chưa đăng ký`;
@@ -800,6 +1084,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (span) span.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Gửi Đăng Ký Đề Tài`;
         }
         hideMessage();
+        loadRegistrationWindow();
+        renderMarketplace();
     };
 
     const checkTopicStatus = async () => {
@@ -812,6 +1098,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const topic = await res.json();
                 
                 if (topic && topic.status) {
+                    studentRegisteredTopicData = topic;
+                    studentHasRegisteredTopic = ["PENDING", "APPROVED", "NEED_REVISION", "JOIN_ACCEPTED"].includes(topic.status);
+
+                    // Cập nhật Stepper theo trạng thái thực tế
+                    updateStepper(topic.status);
+
+                    // Banner xanh nhạt phía trên danh sách: hiển thị tên đề tài thay vì mã đề tài
+                    const registeredBanner = document.getElementById("registeredTopicBanner");
+                    const registeredCode = document.getElementById("registeredTopicCode");
+                    if (registeredBanner) {
+                        registeredBanner.hidden = !studentHasRegisteredTopic;
+                        if (registeredCode && studentHasRegisteredTopic) {
+                            const topicName = topic.title || topic.topic_code || "Đề tài thực tập";
+                            registeredCode.textContent = `"${topicName}"`;
+                            registeredCode.title = topicName;
+                        }
+                    }
+
                     if (lecturerSelect) lecturerSelect.value = topic.lecturer_code || "";
                     
                     renderProposedTopics(topic.lecturer_code || "");
@@ -873,6 +1177,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                                         : `Đã gửi yêu cầu đến Trưởng nhóm <strong>${topic.leader_code}</strong>. Vui lòng chờ xác nhận.`}
                             </div>
                         `);
+                        renderMarketplace();
                         return;
                     }
 
@@ -907,6 +1212,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                             statusEl.innerHTML = `<i class="fa-solid fa-circle"></i> Đã phê duyệt`;
                         }
                         disableForm(true);
+                        // Đề tài đã được phê duyệt -> Ẩn thông báo thời hạn đăng ký
+                        if (registrationWindowNotice) {
+                            registrationWindowNotice.hidden = true;
+                        }
                         if (editBtn) editBtn.style.display = "none";
                         if (cancelBtn) cancelBtn.style.display = "none";
                         if (submitBtn) {
@@ -936,6 +1245,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                             showMessage("error", "", `<i class="fa-solid fa-comment-dots"></i> <strong>Phản hồi từ Giảng viên:</strong> ${topic.feedback}`);
                         }
                     }
+
+                    renderMarketplace();
                 } else {
                     resetToUnregisteredState();
                 }
