@@ -1,6 +1,7 @@
 const Milestone = require('../models/Milestone');
 const Topic = require('../models/Topic');
 const Submission = require('../models/Submission');
+const { notifyUsers } = require('../services/notificationService');
 
 const getStatus = (milestone) => {
     const now = new Date();
@@ -87,6 +88,10 @@ exports.createMilestone = async (req, res) => {
         const validation = validateMilestone(req.body);
         if (validation.error) return res.status(400).json({ success: false, message: validation.error });
 
+        const topics = await Topic.find({
+            lecturer_code: req.user.user_code,
+            status: 'APPROVED'
+        }).select('leader_code member2_code member3_code').lean();
         const existingSteps = await Milestone.find({ lecturerCode: req.user.user_code, topicId: null })
             .select('step')
             .lean();
@@ -100,6 +105,20 @@ exports.createMilestone = async (req, res) => {
             topicId: null,
             step
         });
+
+        const startDate = milestone.startDate.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const endDate = milestone.endDate.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        await notifyUsers(
+            topics.flatMap(topic => [topic.leader_code, topic.member2_code, topic.member3_code]),
+            {
+                title: `Milestone mới: ${milestone.name}`,
+                content: `Giảng viên hướng dẫn đã tạo milestone "${milestone.name}". ${milestone.desc ? `${milestone.desc} ` : ''}Thời gian bắt đầu: ${startDate}. Hạn nộp: ${endDate}.`,
+                eventKey: `milestone-created:${milestone._id}`,
+                type: 'LECTURER',
+                senderName: 'Giảng viên hướng dẫn'
+            }
+        );
+
         return res.status(201).json({ success: true, data: serializeMilestone(milestone) });
     } catch (error) {
         console.error('Lỗi tạo milestone:', error);

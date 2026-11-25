@@ -26,6 +26,7 @@ const {
     withdrawMilestoneSubmission,
     deleteMilestoneSubmission
 } = require('../controllers/topicController');
+const { createMilestone } = require('../controllers/milestoneController');
 const {
     createLecturerNotification,
     getAllNotifications
@@ -531,6 +532,76 @@ test('milestone progress detects late submissions and overdue missing submission
     assert.equal(topicProgress.milestones[3].status, 'late');
     assert.equal(topicProgress.is_late, true);
     assert.equal(topicProgress.completed_milestones, 2);
+});
+
+test('creating a lecturer milestone notifies unique students in their approved topics', async t => {
+    const startDate = new Date(Date.now() - 60 * 1000);
+    const endDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const createdMilestone = {
+        _id: 'milestone-new',
+        step: 1,
+        name: 'Báo cáo tiến độ',
+        desc: 'Nộp bản PDF',
+        startDate,
+        endDate,
+        allowLate: false
+    };
+    const notifications = [];
+    t.mock.method(Topic, 'find', filter => {
+        assert.deepEqual(filter, { lecturer_code: 'GV01', status: 'APPROVED' });
+        return {
+            select(fields) {
+                assert.equal(fields, 'leader_code member2_code member3_code');
+                return this;
+            },
+            lean: async () => [
+                { leader_code: 'SV01', member2_code: 'SV02', member3_code: null },
+                { leader_code: 'SV02', member2_code: 'SV03', member3_code: null }
+            ]
+        };
+    });
+    t.mock.method(Milestone, 'find', filter => {
+        assert.deepEqual(filter, { lecturerCode: 'GV01', topicId: null });
+        return {
+            select(fields) {
+                assert.equal(fields, 'step');
+                return this;
+            },
+            lean: async () => []
+        };
+    });
+    t.mock.method(Milestone, 'create', async data => {
+        assert.equal(data.step, 1);
+        return createdMilestone;
+    });
+    t.mock.method(Notification, 'findOneAndUpdate', async (filter, update) => {
+        notifications.push({ filter, update });
+        return {};
+    });
+
+    const response = {
+        statusCode: 201,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await createMilestone({
+        user: { role: 'LECTURER', user_code: 'GV01' },
+        body: { name: createdMilestone.name, desc: createdMilestone.desc, startDate, endDate }
+    }, response);
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(response.body.success, true);
+    assert.deepEqual(notifications.map(({ filter }) => filter.event_key), [
+        'milestone-created:milestone-new:SV01',
+        'milestone-created:milestone-new:SV02',
+        'milestone-created:milestone-new:SV03'
+    ]);
+    assert.ok(notifications.every(({ update }) =>
+        update.$setOnInsert.type === 'LECTURER' &&
+        update.$setOnInsert.status === 'published' &&
+        update.$setOnInsert.title === 'Milestone mới: Báo cáo tiến độ' &&
+        update.$setOnInsert.content.includes('Nộp bản PDF')
+    ));
 });
 
 test('legacy file uploads without timestamps are not classified as on-time or late', () => {

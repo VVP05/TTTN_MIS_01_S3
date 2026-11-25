@@ -1,3 +1,29 @@
+.app-layout > .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--student-sidebar-width, 250px);
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    z-index: 20;
+}
+
+.app-layout > .main-wrapper {
+    margin-left: var(--student-sidebar-width, 250px);
+    transition: margin-left 0.25s ease;
+}
+
+.app-layout.sidebar-collapsed > .main-wrapper {
+    margin-left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-layout > .main-wrapper {
+        transition: none;
+    }
+}
+
 .sidebar {
     font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }

@@ -67,6 +67,12 @@ body {
     flex-direction: column;
     justify-content: space-between;
     flex-shrink: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
     z-index: 100;
 }
 
@@ -177,6 +183,18 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    margin-left: 260px;
+    transition: margin-left 0.25s ease;
+}
+
+.app-layout.sidebar-collapsed > .main-wrapper {
+    margin-left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main-wrapper {
+        transition: none;
+    }
 }
 
 .top-navbar {

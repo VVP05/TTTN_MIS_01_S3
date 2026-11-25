@@ -94,6 +94,32 @@ body {
     z-index: 100;
 }
 
+@media (min-width: 1025px) {
+    .app-layout > .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: auto;
+    }
+
+    .app-layout > .main-wrapper {
+        margin-left: 260px;
+        transition: margin-left 0.25s ease;
+    }
+
+    .app-layout.sidebar-collapsed > .main-wrapper {
+        margin-left: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-layout > .main-wrapper {
+        transition: none;
+    }
+}
+
 .sidebar-brand {
     display: flex;
     align-items: center;
