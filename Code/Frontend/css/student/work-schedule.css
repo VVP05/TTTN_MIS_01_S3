@@ -56,6 +56,8 @@ body {
     display: flex;
     min-height: 100vh;
     --student-sidebar-width: 260px;
+    --sidebar-width: 260px;
+    --topbar-height: 68px;
 }
 
 /* =========================================================
@@ -1493,6 +1495,21 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.todo-assignment-notice {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border: 1px solid #DBEAFE;
+    border-radius: 8px;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.todo-assignment-notice[hidden] {
+    display: none;
 }
 
 .todo-add-row1 input {

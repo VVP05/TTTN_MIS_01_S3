@@ -124,6 +124,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const openModal = () => {
+        if (String(currentScheduleTopicInfo?.leader_code || "").trim().toUpperCase() !==
+            String(user.user_code || "").trim().toUpperCase()) {
+            showAppNotification("Chỉ trưởng nhóm mới có thể đăng ký lịch hẹn với giảng viên.");
+            return;
+        }
         if (modal) modal.style.display = "flex";
         loadAvailabilitySlots();
     };
@@ -142,6 +147,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (!currentScheduleTopicInfo) {
                 showAppNotification("Bạn chưa đăng ký đề tài hoặc đề tài chưa được duyệt nên chưa thể đặt lịch hẹn!");
+                return;
+            }
+            if (String(currentScheduleTopicInfo.leader_code || "").trim().toUpperCase() !==
+                String(user.user_code || "").trim().toUpperCase()) {
+                showAppNotification("Chỉ trưởng nhóm mới có thể đăng ký lịch hẹn với giảng viên.");
                 return;
             }
 
@@ -211,6 +221,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Bổ sung kiểm tra an toàn: Không cho tạo task khi đề tài chưa được duyệt
         if (!currentScheduleTopicInfo) {
             showAppNotification("Vui lòng đợi đề tài được phê duyệt để sử dụng danh sách công việc!");
+            return;
+        }
+        if (String(currentScheduleTopicInfo.leader_code || "").trim().toUpperCase() !==
+            String(user.user_code || "").trim().toUpperCase()) {
+            showAppNotification("Chỉ trưởng nhóm mới có thể giao công việc.");
             return;
         }
 
@@ -383,19 +398,13 @@ function renderScheduleLoadError(message) {
 // HÀM MỞ KHÓA GIAO DIỆN KHI ĐỀ TÀI HỢP LỆ (APPROVED)
 // =========================================================
 function unlockScheduleControls() {
-    const btnOpenBooking = document.getElementById("btnOpenBookingModal");
     const newTodoInput = document.getElementById("newTodoInput");
     const btnAddTodo = document.getElementById("btnAddTodo");
     const todoAssignee = document.getElementById("todoAssignee");
     const chatInput = document.getElementById("chatInput");
     const chatForm = document.getElementById("chatForm");
 
-    if (btnOpenBooking) {
-        btnOpenBooking.disabled = false;
-        btnOpenBooking.style.opacity = "1";
-        btnOpenBooking.style.cursor = "pointer";
-        btnOpenBooking.title = "";
-    }
+    updateMeetingBookingAccess(currentScheduleTopicInfo, getAuthForRole("STUDENT")?.user?.user_code);
     if (newTodoInput) {
         newTodoInput.disabled = false;
         newTodoInput.placeholder = "Nhập tên công việc cần làm...";
@@ -406,6 +415,7 @@ function unlockScheduleControls() {
         btnAddTodo.style.cursor = "pointer";
     }
     if (todoAssignee) todoAssignee.disabled = false;
+    updateTodoAssignmentAccess(currentScheduleTopicInfo, getAuthForRole("STUDENT")?.user?.user_code);
     if (chatInput) chatInput.disabled = false;
     if (chatForm?.querySelector('button[type="submit"]')) chatForm.querySelector('button[type="submit"]').disabled = false;
 }
@@ -592,6 +602,39 @@ function renderTodoAssigneeOptions(topic, currentStudentCode) {
     todoAssignee.innerHTML = options.join("");
 }
 
+function updateTodoAssignmentAccess(topic, currentStudentCode) {
+    const isLeader = String(topic?.leader_code || "").trim().toUpperCase() ===
+        String(currentStudentCode || "").trim().toUpperCase();
+    const addContainer = document.getElementById("todoAddContainer");
+    const assignmentNotice = document.getElementById("todoAssignmentNotice");
+    const newTodoInput = document.getElementById("newTodoInput");
+    const todoDueDate = document.getElementById("todoDueDate");
+    const todoAssignee = document.getElementById("todoAssignee");
+    const btnAddTodo = document.getElementById("btnAddTodo");
+
+    if (addContainer) addContainer.style.display = isLeader ? "" : "none";
+    if (assignmentNotice) assignmentNotice.hidden = isLeader;
+    if (newTodoInput) newTodoInput.disabled = !isLeader;
+    if (todoDueDate) todoDueDate.disabled = !isLeader;
+    if (todoAssignee) todoAssignee.disabled = !isLeader;
+    if (btnAddTodo) btnAddTodo.disabled = !isLeader;
+}
+
+function updateMeetingBookingAccess(topic, currentStudentCode) {
+    const isLeader = String(topic?.leader_code || "").trim().toUpperCase() ===
+        String(currentStudentCode || "").trim().toUpperCase();
+    const bookingButton = document.getElementById("btnOpenBookingModal");
+    const quickBookingLink = document.getElementById("statBookingLink");
+
+    if (bookingButton) {
+        bookingButton.disabled = !isLeader;
+        bookingButton.style.opacity = isLeader ? "1" : "0.6";
+        bookingButton.style.cursor = isLeader ? "pointer" : "not-allowed";
+        bookingButton.title = isLeader ? "" : "Chỉ trưởng nhóm mới được đăng ký lịch hẹn.";
+    }
+    if (quickBookingLink) quickBookingLink.hidden = !isLeader;
+}
+
 // =========================================================
 // HÀM KHÓA TRANG LỊCH LÀM VIỆC KHI ĐỀ TÀI CHƯA ĐƯỢC DUYỆT
 // =========================================================
@@ -614,8 +657,14 @@ function renderScheduleLockedState(reason) {
     const newTodoInput = document.getElementById("newTodoInput");
     const btnAddTodo = document.getElementById("btnAddTodo");
     const todoAssignee = document.getElementById("todoAssignee");
+    const todoAddContainer = document.getElementById("todoAddContainer");
+    const todoAssignmentNotice = document.getElementById("todoAssignmentNotice");
+    const statBookingLink = document.getElementById("statBookingLink");
 
     // Khóa toàn bộ các nút thao tác giao diện
+    if (todoAddContainer) todoAddContainer.style.display = "";
+    if (todoAssignmentNotice) todoAssignmentNotice.hidden = true;
+    if (statBookingLink) statBookingLink.hidden = true;
     if (btnOpenBooking) {
         btnOpenBooking.disabled = true;
         btnOpenBooking.style.opacity = "0.6";
@@ -884,13 +933,17 @@ function renderTodoList(todos) {
     }
 
     if (!todos || todos.length === 0) {
+        const currentStudentCode = String(getAuthForRole("STUDENT")?.user?.user_code || "").trim().toUpperCase();
+        const isLeader = String(currentScheduleTopicInfo?.leader_code || "").trim().toUpperCase() === currentStudentCode;
         todoList.innerHTML = `
             <div class="empty-state-box" style="padding: 24px 16px;">
                 <div class="empty-state-icon muted" style="width: 44px; height: 44px; font-size: 20px; margin-bottom: 8px;">
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
                 <h4 style="font-size: 14.5px;">Tuần này chưa có việc nào</h4>
-                <p style="font-size: 12.5px; margin-bottom: 0;">Thêm công việc đầu tiên ở form bên dưới để cùng nhau theo dõi.</p>
+                <p style="font-size: 12.5px; margin-bottom: 0;">${isLeader
+                    ? "Thêm công việc đầu tiên ở form bên dưới để cùng nhau theo dõi."
+                    : "Trưởng nhóm chưa giao công việc nào cho nhóm."}</p>
             </div>
         `;
         return;

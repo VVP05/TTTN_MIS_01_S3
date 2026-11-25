@@ -1891,7 +1891,7 @@ test('student AI advisor validates student access and explains when Ollama is un
     assert.match((await unavailableResponse.json()).message, /Không kết nối được Ollama/);
 });
 
-test('group members can add and set all shared todo statuses; supplied identity is ignored', async t => {
+test('only the group leader can add shared todos while members can update their statuses', async t => {
     const topic = {
         _id: 'topic-1',
         status: 'APPROVED',
@@ -1914,6 +1914,19 @@ test('group members can add and set all shared todo statuses; supplied identity 
         return this;
     });
     t.mock.method(Todo, 'findById', async () => storedTodo);
+
+    const memberAddResponse = await request('/api/schedule/todos/add', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV02',
+        body: {
+            topic_id: 'topic-1',
+            assigned_to: 'SV02',
+            title: 'Hoàn thiện báo cáo'
+        }
+    });
+    assert.equal(memberAddResponse.status, 403);
+    assert.equal(createdTodo, undefined);
 
     const addResponse = await request('/api/schedule/todos/add', {
         method: 'POST',
@@ -2261,6 +2274,35 @@ test('students must choose a lecturer availability slot to request a meeting', a
 
     assert.equal(response.status, 400);
     assert.equal((await response.json()).message, 'Vui lòng chọn khung giờ rảnh do giảng viên công khai.');
+});
+
+test('only group leaders can request lecturer meetings', async t => {
+    let slotLookupCalled = false;
+    t.mock.method(Topic, 'findOne', () => ({
+        select: async () => ({
+            _id: 'topic-1',
+            status: 'APPROVED',
+            leader_code: 'SV01',
+            member2_code: 'SV02',
+            lecturer_code: 'GV01',
+            title: 'Đề tài nhóm'
+        })
+    }));
+    t.mock.method(AvailabilitySlot, 'findOneAndUpdate', async () => {
+        slotLookupCalled = true;
+        return null;
+    });
+
+    const response = await request('/api/schedule/meetings/create', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV02',
+        body: { topic_id: 'topic-1', availability_id: 'slot-1', title: 'Báo cáo tiến độ' }
+    });
+
+    assert.equal(response.status, 403);
+    assert.equal((await response.json()).message, 'Chỉ trưởng nhóm mới được đăng ký lịch hẹn với giảng viên.');
+    assert.equal(slotLookupCalled, false);
 });
 
 test('students cannot update another student profile or cancel another group', async () => {

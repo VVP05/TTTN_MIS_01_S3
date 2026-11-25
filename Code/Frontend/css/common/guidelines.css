@@ -7,7 +7,7 @@
 }
 
 body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
-.app-layout { display: flex; min-height: 100vh; }
+.app-layout { display: flex; min-height: 100vh; --sidebar-width: 250px; --topbar-height: 64px; }
 
 /* SIDEBAR & TOPBAR */
 .sidebar {

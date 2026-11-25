@@ -452,6 +452,7 @@ function syncMilestoneCards() {
     const milestones = lecturerMilestones
         .filter(item => Number.isInteger(Number(item.step)) && Number(item.step) > 0)
         .sort((a, b) => Number(a.step) - Number(b.step));
+    updateMilestoneHeaderSummary(milestones);
 
     if (list) {
         list.replaceChildren();
@@ -506,6 +507,32 @@ function syncMilestoneCards() {
         `;
         emptyState.style.display = milestones.length ? "none" : "flex";
     }
+}
+
+function updateMilestoneHeaderSummary(milestones) {
+    const summary = document.getElementById("milestoneSummary");
+    if (!summary) return;
+
+    if (milestoneLoadError || currentTopicData?.status !== "APPROVED" || !milestones.length) {
+        summary.hidden = true;
+        return;
+    }
+
+    const milestoneSteps = new Set(milestones.map(item => Number(item.step)));
+    const submittedSteps = new Set(
+        milestoneSubmissionHistory
+            .filter(item => {
+                const step = Number(item.milestone || item.milestone_step);
+                const status = getSubmissionReviewStatus(item);
+                return milestoneSteps.has(step) &&
+                    !item.is_draft &&
+                    !["DRAFT", "NOT_SUBMITTED", "WITHDRAWN", "SUPERSEDED"].includes(status);
+            })
+            .map(item => Number(item.milestone || item.milestone_step))
+    );
+
+    summary.textContent = `${milestones.length} mốc · ${submittedSteps.size} đã nộp`;
+    summary.hidden = false;
 }
 
 // =========================================================

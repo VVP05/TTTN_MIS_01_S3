@@ -103,7 +103,7 @@
                         <p class="page-subtitle">Quản lý lịch họp với Giảng viên hướng dẫn và theo dõi kế hoạch thực tập từng tuần.</p>
                     </div>
                     <div class="page-header-right">
-                        <button id="btnOpenBookingModal" class="btn-primary btn-booking">
+                        <button id="btnOpenBookingModal" class="btn-primary btn-booking" disabled>
                             <i class="fa-solid fa-calendar-plus"></i>
                             <span>Đăng ký lịch hẹn GVHD</span>
                         </button>
@@ -124,7 +124,7 @@
                             </div>
                             <div class="stat-footer-text" id="statUpcomingNote">
                                 <span id="statUpcomingDetailText">Chưa có lịch họp sắp tới</span>
-                                <a href="javascript:void(0)" onclick="document.getElementById('btnOpenBookingModal')?.click()" class="stat-link">Đặt lịch <i class="fa-solid fa-arrow-right"></i></a>
+                                <a id="statBookingLink" href="javascript:void(0)" onclick="document.getElementById('btnOpenBookingModal')?.click()" class="stat-link" hidden>Đặt lịch <i class="fa-solid fa-arrow-right"></i></a>
                             </div>
                         </div>
                     </div>
@@ -259,7 +259,10 @@
                             </div>
 
                             <!-- FORM THÊM VIỆC MỚI (TÁCH 2 HÀNG RÕ RÀNG) -->
-                            <div class="todo-add-container">
+                            <p id="todoAssignmentNotice" class="todo-assignment-notice" hidden>
+                                <i class="fa-solid fa-circle-info"></i> Chỉ trưởng nhóm mới có thể giao việc cho thành viên trong nhóm.
+                            </p>
+                            <div class="todo-add-container" id="todoAddContainer">
                                 <div class="todo-add-row1">
                                     <input type="text" id="newTodoInput" placeholder="Nhập tên công việc cần làm..." maxlength="255">
                                 </div>

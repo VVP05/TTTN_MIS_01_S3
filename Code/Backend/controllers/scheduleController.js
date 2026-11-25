@@ -177,6 +177,9 @@ exports.createMeeting = async (req, res) => {
             ]
         }).select('lecturer_code leader_code member2_code member3_code title');
         if (!topic) return res.status(403).json({ success: false, message: 'Bạn không có quyền đặt lịch cho đề tài này.' });
+        if (String(topic.leader_code || '').trim().toUpperCase() !== studentCode.toUpperCase()) {
+            return res.status(403).json({ success: false, message: 'Chỉ trưởng nhóm mới được đăng ký lịch hẹn với giảng viên.' });
+        }
         const lecturer_code = topic.lecturer_code;
 
         const slot = await AvailabilitySlot.findOneAndUpdate(
@@ -436,6 +439,9 @@ exports.addTodo = async (req, res) => {
             ]
         });
         if (!topic) return res.status(403).json({ success: false, message: "Bạn không thuộc đề tài được chọn hoặc đề tài chưa được duyệt!" });
+        if (String(topic.leader_code || '').trim().toUpperCase() !== studentCode.toUpperCase()) {
+            return res.status(403).json({ success: false, message: "Chỉ trưởng nhóm mới được giao công việc." });
+        }
 
         const groupMembers = getTopicMemberCodes(topic);
         const assignedCode = String(assigned_to || '').trim();

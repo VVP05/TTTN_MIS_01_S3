@@ -67,7 +67,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Form Elements
     const form = document.getElementById("topicRegisterForm");
+    const groupMembersSection = document.getElementById("groupMembersSection");
+    const formActionsBar = form?.querySelector(".form-actions-bar");
     const roleRadios = document.querySelectorAll('input[name="userRole"]');
+    const leaderRoleCard = document.getElementById("roleCardLeader");
+    const memberRoleCard = document.getElementById("roleCardMember");
+    const memberRoleRadio = document.querySelector('input[name="userRole"][value="MEMBER"]');
+    const leaderRoleRadio = document.querySelector('input[name="userRole"][value="LEADER"]');
     const leaderLabel = document.getElementById("leaderLabel");
     const partnerInput = document.getElementById("partnerCodeInput");
     const member3Input = document.getElementById("member3CodeInput");
@@ -80,6 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const topicTitleInput = document.getElementById("topicTitle");
     const topicDescInput = document.getElementById("topicDescription");
     const topicDetailsSection = document.getElementById("topicDetailsSection");
+    const topicDetailsSubheading = topicDetailsSection?.querySelector(".section-subheading");
     const memberRoleNote = document.getElementById("memberRoleNote");
 
     // Action Buttons & Status UI
@@ -88,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const submitBtn = document.getElementById("submitBtn");
     const msgBox = document.getElementById("formMessage");
     const statusEl = document.getElementById("topicStatus");
+    const topicStatusPill = document.getElementById("topicStatusPill");
     const registrationWindowNotice = document.getElementById("registrationWindowNotice");
     const marketplaceCards = document.getElementById("marketplaceCards");
     const marketplaceMessage = document.getElementById("marketplaceMessage");
@@ -429,29 +437,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 5. CẬP NHẬT GIAO DIỆN THEO VAI TRÒ & SỰ KIỆN LỌC ĐỀ TÀI
     // =========================================================================
-    const updateRoleUI = (role) => {
+    function setMemberRoleLocked(locked) {
+        if (memberRoleRadio) {
+            memberRoleRadio.disabled = locked;
+        }
+        if (memberRoleCard) {
+            memberRoleCard.classList.toggle("role-card-disabled", locked);
+            memberRoleCard.setAttribute("aria-disabled", String(locked));
+            memberRoleCard.title = locked
+                ? "Không thể chuyển sang vai trò Thành viên sau khi đã xác nhận thành viên"
+                : "";
+        }
+        if (locked && memberRoleRadio?.checked) {
+            if (leaderRoleRadio) leaderRoleRadio.checked = true;
+            updateRoleUI("LEADER");
+        }
+    }
+
+    const updateRoleUI = (role, showSubmittedTopic = false) => {
         const isMemberRole = role === "MEMBER";
+        roleRadios.forEach(radio => {
+            const isSelected = radio.value === role;
+            radio.checked = isSelected;
+            radio.closest(".role-card")?.classList.toggle("selected", isSelected);
+        });
+        if (leaderRoleCard) leaderRoleCard.setAttribute("aria-checked", String(!isMemberRole));
+        if (memberRoleCard) memberRoleCard.setAttribute("aria-checked", String(isMemberRole));
 
         if (member2Field) member2Field.style.display = isMemberRole ? "none" : "block";
         if (member3Field) member3Field.style.display = isMemberRole ? "none" : "block";
         if (leaderNameEl) leaderNameEl.closest('.form-group')?.style.setProperty('display', 'block');
 
         if (isMemberRole) {
-            if (topicDetailsSection) topicDetailsSection.style.display = "none";
-            if (memberRoleNote) memberRoleNote.style.display = "block";
+            if (topicDetailsSection) topicDetailsSection.style.display = showSubmittedTopic ? "" : "none";
+            if (topicDetailsSubheading) {
+                topicDetailsSubheading.textContent = showSubmittedTopic
+                    ? "Thông tin đề tài do Trưởng nhóm đăng ký — chế độ chỉ xem"
+                    : "Điền tên đề tài, chọn giảng viên hướng dẫn và mô tả nội dung";
+            }
+            if (memberRoleNote) memberRoleNote.style.display = showSubmittedTopic ? "none" : "block";
             if (submitBtn) submitBtn.querySelector("span").innerHTML = '<i class="fa-solid fa-user-plus"></i> Tham Gia Nhóm';
-            if (lecturerSelect) lecturerSelect.value = "";
-            if (proposedSelect) proposedSelect.value = "";
             if (lecturerSelect) lecturerSelect.disabled = true;
             if (proposedSelect) proposedSelect.disabled = true;
-            if (topicTitleInput) {
-                topicTitleInput.value = "";
-                topicTitleInput.disabled = true;
-            }
-            if (topicDescInput) {
-                topicDescInput.value = "";
-                topicDescInput.disabled = true;
-            }
+            if (!showSubmittedTopic && lecturerSelect) lecturerSelect.value = "";
+            if (!showSubmittedTopic && proposedSelect) proposedSelect.value = "";
+            if (!showSubmittedTopic && topicTitleInput) topicTitleInput.value = "";
+            if (topicTitleInput) topicTitleInput.disabled = true;
+            if (!showSubmittedTopic && topicDescInput) topicDescInput.value = "";
+            if (topicDescInput) topicDescInput.disabled = true;
             if (leaderLabel) leaderLabel.innerHTML = 'MSSV Trưởng nhóm <span class="required" style="color: red;">*</span>';
             if (leaderNameEl) {
                 leaderNameEl.value = "";
@@ -470,6 +503,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         } else {
             if (topicDetailsSection) topicDetailsSection.style.display = "";
+            if (topicDetailsSubheading) {
+                topicDetailsSubheading.textContent = "Điền tên đề tài, chọn giảng viên hướng dẫn và mô tả nội dung";
+            }
             if (memberRoleNote) memberRoleNote.style.display = "none";
             if (submitBtn) submitBtn.querySelector("span").innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi Đăng Ký Đề Tài';
             if (lecturerSelect) lecturerSelect.disabled = false;
@@ -1059,6 +1095,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const registeredBanner = document.getElementById("registeredTopicBanner");
         if (registeredBanner) registeredBanner.hidden = true;
+        if (topicStatusPill) topicStatusPill.style.display = "";
+        if (groupMembersSection) groupMembersSection.style.display = "";
+        if (formActionsBar) formActionsBar.style.display = "";
 
         updateStepper("");
 
@@ -1116,18 +1155,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                         }
                     }
 
+                    const isLeader = (topic.leader_code === user.user_code);
+                    const showSubmittedTopic = !isLeader &&
+                        ["PENDING", "APPROVED", "NEED_REVISION", "REJECTED"].includes(topic.status);
+                    updateRoleUI(isLeader ? "LEADER" : "MEMBER", showSubmittedTopic);
+                    const isApproved = topic.status === "APPROVED";
+                    if (topicStatusPill) topicStatusPill.style.display = isApproved ? "none" : "";
+                    if (groupMembersSection) groupMembersSection.style.display = isApproved ? "none" : "";
+                    if (topicDetailsSection && isApproved) topicDetailsSection.style.display = "none";
+                    if (formActionsBar) formActionsBar.style.display = isApproved ? "none" : "";
+
                     if (lecturerSelect) lecturerSelect.value = topic.lecturer_code || "";
-                    
                     renderProposedTopics(topic.lecturer_code || "");
-                    
                     if (proposedSelect) proposedSelect.value = topic.proposed_topic_id || topic.proposed_topic || "";
                     if (topicTitleInput) topicTitleInput.value = topic.title || "";
                     if (topicDescInput) topicDescInput.value = topic.description || "";
-                    
-                    const isLeader = (topic.leader_code === user.user_code);
-
-                    const roleRadio = document.querySelector(`input[name="userRole"][value="${isLeader ? 'LEADER' : 'MEMBER'}"]`);
-                    if (roleRadio) roleRadio.checked = true;
 
                     await loadPartnerInfo(leaderNameEl, topic.leader_code);
                     if (!hasEditedMemberCodes) {
@@ -1272,6 +1314,28 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             const data = await res.json();
             const requests = data.requests || [];
+            const selectedRole = document.querySelector('input[name="userRole"]:checked')?.value || "LEADER";
+            if (selectedRole === "LEADER") {
+                const acceptedMembers = requests
+                    .filter(request => request.status === "ACCEPTED")
+                    .map(request => ({
+                        code: extractCode(request.member_code),
+                        name: String(request.member_name || "").trim()
+                    }))
+                    .filter(member => member.code);
+                const memberFields = [partnerInput, member3Input];
+                acceptedMembers.forEach(member => {
+                    if (memberFields.some(field => extractCode(field?.value || "") === member.code)) return;
+                    const emptyField = memberFields.find(field => !extractCode(field?.value || ""));
+                    if (emptyField) {
+                        emptyField.value = member.name
+                            ? `${member.name} (${member.code})`
+                            : member.code;
+                        hasEditedMemberCodes = true;
+                    }
+                });
+            }
+            setMemberRoleLocked(requests.some(request => request.status === "ACCEPTED"));
             joinRequestsSection.style.display = requests.length ? "block" : "none";
             joinRequestsList.innerHTML = requests.length
                 ? requests.map(request => `
@@ -1281,7 +1345,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             ${request.status === "ACCEPTED" ? '<i class="fa-solid fa-circle-check"></i> Đã xác nhận' : '<i class="fa-solid fa-clock"></i> Đang chờ xác nhận'}
                         </span>
                         ${request.status === "PENDING" ? `<span class="join-request-actions">
-                            <button type="button" class="btn-primary-action accept-join-btn" data-id="${request._id}" data-status="ACCEPTED">Xác nhận</button>
+                            <button type="button" class="btn-primary-action accept-join-btn" data-id="${request._id}" data-member-code="${String(request.member_code || "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]))}" data-status="ACCEPTED">Xác nhận</button>
                             <button type="button" class="reject-join-btn" data-id="${request._id}" data-status="REJECTED"><i class="fa-solid fa-xmark"></i> Từ chối</button>
                         </span>` : ""}
                     </div>`).join("")
@@ -1300,7 +1364,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                     });
                     const result = await response.json();
                     showMessage(response.ok ? "success" : "error", result.message || "Không thể xử lý yêu cầu!");
-                    await Promise.all([loadJoinRequests(), loadMarketplace()]);
+                    if (response.ok && button.dataset.status === "ACCEPTED") {
+                        const memberCode = String(button.dataset.memberCode || "").trim();
+                        if (memberCode) {
+                            if (!extractCode(partnerInput?.value || "")) {
+                                await loadPartnerInfo(partnerInput, memberCode);
+                                hasEditedMemberCodes = true;
+                            } else if (!extractCode(member3Input?.value || "") &&
+                                extractCode(partnerInput?.value || "") !== memberCode) {
+                                await loadPartnerInfo(member3Input, memberCode);
+                                hasEditedMemberCodes = true;
+                            }
+                        }
+                    }
+                    await Promise.all([checkTopicStatus(), loadJoinRequests(), loadMarketplace()]);
                 });
             });
         } catch (error) {

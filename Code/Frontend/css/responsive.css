@@ -9,6 +9,47 @@ body {
     overflow-x: hidden;
 }
 
+.top-navbar,
+.topbar {
+    position: fixed;
+    top: 0;
+    z-index: 90;
+}
+
+.app-layout > .main-wrapper {
+    padding-top: var(--topbar-height, 68px);
+}
+
+.app-container > .main-content,
+.app-container > .main-wrapper {
+    padding-top: var(--topbar-height, 64px);
+}
+
+.app-layout > .main-wrapper > .top-navbar,
+.app-layout > .main-wrapper > .topbar,
+.app-container > .main-content > .topbar,
+.app-container > .main-wrapper > .topbar {
+    left: var(--sidebar-width, 260px);
+    right: 0;
+    width: auto;
+}
+
+.app-layout.sidebar-collapsed > .main-wrapper > .top-navbar,
+.app-layout.sidebar-collapsed > .main-wrapper > .topbar,
+.app-layout.sidebar-mobile-open > .main-wrapper > .top-navbar,
+.app-layout.sidebar-mobile-open > .main-wrapper > .topbar {
+    left: 0;
+}
+
+@media (max-width: 1024px) {
+    .app-layout > .main-wrapper > .top-navbar,
+    .app-layout > .main-wrapper > .topbar,
+    .app-container > .main-content > .topbar,
+    .app-container > .main-wrapper > .topbar {
+        left: 0 !important;
+    }
+}
+
 img,
 svg,
 video,

@@ -55,7 +55,6 @@ body {
 
 .main-wrapper {
     opacity: 0;
-    transform: translateY(8px);
     animation: pageFadeIn 0.35s ease-out forwards;
     flex: 1;
     display: flex;
@@ -66,17 +65,17 @@ body {
 @keyframes pageFadeIn {
     from {
         opacity: 0;
-        transform: translateY(8px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
 .app-layout {
     display: flex;
     min-height: 100vh;
+    --sidebar-width: 260px;
+    --topbar-height: 64px;
 }
 
 /* =========================================================
@@ -276,10 +275,24 @@ body {
     padding: 0 24px;
     background: #FFFFFF;
     border-bottom: 1px solid #E2E8F0;
-    position: sticky;
-    top: 0;
-    z-index: 30;
+    position: fixed !important;
+    top: 0 !important;
+    left: 260px !important;
+    right: 0 !important;
+    width: auto !important;
+    z-index: 1000 !important;
     box-sizing: border-box;
+}
+
+.app-layout.sidebar-collapsed > .main-wrapper > .top-navbar,
+.app-layout.sidebar-collapsed > .main-wrapper > .topbar,
+.app-layout.sidebar-mobile-open > .main-wrapper > .top-navbar,
+.app-layout.sidebar-mobile-open > .main-wrapper > .topbar {
+    left: 0 !important;
+}
+
+.app-layout > .main-wrapper {
+    padding-top: 64px;
 }
 
 .navbar-left,

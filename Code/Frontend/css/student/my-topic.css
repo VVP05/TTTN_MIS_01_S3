@@ -1131,9 +1131,58 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #F1F5F9;
-    padding-bottom: 18px;
-    margin-bottom: 20px;
+    gap: 16px;
+    padding: 18px 24px;
+    border: 1px solid #DBEAFE;
+    border-left: 4px solid #2563EB;
+    border-radius: 14px;
+    background: linear-gradient(110deg, #EFF6FF, #FFFFFF);
+    margin-bottom: 16px;
+}
+
+.milestone-section-header .title-with-icon {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+}
+
+.milestone-section-header .section-icon {
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+    color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+.milestone-section-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #0F172A;
+}
+
+.milestone-section-header p {
+    margin-top: 4px;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.milestone-summary-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border: 1px solid #DBEAFE;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #1D4ED8;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.milestone-summary-chip[hidden] {
+    display: none;
 }
 
 .title-with-icon {
@@ -2540,6 +2589,23 @@ body {
     }
 
     /* Mobile: Lưới 1 cột và nút full width cho Tiến độ nộp báo cáo */
+    .milestone-section-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: 16px;
+    }
+    .milestone-section-header .title-with-icon {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+    .milestone-section-header .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+    }
+    .milestone-summary-chip {
+        margin-left: 48px;
+    }
     .milestone-header {
         flex-direction: column;
         align-items: flex-start;
