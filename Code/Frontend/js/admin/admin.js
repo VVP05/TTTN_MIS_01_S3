@@ -287,6 +287,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const chartWrapper = ctxRegElem.parentElement;
         const existingEmpty = chartWrapper.querySelector(".chart-empty-state");
         if (totalReg === 0 && values.every(v => v === 0)) {
+            ctxRegElem.style.display = "none";
             if (!existingEmpty) {
                 const emptyDiv = document.createElement("div");
                 emptyDiv.className = "chart-empty-state";
@@ -298,6 +299,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         } else if (existingEmpty) {
             existingEmpty.remove();
+            ctxRegElem.style.display = "";
         }
 
         const ctxReg = ctxRegElem.getContext('2d');

@@ -48,6 +48,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     displayUserFromStorage(user);
+    const lecturerCode = user.userCode || user.user_code || user.lecturerCode || user.lecturer_code;
+    if (lecturerCode) loadLecturerAnnouncements(lecturerCode, token);
 
     try {
         const response = await apiFetch(window.APP_CONFIG.API_BASE_URL + "/api/v1/lecturer/dashboard", {
@@ -98,6 +100,68 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Lỗi kết nối API Backend:", error);
     }
 });
+
+async function loadLecturerAnnouncements(lecturerCode, token) {
+    const ticker = document.getElementById("lecturerAnnouncementTicker");
+    const track = document.getElementById("lecturerAnnouncementTrack");
+    const viewport = ticker?.querySelector(".announcement-ticker-viewport");
+    const accessibleText = document.getElementById("lecturerAnnouncementAccessibleText");
+    if (!ticker || !track || !viewport) return;
+
+    let tickerMessage = track.firstElementChild?.textContent || "";
+    const updateTickerMotion = () => {
+        const messageText = track.firstElementChild;
+        if (!messageText || !tickerMessage) return;
+
+        track.replaceChildren(messageText);
+        messageText.textContent = tickerMessage;
+        const singleMessageWidth = Math.max(1, messageText.getBoundingClientRect().width - 64);
+        const repeatCount = Math.max(1, Math.ceil((viewport.clientWidth + 64) / singleMessageWidth));
+        messageText.textContent = Array(repeatCount).fill(tickerMessage).join("     •     ");
+        track.appendChild(messageText.cloneNode(true));
+
+        const groupWidth = messageText.getBoundingClientRect().width;
+        ticker.style.setProperty("--ticker-duration", `${Math.max(18, groupWidth / 40)}s`);
+        ticker.classList.add("is-overflowing");
+    };
+
+    window.addEventListener("resize", updateTickerMotion);
+    requestAnimationFrame(updateTickerMotion);
+
+    try {
+        const response = await apiFetch(
+            `${window.APP_CONFIG.API_BASE_URL}/api/notifications/lecturer/${encodeURIComponent(lecturerCode)}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Không thể tải thông báo.");
+        }
+
+        const announcements = (result.notifications || [])
+            .filter(item => item.priority === "info")
+            .sort((left, right) => {
+                if (left.isPinned !== right.isPinned) return left.isPinned ? -1 : 1;
+                return (Date.parse(right.createdAt) || 0) - (Date.parse(left.createdAt) || 0);
+            })
+            .slice(0, 5);
+
+        if (announcements.length === 0) return;
+
+        const message = announcements
+            .map(item => [item.title, item.content].filter(Boolean).join(" — "))
+            .join("     •     ");
+
+        tickerMessage = message;
+        const messageText = document.createElement("span");
+        messageText.textContent = tickerMessage;
+        track.replaceChildren(messageText);
+        if (accessibleText) accessibleText.textContent = tickerMessage;
+        requestAnimationFrame(updateTickerMotion);
+    } catch (error) {
+        console.error("Không thể tải thông báo trên dashboard:", error);
+    }
+}
 
 function displayUserFromStorage(user) {
     if (!user) return;
@@ -339,18 +403,18 @@ function renderProgressChart(progressData) {
         return;
     }
 
-    const datasetStyles = [
-        { backgroundColor: '#10B981', hoverBackgroundColor: '#059669' },
-        { backgroundColor: '#3B82F6', hoverBackgroundColor: '#2563EB' },
-        { backgroundColor: '#F59E0B', hoverBackgroundColor: '#D97706' },
-        { backgroundColor: '#F43F5E', hoverBackgroundColor: '#E11D48' },
-        { backgroundColor: '#94A3B8', hoverBackgroundColor: '#64748B' }
-    ];
+    const datasetStyles = {
+        'Hoàn thành đúng hạn': { backgroundColor: '#10B981', hoverBackgroundColor: '#059669' },
+        'Thiếu thời gian nộp': { backgroundColor: '#3B82F6', hoverBackgroundColor: '#2563EB' },
+        'Sắp tới': { backgroundColor: '#94A3B8', hoverBackgroundColor: '#64748B' },
+        'Đang thực hiện': { backgroundColor: '#F59E0B', hoverBackgroundColor: '#D97706' },
+        'Trễ hạn': { backgroundColor: '#F43F5E', hoverBackgroundColor: '#E11D48' }
+    };
 
-    const formattedDatasets = (progressData.series || []).map((seriesItem, index) => ({
+    const formattedDatasets = (progressData.series || []).map(seriesItem => ({
         label: seriesItem.name,
         data: seriesItem.data,
-        ...datasetStyles[index % datasetStyles.length],
+        ...datasetStyles[seriesItem.name],
         borderWidth: 0,
         borderRadius: 6,
         borderSkipped: false,

@@ -1622,6 +1622,45 @@ body {
     transition: all 0.2s ease;
 }
 
+.submission-actions button.btn-resubmit,
+button.btn-resubmit,
+.btn-resubmit {
+    height: 42px;
+    padding: 0 22px !important;
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border: 1px solid #1D4ED8 !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+.submission-actions button.btn-resubmit:hover:not(:disabled),
+button.btn-resubmit:hover:not(:disabled),
+.btn-resubmit:hover:not(:disabled) {
+    background: #1D4ED8 !important;
+    box-shadow: 0 5px 14px rgba(37, 99, 235, 0.45) !important;
+    transform: translateY(-1px) !important;
+}
+
+.submission-actions button.btn-resubmit:disabled,
+button.btn-resubmit:disabled,
+.btn-resubmit:disabled {
+    background: #94A3B8 !important;
+    color: #F1F5F9 !important;
+    border-color: #94A3B8 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 0.7 !important;
+}
+
 .submission-actions button:hover:not(:disabled), .btn-cancel-edit:hover {
     background: #E2E8F0;
 }
@@ -2114,23 +2153,33 @@ body {
 
 .btn-resubmit {
     height: 42px;
-    padding: 0 18px;
-    background: #EFF6FF;
-    color: #2563EB;
-    border: 1px solid #BFDBFE;
+    padding: 0 20px;
+    background: #2563EB;
+    color: #FFFFFF;
+    border: none;
     border-radius: 10px;
-    font-size: 13.5px;
+    font-size: 14px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     transition: all 0.2s ease;
 }
 
 .btn-resubmit:hover:not(:disabled) {
-    background: #DBEAFE;
-    border-color: #93C5FD;
+    background: #1D4ED8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-resubmit:disabled {
+    background: #94A3B8;
+    color: #F1F5F9;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .add-submission-actions {

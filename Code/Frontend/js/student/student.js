@@ -37,6 +37,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    function escapeHtml(str) {
+        if (!str) return "";
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     // =========================================================================
     // 2. KHAI BÁO BIẾN TRẠNG THÁI & DOM ELEMENTS
     // =========================================================================
@@ -47,12 +57,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     let allPoolTopics = [];
     let allLecturers = [];
     let registrationWindowOpen = false;
+    let currentRegistrationStatusData = null;
     let marketplaceData = { lecturerTopics: [], groupTopics: [] };
     let myRecruitmentOpen = false;
     let canPublishRecruitment = false;
     let activeMarketplaceTab = "lecturer";
     let marketplacePage = 1;
-    const marketplacePageSize = 12;
+    const marketplacePageSize = 10;
 
     // Header Info Elements
     const userNameEl = document.getElementById("userName");
@@ -105,6 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const lecturerTopicCount = document.getElementById("lecturerTopicCount");
     const groupTopicCount = document.getElementById("groupTopicCount");
     const groupRecruitmentBtn = document.getElementById("groupRecruitmentBtn");
+    const proposeOwnTopicBtn = document.getElementById("proposeOwnTopicBtn");
 
     // Modal Cancel Elements
     const cancelModal = document.getElementById("cancelModal");
@@ -194,6 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!response.ok) throw new Error(result.message || "Không thể tải thời hạn đăng ký.");
 
             const data = result.data || {};
+            currentRegistrationStatusData = data;
             registrationWindowOpen = data.is_open === true;
 
             // Thống nhất cách viết Học kỳ & đồng bộ tên học kỳ (ví dụ "Học kỳ 2026-2028")
@@ -224,19 +237,25 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const endFormat = data.semester.registration_window_has_time
                         ? { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }
                         : { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" };
-                    registrationWindowNotice.innerHTML = `<i class="fa-regular fa-clock" aria-hidden="true"></i> <span>Hạn cuối: <strong>${endDate.toLocaleString("vi-VN", endFormat)}</strong></span>`;
+                    registrationWindowNotice.innerHTML = `<i class="fa-regular fa-clock" aria-hidden="true"></i> <span>Hạn cuối đăng ký đề tài: <strong>${endDate.toLocaleString("vi-VN", endFormat)}</strong></span>`;
                 } else if (isUpcoming && data.semester?.registration_start_date) {
                     const startDate = new Date(data.semester.registration_start_date);
                     const startFormat = data.semester.registration_window_has_time
                         ? { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }
                         : { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" };
-                    registrationWindowNotice.innerHTML = `<i class="fa-regular fa-calendar" aria-hidden="true"></i> <span>Mở đăng ký: <strong>${startDate.toLocaleString("vi-VN", startFormat)}</strong></span>`;
+                    registrationWindowNotice.innerHTML = `<i class="fa-regular fa-calendar" aria-hidden="true"></i> <span>Hệ thống sẽ mở đăng ký đề tài vào lúc: <strong>${startDate.toLocaleString("vi-VN", startFormat)}</strong></span>`;
                 } else {
                     registrationWindowNotice.innerHTML = `<i class="fa-solid fa-lock" aria-hidden="true"></i> <span>Hiện không trong thời hạn đăng ký đề tài</span>`;
                 }
             }
+
+            // Đồng bộ lại tin tức chữ chạy theo thời hạn đăng ký thực tế
+            if (!studentRegisteredTopicData || studentRegisteredTopicData.status !== "APPROVED") {
+                updateStudentTicker(studentRegisteredTopicData ? studentRegisteredTopicData.status : "");
+            }
         } catch (error) {
             registrationWindowOpen = false;
+            currentRegistrationStatusData = null;
             if (registrationWindowNotice) {
                 registrationWindowNotice.hidden = false;
                 registrationWindowNotice.classList.add("is-closed");
@@ -293,6 +312,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             const option = document.createElement("option");
             option.value = "";
             option.textContent = "-- Vui lòng chọn Giảng viên hướng dẫn trước --";
+            proposedSelect.replaceChildren(option);
+            return;
+        }
+
+        if (selectedLecturerCode === "UNASSIGNED") {
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "-- Tự nhập tên đề tài dự kiến bên dưới --";
             proposedSelect.replaceChildren(option);
             return;
         }
@@ -390,7 +417,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             maxQuota: Number.isInteger(quota) && quota >= 0 ? quota : 5
                         };
                     });
-                    lecturerSelect.innerHTML = `<option value="">-- Chọn Giảng viên hướng dẫn --</option>` +
+                    lecturerSelect.innerHTML = `<option value="">-- Chọn Giảng viên hướng dẫn --</option><option value="UNASSIGNED">-- Chưa có GVHD (Nhờ Khoa phân công) --</option>` +
                         allLecturers.map(lecturer =>
                             `<option value="${lecturer.code}">${lecturer.name} (${lecturer.code})</option>`
                         ).join('');
@@ -585,6 +612,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     /**
      * Modal xem nhanh chi tiết đề tài
      */
+    /**
+     * Modal xem nhanh chi tiết đề tài (Thiết kế hiện đại, đồng bộ màu lĩnh vực)
+     */
     function showTopicDetailModal(topic) {
         let modal = document.getElementById("topicDetailModal");
         if (!modal) {
@@ -592,23 +622,49 @@ document.addEventListener("DOMContentLoaded", async () => {
             modal.id = "topicDetailModal";
             modal.className = "modal-overlay";
             modal.innerHTML = `
-                <div class="modal-box topic-detail-modal-box" style="width: min(560px, 94vw); text-align: left; padding: 26px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <span id="topicDetailCatChip" class="chip-cat" style="font-size: 13px;"></span>
-                        <button type="button" id="closeTopicDetailBtn" class="btn-cancel" style="width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; font-size: 18px; line-height: 1;" aria-label="Đóng">&times;</button>
+                <div class="modal-box topic-detail-modal-box">
+                    <div class="modal-top-accent"></div>
+                    <div class="modal-header-section">
+                        <div class="modal-header-left">
+                            <div id="modalCatIcon" class="modal-cat-icon"></div>
+                            <span id="topicDetailCatChip" class="modal-cat-chip"></span>
+                        </div>
+                        <button type="button" id="closeTopicDetailBtn" class="modal-close-btn" aria-label="Đóng">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
                     </div>
-                    <h3 id="topicDetailTitle" style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 12px; line-height: 1.45;"></h3>
-                    <div id="topicDetailLecturer" style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #475569; margin-bottom: 16px;"></div>
-                    <div style="margin-bottom: 14px;">
-                        <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Mô tả đề tài</div>
-                        <p id="topicDetailDesc" style="font-size: 14px; color: #334155; line-height: 1.6; white-space: pre-line; margin: 0;"></p>
+                    <div class="modal-body-content">
+                        <h3 id="topicDetailTitle" class="modal-topic-title"></h3>
+                        <div class="modal-lecturer-card">
+                            <div class="modal-lecturer-left">
+                                <span id="modalLecturerAvatar" class="modal-lecturer-avatar"></span>
+                                <div>
+                                    <div class="modal-lecturer-role">Giảng viên hướng dẫn</div>
+                                    <div id="modalLecturerName" class="modal-lecturer-name"></div>
+                                </div>
+                            </div>
+                            <span class="modal-slot-pill">
+                                <span class="modal-slot-dot"></span>
+                                <span id="modalSlotText">Đang mở đăng ký</span>
+                            </span>
+                        </div>
+                        <div class="modal-section">
+                            <div class="modal-section-title">
+                                <i class="fa-solid fa-align-left"></i> Mô tả chi tiết đề tài
+                            </div>
+                            <div id="topicDetailDesc" class="modal-section-box"></div>
+                        </div>
+                        <div id="topicDetailReqWrap" class="modal-section" style="display: none;">
+                            <div class="modal-section-title" style="color: #D97706;">
+                                <i class="fa-solid fa-list-check"></i> Yêu cầu đề tài
+                            </div>
+                            <div id="topicDetailReq" class="modal-section-box modal-section-req"></div>
+                        </div>
                     </div>
-                    <div id="topicDetailReqWrap" style="margin-bottom: 20px; display: none;">
-                        <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Yêu cầu đề tài</div>
-                        <p id="topicDetailReq" style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0;"></p>
-                    </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #F1F5F9; padding-top: 14px;">
-                        <button type="button" id="confirmCloseTopicDetailBtn" class="btn-cancel" style="flex: unset; padding: 8px 22px;">Đóng</button>
+                    <div class="modal-footer-section">
+                        <button type="button" id="confirmCloseTopicDetailBtn" class="btn-modal-close">
+                            <i class="fa-solid fa-check"></i> Đã hiểu &amp; Đóng
+                        </button>
                     </div>
                 </div>
             `;
@@ -620,16 +676,56 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
+        // 1. Phân loại lĩnh vực (Web, AI, Data, Khác) đồng bộ màu sắc
+        const rawCat = String(topic.category || "").toLowerCase();
+        let catKey = "other";
+        let catIcon = "fa-layer-group";
+        let catLabel = topic.category || "Lĩnh vực khác";
+
+        if (rawCat.includes("web") || rawCat.includes("ứng dụng") || rawCat.includes("app")) {
+            catKey = "web";
+            catIcon = "fa-globe";
+            catLabel = "Web / Ứng dụng";
+        } else if (rawCat.includes("ai") || rawCat.includes("ml") || rawCat.includes("trí tuệ") || rawCat.includes("máy")) {
+            catKey = "ai";
+            catIcon = "fa-microchip";
+            catLabel = "AI / ML";
+        } else if (rawCat.includes("dữ liệu") || rawCat.includes("data") || rawCat.includes("phân tích")) {
+            catKey = "data";
+            catIcon = "fa-chart-pie";
+            catLabel = "Dữ liệu / Phân tích";
+        }
+
+        const modalBox = modal.querySelector(".topic-detail-modal-box");
+        modalBox.className = `modal-box topic-detail-modal-box cat-${catKey}`;
+
+        modal.querySelector("#modalCatIcon").innerHTML = `<i class="fa-solid ${catIcon}"></i>`;
+        const catChipEl = modal.querySelector("#topicDetailCatChip");
+        catChipEl.textContent = "";
+        const iconI = document.createElement("i");
+        iconI.className = `fa-solid ${catIcon}`;
+        catChipEl.append(iconI, document.createTextNode(` ${catLabel}`));
         modal.querySelector("#topicDetailTitle").textContent = topic.title || "Chi tiết đề tài";
         modal.querySelector("#topicDetailDesc").textContent = topic.description || "Chưa có mô tả cho đề tài này.";
-        modal.querySelector("#topicDetailCatChip").textContent = topic.category || "Lĩnh vực khác";
 
-        const lecturerName = topic.lecturer_name || topic.lecturer_code || "Giảng viên";
+        const lecturerName = topic.lecturer_name || topic.lecturer_code || "Giảng viên hướng dẫn";
         const avatarLetter = (lecturerName.trim().charAt(0) || "G").toUpperCase();
-        modal.querySelector("#topicDetailLecturer").innerHTML = `
-            <span class="lecturer-avatar" style="width: 24px; height: 24px; border-radius: 50%; background: #E2E8F0; color: #1E293B; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">${avatarLetter}</span>
-            <span><strong>Giảng viên hướng dẫn:</strong> ${lecturerName}</span>
-        `;
+        modal.querySelector("#modalLecturerAvatar").textContent = avatarLetter;
+        modal.querySelector("#modalLecturerName").textContent = lecturerName;
+
+        // Slot hiển thị
+        let remSlots = 1;
+        if (typeof topic.open_slots === "number") {
+            remSlots = Number(topic.open_slots) || 0;
+        } else {
+            const regCount = Number(topic.registered_groups) || 0;
+            const totalSlots = Number(topic.max_groups) || 1;
+            remSlots = topic.remaining_groups !== undefined ? Number(topic.remaining_groups) : Math.max(0, totalSlots - regCount);
+        }
+        const slotTextEl = modal.querySelector("#modalSlotText");
+        if (slotTextEl) {
+            slotTextEl.textContent = remSlots > 0 ? `Còn ${remSlots} slot đăng ký` : "Đã đủ nhóm";
+        }
 
         const reqWrap = modal.querySelector("#topicDetailReqWrap");
         if (topic.requirements) {
@@ -968,7 +1064,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderGroupRecruitmentButton() {
+        const isApproved = studentRegisteredTopicData?.status === "APPROVED";
+        if (proposeOwnTopicBtn) {
+            proposeOwnTopicBtn.style.display = isApproved ? "none" : "";
+        }
         if (!groupRecruitmentBtn) return;
+        if (isApproved) {
+            groupRecruitmentBtn.style.display = "none";
+            return;
+        }
+        groupRecruitmentBtn.style.display = "";
+
         if (myRecruitmentOpen) {
             groupRecruitmentBtn.disabled = false;
             groupRecruitmentBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ngừng công khai nhóm';
@@ -1084,6 +1190,105 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 6. KIỂM TRA TRẠNG THÁI ĐĂNG KÝ ĐỀ TÀI CỦA SINH VIÊN
     // =========================================================================
+    /**
+     * Dải thông báo chữ chạy thích ứng theo trạng thái sinh viên (Hướng A)
+     */
+    function updateStudentTicker(status = "") {
+        const tickerBar = document.getElementById("studentTickerBar");
+        const tickerBadge = document.getElementById("tickerBadge");
+        const tickerContent = document.getElementById("tickerContent");
+        const tickerContentClone = document.getElementById("tickerContentClone");
+        if (!tickerBar || !tickerContent) return;
+
+        let barClass = "ticker-warning";
+        let badgeClass = "badge-warning";
+        let badgeLabel = "HỌC VỤ";
+        let iconClass = "fa-bullhorn";
+        let items = [];
+
+        const normalizedStatus = String(status || "").toUpperCase();
+
+        if (normalizedStatus === "APPROVED") {
+            barClass = "ticker-success";
+            badgeClass = "badge-success";
+            badgeLabel = "TIẾN ĐỘ";
+            iconClass = "fa-circle-check";
+            items = [
+                { icon: "fa-calendar-check", text: "Hãy vào mục 'Đề tài của tôi' để theo dõi các mốc nộp báo cáo và nhận điểm đánh giá." },
+                { icon: "fa-comments", text: "Chủ động liên hệ và cập nhật tiến độ định kỳ với Giảng viên hướng dẫn." },
+                { icon: "fa-file-lines", text: "Chuẩn bị đề cương và tài liệu báo cáo theo đúng biểu mẫu chuẩn của khoa." }
+            ];
+        } else if (["PENDING", "NEED_REVISION", "JOIN_ACCEPTED"].includes(normalizedStatus)) {
+            barClass = "ticker-info";
+            badgeClass = "badge-info";
+            badgeLabel = "ĐANG XỬ LÝ";
+            iconClass = "fa-clock";
+            items = [
+                { icon: "fa-paper-plane", text: "Đề tài của bạn đã được gửi thành công và đang chờ xét duyệt." },
+                { icon: "fa-comments", text: "Chủ động trao đổi với Giảng viên hướng dẫn để được hỗ trợ phê duyệt sớm." },
+                { icon: "fa-bell", text: "Thường xuyên kiểm tra thông báo và email để nhận phản hồi từ Hội đồng." },
+                { icon: "fa-pen", text: "Nếu có yêu cầu chỉnh sửa, bạn có thể cập nhật lại thông tin đề tài trực tiếp trên hệ thống." }
+            ];
+        } else {
+            barClass = "ticker-warning";
+            badgeClass = "badge-warning";
+            badgeLabel = "HỌC VỤ";
+            iconClass = "fa-bullhorn";
+
+            let timingItem = { icon: "fa-calendar-days", text: "Theo dõi thời hạn mở cổng đăng ký đề tài Thực tập Tốt nghiệp của học kỳ." };
+
+            if (currentRegistrationStatusData) {
+                if (currentRegistrationStatusData.is_open) {
+                    if (currentRegistrationStatusData.semester?.registration_end_date) {
+                        const endDate = new Date(currentRegistrationStatusData.semester.registration_end_date);
+                        const endFormat = currentRegistrationStatusData.semester.registration_window_has_time
+                            ? { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }
+                            : { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" };
+                        timingItem = { icon: "fa-clock", text: `Cổng đăng ký đề tài đang mở! Hạn cuối: ${endDate.toLocaleString("vi-VN", endFormat)}.` };
+                    } else {
+                        timingItem = { icon: "fa-clock", text: "Cổng đăng ký đề tài Thực tập Tốt nghiệp đang mở!" };
+                    }
+                } else if (currentRegistrationStatusData.state === "upcoming") {
+                    if (currentRegistrationStatusData.semester?.registration_start_date) {
+                        const startDate = new Date(currentRegistrationStatusData.semester.registration_start_date);
+                        const startFormat = currentRegistrationStatusData.semester.registration_window_has_time
+                            ? { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }
+                            : { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" };
+                        timingItem = { icon: "fa-calendar-days", text: `Cổng đăng ký đề tài chưa mở (Dự kiến mở vào: ${startDate.toLocaleString("vi-VN", startFormat)}). Bạn hãy tham khảo trước các đề tài!` };
+                    } else {
+                        timingItem = { icon: "fa-calendar-days", text: "Chưa đến thời gian mở cổng đăng ký đề tài. Bạn hãy tham khảo trước các đề tài!" };
+                    }
+                } else {
+                    timingItem = { icon: "fa-lock", text: "Hiện không trong thời hạn đăng ký đề tài Thực tập Tốt nghiệp." };
+                }
+            } else if (registrationWindowOpen) {
+                timingItem = { icon: "fa-clock", text: "Cổng đăng ký đề tài Thực tập Tốt nghiệp đang mở!" };
+            }
+
+            items = [
+                timingItem,
+                { icon: "fa-lightbulb", text: "Khám phá hơn 24 đề tài gợi ý từ Giảng viên hoặc Tự đề xuất đề tài mới của nhóm." },
+                { icon: "fa-thumbtack", text: "Nếu chưa có Giảng viên hướng dẫn, bạn có thể chọn 'Nhờ Khoa phân công' để Khoa sắp xếp GVHD." },
+                { icon: "fa-users", text: "Tìm thêm đồng đội nhanh chóng bằng cách bấm 'Công khai nhóm' hoặc xin vào các nhóm đang tuyển." }
+            ];
+        }
+
+        tickerBar.className = `student-ticker-bar ${barClass}`;
+        if (tickerBadge) {
+            tickerBadge.className = `ticker-badge ${badgeClass}`;
+            tickerBadge.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${escapeHtml(badgeLabel)}</span>`;
+        }
+
+        const htmlContent = items.map(item => 
+            `<span class="ticker-item"><i class="fa-solid ${escapeHtml(item.icon)}"></i><span>${escapeHtml(item.text)}</span></span><span class="ticker-separator">•</span>`
+        ).join("");
+
+        tickerContent.innerHTML = htmlContent;
+        if (tickerContentClone) {
+            tickerContentClone.innerHTML = htmlContent;
+        }
+    }
+
     function updateStepper(status) {
         // Đã xóa bỏ Stepper 3 bước để giao diện thoáng gọn hơn
     }
@@ -1100,6 +1305,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (formActionsBar) formActionsBar.style.display = "";
 
         updateStepper("");
+        updateStudentTicker("");
 
         if (statusEl) {
             statusEl.className = "status-text status-none";
@@ -1122,6 +1328,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             const span = submitBtn.querySelector("span");
             if (span) span.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Gửi Đăng Ký Đề Tài`;
         }
+        if (groupRecruitmentBtn) groupRecruitmentBtn.style.display = "";
+        if (proposeOwnTopicBtn) proposeOwnTopicBtn.style.display = "";
         hideMessage();
         loadRegistrationWindow();
         renderMarketplace();
@@ -1142,6 +1350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     // Cập nhật Stepper theo trạng thái thực tế
                     updateStepper(topic.status);
+                    updateStudentTicker(topic.status);
 
                     // Banner xanh nhạt phía trên danh sách: hiển thị tên đề tài thay vì mã đề tài
                     const registeredBanner = document.getElementById("registeredTopicBanner");
@@ -1164,6 +1373,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (groupMembersSection) groupMembersSection.style.display = isApproved ? "none" : "";
                     if (topicDetailsSection && isApproved) topicDetailsSection.style.display = "none";
                     if (formActionsBar) formActionsBar.style.display = isApproved ? "none" : "";
+                    if (groupRecruitmentBtn) groupRecruitmentBtn.style.display = isApproved ? "none" : "";
+                    if (proposeOwnTopicBtn) proposeOwnTopicBtn.style.display = isApproved ? "none" : "";
 
                     if (lecturerSelect) lecturerSelect.value = topic.lecturer_code || "";
                     renderProposedTopics(topic.lecturer_code || "");
@@ -1386,6 +1597,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Khởi tạo tải dữ liệu danh sách
+    updateStudentTicker("");
     await Promise.all([loadRegistrationWindow(), loadLecturers(), loadProposedTopics()]);
     await checkTopicStatus();
     await loadMarketplace();
@@ -1532,7 +1744,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             if (selectedRole === "LEADER" && !lecturerCode) {
-                showMessage("error", "Vui lòng chọn Giảng viên hướng dẫn!");
+                showMessage("error", "Vui lòng chọn Giảng viên hướng dẫn hoặc chọn 'Chưa có GVHD'!");
                 if (lecturerSelect) lecturerSelect.focus();
                 return;
             }
@@ -1562,7 +1774,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 member3_code: member3Code,
                 registration_role: selectedRole,
                 proposed_topic_id: proposedSelect ? proposedSelect.value : null,
-                lecturer_code: lecturerCode,
+                lecturer_code: (lecturerCode && lecturerCode !== "UNASSIGNED") ? lecturerCode : null,
                 title: title,
                 description: description
             };

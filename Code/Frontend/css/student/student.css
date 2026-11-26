@@ -1332,6 +1332,394 @@ body {
 }
 .btn-confirm:hover { background: #DC2626; }
 
+/* =========================================================================
+   TOPIC DETAIL MODAL (MODERN & VIBRANT)
+   ========================================================================= */
+.topic-detail-modal-box {
+    position: relative;
+    width: min(600px, 94vw) !important;
+    max-height: 88vh;
+    overflow-y: auto;
+    text-align: left !important;
+    padding: 0 !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.06);
+    background: #FFFFFF;
+    overflow: hidden;
+}
+
+.topic-detail-modal-box.cat-web {
+    --cat-color: #2563EB;
+    --cat-bg: #EFF6FF;
+    --cat-border: #93C5FD;
+    --cat-gradient: linear-gradient(135deg, #2563EB, #3B82F6);
+}
+.topic-detail-modal-box.cat-ai {
+    --cat-color: #7C3AED;
+    --cat-bg: #F5F3FF;
+    --cat-border: #C4B5FD;
+    --cat-gradient: linear-gradient(135deg, #7C3AED, #9333EA);
+}
+.topic-detail-modal-box.cat-data {
+    --cat-color: #D97706;
+    --cat-bg: #FFFBEB;
+    --cat-border: #FCD34D;
+    --cat-gradient: linear-gradient(135deg, #D97706, #F59E0B);
+}
+.topic-detail-modal-box.cat-other {
+    --cat-color: #0D9488;
+    --cat-bg: #F0FDFA;
+    --cat-border: #99F6E4;
+    --cat-gradient: linear-gradient(135deg, #0D9488, #14B8A6);
+}
+
+.modal-top-accent {
+    height: 6px;
+    background: var(--cat-gradient, linear-gradient(135deg, #2563EB, #3B82F6));
+    width: 100%;
+}
+
+.modal-header-section {
+    padding: 20px 24px 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-cat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--cat-bg, #EFF6FF);
+    color: var(--cat-color, #2563EB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: 1px solid var(--cat-border, #93C5FD);
+}
+
+.modal-cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: var(--cat-bg, #EFF6FF);
+    color: var(--cat-color, #2563EB);
+    border: 1px solid var(--cat-border, #93C5FD);
+}
+
+.modal-close-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    color: #64748B;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+.modal-close-btn:hover {
+    background: #EF4444;
+    color: #FFFFFF;
+    border-color: #EF4444;
+    transform: rotate(90deg);
+}
+
+.modal-body-content {
+    padding: 0 24px 20px 24px;
+}
+
+.modal-topic-title {
+    font-size: 19px !important;
+    font-weight: 800 !important;
+    color: #0F172A !important;
+    line-height: 1.45 !important;
+    margin: 0 0 16px 0 !important;
+    text-align: left !important;
+}
+
+.modal-lecturer-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    margin-bottom: 18px;
+}
+
+.modal-lecturer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-lecturer-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--cat-gradient, linear-gradient(135deg, #2563EB, #3B82F6));
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.modal-lecturer-role {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #64748B;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    text-align: left;
+}
+
+.modal-lecturer-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #1E293B;
+    text-align: left;
+}
+
+.modal-slot-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.modal-slot-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10B981;
+}
+
+.modal-section {
+    margin-bottom: 16px;
+}
+
+.modal-section-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: var(--cat-color, #2563EB) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-align: left !important;
+}
+
+.modal-section-box {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.65;
+    white-space: pre-line;
+    text-align: left;
+}
+
+.modal-section-req {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    color: #92400E;
+}
+
+.modal-footer-section {
+    padding: 14px 24px;
+    border-top: 1px solid #F1F5F9;
+    background: #FAFAFA;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-modal-close {
+    padding: 9px 24px;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-modal-close:hover {
+    background: #F1F5F9;
+    color: #1E293B;
+    border-color: #94A3B8;
+}
+
+/* =========================================================================
+   STUDENT NEWS TICKER BAR (HƯỚNG A)
+   ========================================================================= */
+.student-ticker-bar {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 7px 14px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    gap: 12px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.student-ticker-bar.ticker-warning {
+    background: linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 100%);
+    border-color: #FDE68A;
+}
+
+.student-ticker-bar.ticker-info {
+    background: linear-gradient(90deg, #EFF6FF 0%, #FFFFFF 100%);
+    border-color: #BFDBFE;
+}
+
+.student-ticker-bar.ticker-success {
+    background: linear-gradient(90deg, #ECFDF5 0%, #FFFFFF 100%);
+    border-color: #A7F3D0;
+}
+
+.ticker-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+    z-index: 2;
+}
+
+.ticker-badge.badge-warning {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: #FFFFFF;
+}
+
+.ticker-badge.badge-info {
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: #FFFFFF;
+}
+
+.ticker-badge.badge-success {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF;
+}
+
+.ticker-badge i {
+    font-size: 11px;
+}
+
+.ticker-track-wrapper {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    mask-image: linear-gradient(90deg, transparent 0%, black 2%, black 98%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 2%, black 98%, transparent 100%);
+    cursor: default;
+}
+
+.ticker-track {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: tickerLoop 36s linear infinite;
+    will-change: transform;
+}
+
+.ticker-track-wrapper:hover .ticker-track {
+    animation-play-state: paused;
+}
+
+.ticker-content {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    padding-right: 40px;
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 24px;
+    line-height: 1.4;
+}
+
+.ticker-item i {
+    font-size: 14px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.student-ticker-bar.ticker-warning .ticker-item i {
+    color: #D97706;
+}
+
+.student-ticker-bar.ticker-info .ticker-item i {
+    color: #2563EB;
+}
+
+.student-ticker-bar.ticker-success .ticker-item i {
+    color: #16A34A;
+}
+
+.ticker-separator {
+    color: #CBD5E1;
+    margin-right: 24px;
+    font-weight: 700;
+    user-select: none;
+}
+
+@keyframes tickerLoop {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
 /* 17. RESPONSIVE */
 @media (max-width: 900px) {
     .marketplace-toolbar { align-items: stretch; flex-direction: column; gap: 12px; }

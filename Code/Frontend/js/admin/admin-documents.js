@@ -651,13 +651,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ── LOGOUT ────────────────────────────────────────────────
+    const logoutModal = document.getElementById("logoutModal");
+    const cancelLogout = document.getElementById("cancelLogout");
+    const confirmLogout = document.getElementById("confirmLogout");
+
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
-            window.logoutSession();
+            if (logoutModal) logoutModal.style.display = "flex";
+        });
+    }
+    if (cancelLogout) {
+        cancelLogout.addEventListener("click", () => {
+            if (logoutModal) logoutModal.style.display = "none";
+        });
+    }
+    if (confirmLogout) {
+        confirmLogout.addEventListener("click", () => {
+            if (typeof window.logoutSession === "function") window.logoutSession();
             localStorage.removeItem("adminAuth");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
+            sessionStorage.clear();
             window.location.href = "../auth/index.html";
+        });
+    }
+    if (logoutModal) {
+        logoutModal.addEventListener("click", (e) => {
+            if (e.target === logoutModal) logoutModal.style.display = "none";
         });
     }
 

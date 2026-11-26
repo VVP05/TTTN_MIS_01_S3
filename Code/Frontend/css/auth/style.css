@@ -33,6 +33,7 @@ html {
 }
 
 body {
+    position: relative;
     width: 100%;
     min-height: 100dvh;
     margin: 0;
@@ -54,9 +55,142 @@ body {
 }
 
 /* =========================================================
+   CHIM BAY TRÊN NỀN ĐĂNG NHẬP
+   ========================================================= */
+.login-birds {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.login-bird {
+    position: absolute;
+    left: 0;
+    display: block;
+    will-change: transform;
+    animation-fill-mode: both;
+}
+
+.login-bird-svg {
+    display: block;
+    width: var(--bird-size);
+    height: auto;
+    fill: #2F68A8;
+    opacity: var(--bird-opacity, 0.7);
+    animation: birdFloat 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes birdFloat {
+    from { transform: translateY(-2px); }
+    to { transform: translateY(2px); }
+}
+
+.login-bird-wing {
+    transform-box: view-box;
+    transform-origin: 50% 66.67%;
+    will-change: transform;
+    animation-delay: var(--wing-delay, 0s);
+}
+
+.login-bird-body {
+    fill: #2F68A8;
+}
+
+.login-bird-wing-left {
+    animation: birdWingFlapLeft 0.75s ease-in-out infinite alternate;
+}
+
+.login-bird-wing-right {
+    animation: birdWingFlapRight 0.75s ease-in-out infinite alternate;
+}
+
+@keyframes birdWingFlapLeft {
+    from { transform: rotate(-12deg); }
+    to { transform: rotate(12deg); }
+}
+
+@keyframes birdWingFlapRight {
+    from { transform: rotate(12deg); }
+    to { transform: rotate(-12deg); }
+}
+
+.login-bird-1 {
+    top: 5%;
+    --bird-size: 40px;
+    --bird-opacity: 0.78;
+    --wing-delay: 0s;
+    animation: birdFly 44s linear 0s infinite alternate;
+}
+
+.login-bird-2 {
+    top: 18%;
+    --bird-size: 32px;
+    --bird-opacity: 0.7;
+    --wing-delay: -0.18s;
+    animation: birdFly 44s linear -12s infinite alternate;
+}
+
+.login-bird-3 {
+    top: 9%;
+    --bird-size: 27px;
+    --bird-opacity: 0.62;
+    --wing-delay: -0.36s;
+    animation: birdFly 44s linear -19s infinite alternate;
+}
+
+.login-bird-4 {
+    top: 27%;
+    --bird-size: 36px;
+    --bird-opacity: 0.74;
+    --wing-delay: -0.54s;
+    animation: birdFly 44s linear -65s infinite alternate;
+}
+
+.login-bird-5 {
+    top: 6%;
+    --bird-size: 30px;
+    --bird-opacity: 0.66;
+    --wing-delay: -0.09s;
+    animation: birdFly 44s linear -31s infinite alternate;
+}
+
+.login-bird-6 {
+    top: 22%;
+    --bird-size: 24px;
+    --bird-opacity: 0.58;
+    --wing-delay: -0.45s;
+    animation: birdFly 44s linear -4s infinite alternate;
+}
+
+.login-bird-7 {
+    top: 12%;
+    --bird-size: 34px;
+    --bird-opacity: 0.72;
+    --wing-delay: -0.27s;
+    animation: birdFly 44s linear -41s infinite alternate;
+}
+
+.login-bird-8 {
+    top: 25%;
+    --bird-size: 23px;
+    --bird-opacity: 0.6;
+    --wing-delay: -0.63s;
+    animation: birdFly 44s linear -23s infinite alternate;
+}
+
+@keyframes birdFly {
+    from { transform: translate3d(-50px, 0, 0); }
+    to { transform: translate3d(calc(100vw + 50px), 0, 0); }
+}
+
+/* =========================================================
    THẺ ĐĂNG NHẬP (GLASSMORPHISM CARD)
    ========================================================= */
 .auth-card {
+    position: relative;
+    z-index: 2;
     width: min(440px, 100%);
     margin: 0 auto;
     padding: 36px 32px 28px;
@@ -507,6 +641,19 @@ input[type="password"]::-ms-clear {
         padding: 16px;
     }
 
+    .login-bird-1 { top: 3%; }
+    .login-bird-2 { top: 16%; }
+    .login-bird-3 { top: 7%; }
+    .login-bird-4 { top: 21%; }
+    .login-bird-5 { top: 5%; }
+    .login-bird-6 { top: 18%; }
+    .login-bird-7 { top: 10%; }
+    .login-bird-8 { top: 23%; }
+
+    .login-bird-svg {
+        opacity: 0.62;
+    }
+
     .auth-card {
         width: 100%;
         margin: 0 auto;
@@ -540,4 +687,8 @@ input[type="password"]::-ms-clear {
     .fp-modal-box {
         padding: 24px 20px;
     }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-birds { display: none; }
 }

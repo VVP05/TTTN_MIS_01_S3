@@ -83,4 +83,40 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         mobileQuery.addListener(closeOnDesktop);
     }
+
+    // =========================================================================
+    // XỬ LÝ ĐỒNG BỘ MODAL ĐĂNG XUẤT CHO TOÀN BỘ TRANG ADMIN
+    // =========================================================================
+    const logoutModal = document.getElementById("logoutModal");
+    const openLogoutBtns = document.querySelectorAll("#logoutBtn, #openLogoutBtn");
+    const cancelLogoutBtns = document.querySelectorAll("#cancelLogoutBtn, #cancelLogout, .btn-cancel");
+    const confirmLogoutBtns = document.querySelectorAll("#confirmLogoutBtn, #confirmLogout, .btn-confirm");
+
+    openLogoutBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (logoutModal) logoutModal.style.display = "flex";
+        });
+    });
+
+    cancelLogoutBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (logoutModal) logoutModal.style.display = "none";
+        });
+    });
+
+    confirmLogoutBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (typeof window.logoutSession === "function") window.logoutSession();
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "../auth/index.html";
+        });
+    });
+
+    if (logoutModal) {
+        logoutModal.addEventListener("click", (e) => {
+            if (e.target === logoutModal) logoutModal.style.display = "none";
+        });
+    }
 });

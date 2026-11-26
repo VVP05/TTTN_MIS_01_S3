@@ -777,7 +777,7 @@ exports.getUserByCode = async (req, res) => {
     }
 };
 
-// Sinh viên tự cập nhật email và số điện thoại của tài khoản
+// Sinh viên tự cập nhật email và số điện thoại; lớp, ngành do Khoa/Quản trị quản lý
 exports.updateStudentProfile = async (req, res) => {
     try {
         const user_code = String(req.user?.user_code || '').trim();
@@ -785,7 +785,7 @@ exports.updateStudentProfile = async (req, res) => {
             user_code.toUpperCase() !== String(req.params.user_code || '').trim().toUpperCase()) {
             return res.status(403).json({ success: false, message: 'Bạn chỉ có thể cập nhật hồ sơ của mình.' });
         }
-        const { email, phone, class: studentClass, major } = req.body;
+        const { email, phone } = req.body;
         const student = await User.findOne({ user_code, role: 'STUDENT' });
 
         if (!student) {
@@ -797,8 +797,6 @@ exports.updateStudentProfile = async (req, res) => {
 
         student.email = email.trim();
         student.phone = (phone || '').trim();
-        student.class = (studentClass || '').trim();
-        student.major = (major || '').trim();
         await student.save();
 
         return res.status(200).json({

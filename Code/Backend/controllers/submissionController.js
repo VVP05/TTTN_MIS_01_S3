@@ -2,6 +2,7 @@ const Submission = require('../models/Submission');
 const Topic = require('../models/Topic');
 const mongoose = require('mongoose');
 const path = require('path');
+const { notifyTopicStudents } = require('../services/notificationService');
 
 function getStudentCodePattern(userCode) {
     const escaped = String(userCode || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -58,6 +59,14 @@ exports.reviewSubmission = async (req, res) => {
         }
         const reviewStatus = String(req.body.status || '').toUpperCase();
         const feedback = String(req.body.feedback || '').trim();
+        let grade = null;
+        if (req.body.grade !== undefined && req.body.grade !== null && req.body.grade !== '') {
+            const parsedGrade = Number(req.body.grade);
+            if (Number.isNaN(parsedGrade) || parsedGrade < 0 || parsedGrade > 10) {
+                return res.status(400).json({ success: false, message: 'Điểm số không hợp lệ! Vui lòng nhập số từ 0 đến 10.' });
+            }
+            grade = Math.round(parsedGrade * 10) / 10; // Làm tròn 1 chữ số thập phân
+        }
         if (!['APPROVED', 'REVISION_REQUESTED'].includes(reviewStatus)) {
             return res.status(400).json({ success: false, message: 'Trạng thái nhận xét không hợp lệ.' });
         }
@@ -78,7 +87,7 @@ exports.reviewSubmission = async (req, res) => {
         const topic = await Topic.findOne({
             _id: submission.topic_id,
             lecturer_code: getStudentCodePattern(req.user?.user_code)
-        }).select('_id');
+        }).select('_id title leader_code member2_code member3_code');
         if (!topic) {
             return res.status(403).json({ success: false, message: 'Bạn không được phân công hướng dẫn đề tài này.' });
         }
@@ -93,6 +102,7 @@ exports.reviewSubmission = async (req, res) => {
                 $set: {
                     review_status: reviewStatus,
                     feedback,
+                    grade,
                     reviewed_by: req.user.user_code,
                     reviewed_at: new Date()
                 }
@@ -102,6 +112,31 @@ exports.reviewSubmission = async (req, res) => {
         if (!reviewedSubmission) {
             return res.status(409).json({ success: false, message: 'Bài nộp này vừa được xử lý. Vui lòng tải lại trang.' });
         }
+
+        // Gửi thông báo đến toàn bộ thành viên nhóm đề tài
+        try {
+            const milestoneLabel = `Mốc ${reviewedSubmission.milestone || ''}`.trim();
+            const gradeText = (grade !== null && grade !== undefined) ? ` [Điểm: ${grade}/10]` : '';
+            const notiTitle = reviewStatus === 'APPROVED'
+                ? `Bài nộp ${milestoneLabel} đã được duyệt${gradeText}`
+                : `Yêu cầu nộp lại bài ${milestoneLabel}`;
+            const notiContent = reviewStatus === 'APPROVED'
+                ? `Giảng viên đã duyệt bài nộp ${milestoneLabel} của đề tài.${gradeText}${feedback ? ` Nhận xét: "${feedback}"` : ''}`
+                : `Giảng viên yêu cầu nộp lại bài ${milestoneLabel}.${feedback ? ` Nhận xét: "${feedback}"` : ''}`;
+
+            const eventKey = `submission-review:${reviewedSubmission._id}:${reviewStatus}:${Date.now()}`;
+            await notifyTopicStudents(topic, {
+                title: notiTitle,
+                content: notiContent,
+                eventKey: eventKey,
+                priority: reviewStatus === 'APPROVED' ? 'info' : 'warning',
+                type: 'LECTURER',
+                senderName: req.user?.full_name || 'Giảng viên hướng dẫn'
+            });
+        } catch (notiErr) {
+            console.error('Lỗi gửi thông báo cho sinh viên khi review bài nộp:', notiErr);
+        }
+
         return res.json({ success: true, message: reviewStatus === 'APPROVED' ? 'Đã duyệt bài nộp.' : 'Đã gửi yêu cầu nộp lại.', data: reviewedSubmission });
     } catch (error) {
         console.error('Lỗi nhận xét bài nộp:', error);
@@ -152,6 +187,13 @@ exports.downloadTopicSubmissionFile = async (req, res) => {
         if (!filePath.startsWith(`${uploadRoot}${path.sep}`)) {
             return res.status(400).json({ success: false, message: 'Đường dẫn tệp không hợp lệ.' });
         }
+
+        const ext = path.extname(filename).toLowerCase();
+        if (ext === '.pdf') {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline; filename="' + encodeURIComponent(path.basename(submission.file_path || filename)) + '"');
+        }
+
         return res.sendFile(filePath, error => {
             if (error && !res.headersSent) {
                 res.status(error.statusCode || 404).json({ success: false, message: 'Không thể tải tệp báo cáo.' });

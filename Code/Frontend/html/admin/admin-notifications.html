@@ -455,18 +455,14 @@
     </div>
 
     <!-- MODAL ĐĂNG XUẤT -->
-    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
-        <div class="modal-card modal-sm text-center">
-            <div class="modal-danger-icon">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            </div>
-            <h3 class="modal-title" id="logoutModalTitle" style="margin-bottom: 8px;">Xác nhận đăng xuất</h3>
-            <p style="font-size: 14px; color: var(--text-muted);">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
-            <div class="modal-foot" style="justify-content: center; margin-top: 20px;">
-                <button type="button" class="btn-action btn-action-outline" id="cancelLogout">Hủy</button>
-                <button type="button" class="btn-action btn-action-danger" id="confirmLogout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
-                </button>
+    <div id="logoutModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3 id="logoutModalTitle">Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogout" class="btn-cancel" type="button">Hủy bỏ</button>
+                <button id="confirmLogout" class="btn-confirm" type="button">Đăng xuất</button>
             </div>
         </div>
     </div>

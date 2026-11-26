@@ -112,6 +112,10 @@ body {
     gap: 12px;
 }
 
+.page-header-actions [hidden] {
+    display: none !important;
+}
+
 /* BUTTONS */
 .btn-primary {
     height: 42px;
@@ -156,6 +160,18 @@ body {
     border-color: #CBD5E1;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#openTopicImportBtn {
+    background-color: #F0FDF4;
+    color: #15803D;
+    border-color: #BBF7D0;
+}
+
+#openTopicImportBtn:hover {
+    background-color: #DCFCE7;
+    border-color: #86EFAC;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
 }
 
 /* =========================================================

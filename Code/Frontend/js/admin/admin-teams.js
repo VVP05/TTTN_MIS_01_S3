@@ -657,6 +657,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
     }
 
+    // Export Grades
+    const exportGradesBtn = document.getElementById("exportGradesBtn");
+    if (exportGradesBtn) {
+        exportGradesBtn.addEventListener("click", async () => {
+            const originalHtml = exportGradesBtn.innerHTML;
+            exportGradesBtn.disabled = true;
+            exportGradesBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xuất...';
+            try {
+                const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/auth/grades/export`);
+                if (!response.ok) {
+                    const result = await response.json().catch(() => ({}));
+                    throw new Error(result.message || "Không thể xuất bảng điểm.");
+                }
+
+                const blob = await response.blob();
+                if (!blob.size) throw new Error("File Excel tải về đang trống.");
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `bang-diem-tong-ket-${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showAppNotification("Đã xuất bảng điểm tổng kết Excel thành công!");
+            } catch (error) {
+                console.error("Lỗi xuất bảng điểm:", error);
+                showAppNotification(error.message || "Không thể xuất bảng điểm.");
+            } finally {
+                exportGradesBtn.disabled = false;
+                exportGradesBtn.innerHTML = originalHtml;
+            }
+        });
+    }
+
     // Modal close
     if (closeAssignModal) closeAssignModal.onclick = () => assignModal.style.display = "none";
     if (cancelAssignBtn)  cancelAssignBtn.onclick  = () => assignModal.style.display = "none";

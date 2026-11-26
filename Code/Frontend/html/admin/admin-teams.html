@@ -133,7 +133,12 @@
                         <h1 class="page-title">Quản lý nhóm &amp; phân công GVHD</h1>
                         <p class="page-desc">Quản lý danh sách nhóm thực tập, đề tài và phân công Giảng viên hướng dẫn.</p>
                     </div>
-                    <div class="page-header-right">
+                    <div class="page-header-right" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn-action btn-action-outline" id="exportGradesBtn"
+                            title="Xuất bảng điểm toàn bộ sinh viên và đề tài ra file Excel" aria-label="Xuất bảng điểm Excel">
+                            <i class="fa-solid fa-file-excel" style="color: #10B981;"></i>
+                            Xuất bảng điểm Excel
+                        </button>
                         <button class="btn-action btn-action-primary" id="bulkAssignBtn" disabled
                             title="Chọn ít nhất một nhóm" aria-label="Phân công hàng loạt">
                             <i class="fa-solid fa-user-plus"></i>
@@ -360,18 +365,14 @@
     </div>
 
     <!-- MODAL ĐĂNG XUẤT -->
-    <div id="logoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
-        <div class="modal-card modal-sm text-center">
-            <div class="modal-danger-icon">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            </div>
-            <h3 class="modal-title" id="logoutModalTitle" style="margin-bottom:8px;">Xác nhận đăng xuất</h3>
-            <p style="font-size:14px;color:var(--text-muted);">Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên?</p>
-            <div class="modal-foot" style="justify-content:center; margin-top:20px;">
-                <button class="btn-action btn-action-outline" id="cancelLogout">Hủy</button>
-                <button class="btn-action btn-action-danger" id="confirmLogout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
-                </button>
+    <div id="logoutModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3 id="logoutModalTitle">Xác nhận đăng xuất</h3>
+            <p>Bạn có chắc chắn muốn thoát khỏi phiên Quản trị viên không?</p>
+            <div class="modal-actions">
+                <button id="cancelLogout" class="btn-cancel" type="button">Hủy bỏ</button>
+                <button id="confirmLogout" class="btn-confirm" type="button">Đăng xuất</button>
             </div>
         </div>
     </div>

@@ -82,6 +82,7 @@ router.put('/lecturers/:user_code', authMiddleware, requireRole('ADMIN'), update
 router.put('/lecturers/:user_code/profile', authMiddleware, requireRole('LECTURER'), requireSelfCode, updateLecturerProfile);
 router.delete('/lecturers/:user_code', authMiddleware, requireRole('ADMIN'), deleteLecturer);
 router.get('/students/export', authMiddleware, requireRole('ADMIN'), userExportController.exportStudents);
+router.get('/grades/export', authMiddleware, requireRole('ADMIN'), userExportController.exportFinalGrades);
 router.get('/students', authMiddleware, requireRole('ADMIN'), getStudents);
 router.post('/students', authMiddleware, requireRole('ADMIN'), createStudent);
 router.put('/students/:user_code', authMiddleware, requireRole('ADMIN'), updateStudent);

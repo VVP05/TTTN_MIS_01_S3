@@ -63,9 +63,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const openTopicImportBtn = document.getElementById("openTopicImportBtn");
 
     const updateCreateButtonVisibility = activeTab => {
-        // Luôn hiển thị nút để giảng viên thao tác nhanh, nếu nhấn từ tab khác sẽ tự mở modal/tab kho
-        if (openCreateModalBtn) openCreateModalBtn.hidden = false;
-        if (openTopicImportBtn) openTopicImportBtn.hidden = false;
+        const showPoolActions = activeTab === "my-topics";
+        if (openCreateModalBtn) openCreateModalBtn.hidden = !showPoolActions;
+        if (openTopicImportBtn) openTopicImportBtn.hidden = !showPoolActions;
     };
 
     updateCreateButtonVisibility(document.querySelector(".tab-btn.active")?.dataset.tab);

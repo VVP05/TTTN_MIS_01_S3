@@ -757,16 +757,51 @@ body {
     text-align: center; font-size: 12px; color: #94a3b8; margin-top: 30px;
 }
 
-/* MODAL */
+/* MODAL ĐỒNG BỘ CHO TOÀN BỘ TRANG ADMIN */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: none; justify-content: center; align-items: center; z-index: 9999;
+    animation: adminFadeIn 0.2s ease;
 }
-.modal-box {
-    background: #fff; padding: 28px; border-radius: 16px; width: 380px; text-align: center;
+.modal-box, .modal-card.modal-sm {
+    background: #ffffff; padding: 28px 24px; border-radius: 18px; width: 380px; max-width: 90vw; text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: adminScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
 }
-.modal-icon { font-size: 36px; color: #ef4444; margin-bottom: 10px; }
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.btn-cancel { flex: 1; padding: 10px; background: #f1f5f9; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-.btn-confirm { flex: 1; padding: 10px; background: #ef4444; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.modal-box .modal-icon, .modal-icon-red, .modal-danger-icon {
+    width: 64px; height: 64px; margin: 0 auto 16px;
+    background: #FEF2F2; color: #EF4444; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+}
+.modal-box h3, .modal-card h3 {
+    font-size: 19px; font-weight: 700; color: #0F172A; margin: 0 0 8px 0;
+}
+.modal-box p, .modal-card p {
+    font-size: 14px; color: #64748B; margin: 0 0 24px 0; line-height: 1.5;
+}
+.modal-actions, .modal-foot {
+    display: flex; gap: 12px; justify-content: center; margin-top: 0;
+}
+.btn-cancel, .btn-action.btn-action-outline, .btn.btn-outline {
+    flex: 1; padding: 11px 16px; background: #F1F5F9; color: #475569;
+    border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: 14px; transition: all 0.2s ease;
+}
+.btn-cancel:hover, .btn-action.btn-action-outline:hover, .btn.btn-outline:hover {
+    background: #E2E8F0; color: #1E293B;
+}
+.btn-confirm, .btn-action.btn-action-danger, .btn.btn-danger {
+    flex: 1; padding: 11px 16px; background: #EF4444; color: #FFFFFF;
+    border: none; border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: 14px; transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+.btn-confirm:hover, .btn-action.btn-action-danger:hover, .btn.btn-danger:hover {
+    background: #DC2626; box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+@keyframes adminFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes adminScaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }

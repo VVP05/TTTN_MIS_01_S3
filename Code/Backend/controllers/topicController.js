@@ -164,6 +164,7 @@ async function removeUploadedReportFile(filePath) {
 exports.registerTopic = async (req, res) => {
     try {
         let { lecturer_code, title, description, category } = req.body;
+        if (lecturer_code === 'UNASSIGNED') lecturer_code = null;
         const { registration_role } = req.body;
         const selectedPoolTopicId = String(req.body.proposed_topic_id || req.body.pool_topic_id || '').trim();
         const normalizeCode = (code) => {
@@ -461,12 +462,14 @@ exports.registerTopic = async (req, res) => {
             });
         }
 
-        const alreadyUsesLecturerQuota = existingTopic &&
-            activeTopicStatuses.includes(existingTopic.status) &&
-            String(existingTopic.lecturer_code || '').trim().toUpperCase() ===
-                String(lecturer_code || '').trim().toUpperCase();
-        if (!alreadyUsesLecturerQuota &&
-            !await ensureLecturerHasCapacity(res, lecturer_code, existingTopic?._id)) return;
+        if (lecturer_code) {
+            const alreadyUsesLecturerQuota = existingTopic &&
+                activeTopicStatuses.includes(existingTopic.status) &&
+                String(existingTopic.lecturer_code || '').trim().toUpperCase() ===
+                    String(lecturer_code || '').trim().toUpperCase();
+            if (!alreadyUsesLecturerQuota &&
+                !await ensureLecturerHasCapacity(res, lecturer_code, existingTopic?._id)) return;
+        }
 
         if (existingTopic) {
             if (existingTopic.status === 'APPROVED') {
@@ -495,7 +498,7 @@ exports.registerTopic = async (req, res) => {
 
             existingTopic.member2_code = member2_code || null;
             existingTopic.member3_code = member3_code || null;
-            existingTopic.lecturer_code = lecturer_code;
+            existingTopic.lecturer_code = lecturer_code || null;
             existingTopic.title = title;
             existingTopic.description = description;
             existingTopic.category = category || existingTopic.category || 'Web / Ứng dụng';
@@ -558,7 +561,7 @@ exports.registerTopic = async (req, res) => {
             leader_code,
             member2_code: finalMemberCodes[0],
             member3_code: finalMemberCodes[1],
-            lecturer_code,
+            lecturer_code: lecturer_code || null,
             title,
             description,
             category: category || 'Web / Ứng dụng',

@@ -63,11 +63,37 @@ const storage = multer.diskStorage({
     }
 });
 
+const ALLOWED_MILESTONE_EXTENSIONS = ['.pdf', '.doc', '.docx', '.zip', '.rar', '.7z', '.ppt', '.pptx'];
+
+const milestoneFileFilter = (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!ALLOWED_MILESTONE_EXTENSIONS.includes(ext)) {
+        return cb(new Error('Định dạng tệp không được hỗ trợ! Chỉ chấp nhận: PDF, Word (.doc, .docx), Nén (.zip, .rar, .7z), PowerPoint (.ppt, .pptx).'), false);
+    }
+    cb(null, true);
+};
+
 const upload = multer({ 
     storage: storage,
     limits: { fileSize: 25 * 1024 * 1024 }, // Giới hạn 25MB
+    fileFilter: milestoneFileFilter,
     defParamCharset: 'utf8'
 });
+
+const handleMilestoneUpload = (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            if (err instanceof multer.MulterError) {
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return res.status(400).json({ success: false, message: 'Dung lượng tệp vượt quá giới hạn cho phép (tối đa 25MB).' });
+                }
+                return res.status(400).json({ success: false, message: `Lỗi tải tệp: ${err.message}` });
+            }
+            return res.status(400).json({ success: false, message: err.message });
+        }
+        next();
+    });
+};
 
 // Import ĐẦY ĐỦ các hàm từ topicController
 const { 
@@ -160,8 +186,8 @@ router.delete('/delete/:topic_id', authMiddleware, requireStudentRole, cancelTop
 router.delete('/:topic_id/milestone/:mIndex/submission', authMiddleware, requireStudentRole, deleteMilestoneSubmission);
 router.post('/:topic_id/milestone/:mIndex/submit', authMiddleware, requireStudentRole, submitMilestoneDraft);
 router.post('/:topic_id/milestone/:mIndex/withdraw', authMiddleware, requireStudentRole, withdrawMilestoneSubmission);
-router.post('/:topic_id/upload-milestone/:mIndex', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
-router.post('/:topic_id/upload-milestone', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
+router.post('/:topic_id/upload-milestone/:mIndex', authMiddleware, requireStudentRole, handleMilestoneUpload, uploadMilestone);
+router.post('/:topic_id/upload-milestone', authMiddleware, requireStudentRole, handleMilestoneUpload, uploadMilestone);
 
 
 // ==========================================

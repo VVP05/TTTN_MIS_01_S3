@@ -40,16 +40,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!link) return;
         event.preventDefault();
         try {
+            const fileName = link.dataset.fileName || "bao-cao";
+            const isPdf = /\.pdf$/i.test(fileName);
             const response = await apiFetch(link.href, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!response.ok) throw new Error("Không thể tải tệp báo cáo.");
-            const fileUrl = URL.createObjectURL(await response.blob());
-            const downloadLink = document.createElement("a");
-            downloadLink.href = fileUrl;
-            downloadLink.download = link.dataset.fileName || "bao-cao";
-            downloadLink.click();
-            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+            const blob = await response.blob();
+            const fileBlob = isPdf ? new Blob([blob], { type: "application/pdf" }) : blob;
+            const fileUrl = URL.createObjectURL(fileBlob);
+
+            if (isPdf) {
+                // Với file PDF: Mở tab mới để xem trực tiếp
+                window.open(fileUrl, "_blank");
+                window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60000);
+            } else {
+                // Với các file khác (.docx, .zip,...): Tự động tải về máy
+                const downloadLink = document.createElement("a");
+                downloadLink.href = fileUrl;
+                downloadLink.download = fileName;
+                downloadLink.click();
+                window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+            }
         } catch (error) {
             showAppNotification(error.message || "Không thể tải tệp báo cáo.");
         }
@@ -573,11 +585,17 @@ function renderMilestoneSubmissionHistory(step) {
             const fileUrl = storedName ? `${window.APP_CONFIG.API_BASE_URL}/api/submissions/file/${encodeURIComponent(storedName)}` : "";
             const status = getSubmissionReviewStatus(item);
             const feedback = String(item.feedback || "").trim();
+            const grade = (item.grade !== undefined && item.grade !== null) ? Number(item.grade) : null;
             const submittedAt = item.submitted_at || item.createdAt;
             return `<li>
                 <div class="history-submission-heading">
-                    <strong>${item.is_draft ? "Bản nháp" : `Lần nộp ${Number(item.attempt) || index + 1}`}</strong>
-                    <span class="history-status ${status.toLowerCase()}">${escapeHtml(getSubmissionStatusLabel(status))}</span>
+                    <div class="history-heading-left">
+                        <strong>${item.is_draft ? "Bản nháp" : `Lần nộp ${Number(item.attempt) || index + 1}`}</strong>
+                    </div>
+                    <div class="history-heading-right" style="display: flex; align-items: center; gap: 8px;">
+                        <span class="history-status ${status.toLowerCase()}">${escapeHtml(getSubmissionStatusLabel(status))}</span>
+                        ${grade !== null ? `<span class="history-grade-pill" style="font-weight: 700; color: #D97706; background: #FEF3C7; padding: 2px 8px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center;">Điểm: ${grade}/10</span>` : ""}
+                    </div>
                 </div>
                 <small>${submittedAt ? escapeHtml(new Date(submittedAt).toLocaleString("vi-VN")) : "Chưa có thời gian nộp"}</small>
                 <a class="protected-submission-file" href="${escapeHtml(fileUrl || "#")}" data-file-name="${escapeHtml(fileName)}">${escapeHtml(fileName)}</a>
@@ -594,7 +612,8 @@ function renderSubmissionStatusTable(milestone, {
     fileInfo = null,
     timeStr = "",
     reviewStatus = "",
-    feedback = ""
+    feedback = "",
+    grade = null
 } = {}) {
     const remainingMs = new Date(milestone?.endDate).getTime() - Date.now();
     const remainingSeconds = Math.floor(Math.abs(remainingMs) / 1000);
@@ -717,7 +736,8 @@ function renderMilestonesWorkflow(topicData) {
             submittedAt: submission.submitted_at || submission.createdAt,
             isDraft: Boolean(submission.is_draft),
             review_status: getSubmissionReviewStatus(submission),
-            feedback: submission.feedback || ""
+            feedback: submission.feedback || "",
+            grade: (submission.grade !== undefined && submission.grade !== null) ? submission.grade : null
         } : topicData[`milestone${step}_file`] || (topicData.milestones && topicData.milestones[step - 1]);
 
         if (mFile && (mFile.name || mFile.original_name || mFile.filename)) {
@@ -876,7 +896,8 @@ function setMilestoneCompleted(mIndex, fileName, timeStr, fileInfo, milestone) {
             fileInfo,
             timeStr,
             reviewStatus: "APPROVED",
-            feedback: fileInfo?.feedback || ""
+            feedback: fileInfo?.feedback || "",
+            grade: fileInfo?.grade
         });
 
         document.getElementById(`editSubmissionM${mIndex}`)?.addEventListener("click", () => {
@@ -940,7 +961,8 @@ function setMilestoneUnderReview(mIndex, fileName, timeStr, fileInfo, milestone)
                 fileInfo,
                 timeStr,
                 reviewStatus: "PENDING_REVIEW",
-                feedback: fileInfo?.feedback || ""
+                feedback: fileInfo?.feedback || "",
+                grade: fileInfo?.grade
             })}`;
 
         document.getElementById(`replaceSubmissionM${mIndex}`)?.addEventListener("click", () => {
@@ -1031,7 +1053,8 @@ function setMilestoneRevisionRequested(mIndex, fileName, timeStr, fileInfo, mile
             fileInfo,
             timeStr,
             reviewStatus: "REVISION_REQUESTED",
-            feedback: fileInfo?.feedback || ""
+            feedback: fileInfo?.feedback || "",
+            grade: fileInfo?.grade
         })}`;
 
     document.getElementById(`resubmitM${mIndex}`)?.addEventListener("click", () => {
@@ -1540,6 +1563,26 @@ function initUploadEvents(mIndex) {
     function handleFiles(files) {
         if (!files || files.length === 0) return;
         const file = files[0];
+        const allowedExtensions = ["pdf", "doc", "docx", "zip", "rar", "7z", "ppt", "pptx"];
+        const ext = (file.name || "").split(".").pop().toLowerCase();
+
+        if (!allowedExtensions.includes(ext)) {
+            showAppNotification("Định dạng tệp không được hỗ trợ! Vui lòng chọn tệp PDF, Word, PowerPoint hoặc file nén (ZIP, RAR, 7z).", "error");
+            fileInput.value = "";
+            delete pendingMilestoneFiles[mIndex];
+            if (previewBox) {
+                previewBox.innerHTML = "";
+                previewBox.style.display = "none";
+            }
+            if (promptBox) promptBox.style.display = "flex";
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.style.opacity = "0.5";
+                btnSubmit.style.cursor = "not-allowed";
+            }
+            return;
+        }
+
         if (file.size > 25 * 1024 * 1024) {
             showAppNotification("File vượt quá kích thước tối đa 25MB!", "error");
             fileInput.value = "";

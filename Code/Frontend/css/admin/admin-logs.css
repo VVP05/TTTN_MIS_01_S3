@@ -531,13 +531,16 @@
 
 /* Cột vai trò */
 .role-pill {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 3px 10px;
     border-radius: 20px;
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.02em;
     text-align: center;
+    white-space: nowrap;
 }
 
 .role-pill.role-admin {

@@ -50,23 +50,17 @@ const seedData = async () => {
         await assertCollectionsEmpty(seedCollections);
         console.log('✅ Các collection liên quan đang trống.');
 
-        // 2. KHỞI TẠO TÀI KHOẢN MẪU
+        // 2. KHỞI TẠO TÀI KHOẢN ADMIN
+        const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+        if (!adminPassword) {
+            throw new Error('Thiếu biến ADMIN_DEFAULT_PASSWORD trong file .env');
+        }
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('123456', salt);
+        const hashedPassword = await bcrypt.hash(adminPassword, salt);
 
+        // Chỉ tạo tài khoản Admin duy nhất — GV & SV sẽ được Admin import từ file Excel sau khi deploy
         const users = [
-            { user_code: 'ADMIN01', password: hashedPassword, full_name: 'Quản Trị Viên', role: 'ADMIN', email: 'admin01@tttn.edu.vn' },
-            { user_code: 'GV01', password: hashedPassword, full_name: 'TS. Nguyễn Văn An', role: 'LECTURER', max_quota: 5, email: 'gv01@tttn.edu.vn' },
-            { user_code: 'GV02', password: hashedPassword, full_name: 'TS. Lê Thị Bình', role: 'LECTURER', max_quota: 5, email: 'gv02@tttn.edu.vn' },
-            { user_code: 'GV03', password: hashedPassword, full_name: 'TS. Trần Thị Ngọc', role: 'LECTURER', max_quota: 5, email: 'gv03@tttn.edu.vn' },
-            { user_code: 'SV01', password: hashedPassword, full_name: 'Trần Văn Bảo', role: 'STUDENT', email: 'sv01@tttn.edu.vn' },
-            { user_code: 'SV02', password: hashedPassword, full_name: 'Trần Văn Khải', role: 'STUDENT', email: 'sv02@tttn.edu.vn' },
-            { user_code: 'SV03', password: hashedPassword, full_name: 'Nguyễn Thị Chung', role: 'STUDENT', email: 'sv03@tttn.edu.vn' },
-            { user_code: 'SV04', password: hashedPassword, full_name: 'Võ Văn Phụng', role: 'STUDENT', email: 'sv04@tttn.edu.vn' },
-            { user_code: 'SV05', password: hashedPassword, full_name: 'Võ Văn Huy', role: 'STUDENT', email: 'sv05@tttn.edu.vn' },
-            { user_code: 'SV06', password: hashedPassword, full_name: 'Nguyễn Văn Hoàng', role: 'STUDENT', email: 'sv06@tttn.edu.vn' },
-            { user_code: 'SV07', password: hashedPassword, full_name: 'Nguyễn Minh Hoàng', role: 'STUDENT', email: 'sv07@tttn.edu.vn' },
-             { user_code: 'SV08', password: hashedPassword, full_name: 'Võ Văn Hoàng', role: 'STUDENT', email: 'sv08@tttn.edu.vn' },
+            { user_code: 'ADMIN01', password: hashedPassword, full_name: 'Quản Trị Viên', role: 'ADMIN', email: 'vovanphung20112005@gmail.com' },
         ];
 
         await User.insertMany(users.map(user => ({ ...user, must_change_password: true })));

@@ -214,16 +214,28 @@ function renderSubmissions(submissions) {
         event.preventDefault();
         const auth = getLecturerAuth();
         try {
+            const fileName = link.dataset.fileName || 'bao-cao';
+            const isPdf = /\.pdf$/i.test(fileName);
             const response = await apiFetch(link.href, {
                 headers: { Authorization: `Bearer ${auth?.token || ''}` }
             });
             if (!response.ok) throw new Error('Không thể tải tệp báo cáo.');
-            const fileUrl = URL.createObjectURL(await response.blob());
-            const downloadLink = document.createElement('a');
-            downloadLink.href = fileUrl;
-            downloadLink.download = link.dataset.fileName || 'bao-cao';
-            downloadLink.click();
-            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+            const blob = await response.blob();
+            const fileBlob = isPdf ? new Blob([blob], { type: 'application/pdf' }) : blob;
+            const fileUrl = URL.createObjectURL(fileBlob);
+
+            if (isPdf) {
+                // Với file PDF: Mở tab mới để xem trực tiếp
+                window.open(fileUrl, '_blank');
+                window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60000);
+            } else {
+                // Với các file khác (.docx, .zip,...): Tự động tải về máy
+                const downloadLink = document.createElement('a');
+                downloadLink.href = fileUrl;
+                downloadLink.download = fileName;
+                downloadLink.click();
+                window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+            }
         } catch (error) {
             showAppNotification(error.message || 'Không thể tải tệp báo cáo.', 'error');
         }
@@ -263,7 +275,10 @@ function renderSubmissions(submissions) {
             pillHtml = '<span class="status-pill pill-gray"><i class="fa-solid fa-clock-rotate-left"></i> Đã thay thế</span>';
         }
 
-        const isReviewed = Boolean(submission.feedback) || status === 'APPROVED' || status === 'REVISION_REQUESTED';
+        const isReviewed = Boolean(submission.feedback) || Boolean(submission.grade !== undefined && submission.grade !== null) || status === 'APPROVED' || status === 'REVISION_REQUESTED';
+        const gradeDisplay = (submission.grade !== undefined && submission.grade !== null)
+            ? `<span class="submission-grade-badge">Điểm: <strong>${submission.grade}</strong>/10</span>`
+            : '';
 
         const bubbleHtml = isReviewed ? `
             <div class="submission-feedback-bubble-wrap" id="feedbackBubble_${submission._id}">
@@ -275,6 +290,7 @@ function renderSubmissions(submissions) {
                         <div class="feedback-bubble-author">
                             <strong>${escapeHtml(lecturerName)}</strong>
                             <span class="feedback-time"><i class="fa-regular fa-clock"></i> ${formatDateTime(submission.reviewed_at || submission.updatedAt)}</span>
+                            ${gradeDisplay}
                         </div>
                         <button type="button" class="btn-edit-feedback" data-submission-id="${escapeHtml(submission._id)}">
                             <i class="fa-solid fa-pen"></i> Sửa nhận xét
@@ -300,14 +316,28 @@ function renderSubmissions(submissions) {
                         <i class="fa-solid fa-circle-exclamation"></i> Vui lòng nhập nhận xét trước khi yêu cầu sinh viên nộp lại.
                     </div>
                 </div>
-                <div class="review-buttons-row">
-                    ${isReviewed ? `<button type="button" class="btn-cancel-edit-feedback" data-submission-id="${escapeHtml(submission._id)}">Hủy</button>` : ''}
-                    <button type="button" class="review-submission-button request-revision" data-review-status="REVISION_REQUESTED" data-submission-id="${escapeHtml(submission._id)}">
-                        <i class="fa-solid fa-rotate-left"></i> Yêu cầu nộp lại
-                    </button>
-                    <button type="button" class="review-submission-button approve" data-review-status="APPROVED" data-submission-id="${escapeHtml(submission._id)}">
-                        <i class="fa-solid fa-check"></i> Duyệt
-                    </button>
+                <div class="review-bottom-actions-bar">
+                    <div class="submission-grade-field-group">
+                        <div class="grade-label-row">
+                            <label for="gradeInput_${submission._id}" class="grade-field-label">
+                                Điểm
+                            </label>
+                            <span class="grade-field-optional">Tùy chọn</span>
+                        </div>
+                        <div class="grade-input-container">
+                            <input type="number" id="gradeInput_${submission._id}" class="submission-review-grade" min="0" max="10" step="0.25" placeholder="0 - 10" value="${submission.grade !== undefined && submission.grade !== null ? submission.grade : ''}">
+                        </div>
+                        <span class="grade-field-error" id="gradeError_${submission._id}">Điểm phải từ 0 đến 10</span>
+                    </div>
+                    <div class="review-buttons-row">
+                        ${isReviewed ? `<button type="button" class="btn-cancel-edit-feedback" data-submission-id="${escapeHtml(submission._id)}">Hủy</button>` : ''}
+                        <button type="button" class="review-submission-button request-revision" data-review-status="REVISION_REQUESTED" data-submission-id="${escapeHtml(submission._id)}">
+                            <i class="fa-solid fa-rotate-left"></i> Yêu cầu nộp lại
+                        </button>
+                        <button type="button" class="review-submission-button approve" data-review-status="APPROVED" data-submission-id="${escapeHtml(submission._id)}">
+                            <i class="fa-solid fa-check"></i> Duyệt
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -357,6 +387,28 @@ function renderSubmissions(submissions) {
         });
     });
 
+    // Sự kiện kiểm tra và xóa lỗi inline cho ô nhập điểm
+    body.querySelectorAll('.submission-review-grade').forEach(gradeInput => {
+        const submissionCard = gradeInput.closest('.submission-card');
+        const gradeError = submissionCard?.querySelector('.grade-field-error');
+        gradeInput.addEventListener('input', () => {
+            const val = gradeInput.value.trim();
+            if (val === '') {
+                gradeInput.classList.remove('has-error');
+                if (gradeError) gradeError.style.display = 'none';
+                return;
+            }
+            const num = Number(val);
+            if (Number.isNaN(num) || num < 0 || num > 10) {
+                gradeInput.classList.add('has-error');
+                if (gradeError) gradeError.style.display = 'block';
+            } else {
+                gradeInput.classList.remove('has-error');
+                if (gradeError) gradeError.style.display = 'none';
+            }
+        });
+    });
+
     // Sự kiện nút "Sửa nhận xét"
     body.querySelectorAll('.btn-edit-feedback').forEach(button => {
         button.addEventListener('click', () => {
@@ -390,10 +442,25 @@ function renderSubmissions(submissions) {
         button.addEventListener('click', async () => {
             const card = button.closest('.submission-card');
             const textarea = card?.querySelector('.submission-review-feedback');
+            const gradeInput = card?.querySelector('.submission-review-grade');
+            const gradeError = card?.querySelector('.grade-field-error');
             const inlineError = card?.querySelector('.feedback-inline-error');
             const feedback = textarea?.value.trim() || '';
+            const gradeVal = gradeInput?.value.trim();
             const status = button.dataset.reviewStatus;
             const submissionId = button.dataset.submissionId;
+
+            let grade = null;
+            if (gradeVal !== '' && gradeVal !== undefined && gradeVal !== null) {
+                const parsed = Number(gradeVal);
+                if (Number.isNaN(parsed) || parsed < 0 || parsed > 10) {
+                    gradeInput?.classList.add('has-error');
+                    if (gradeError) gradeError.style.display = 'block';
+                    gradeInput?.focus();
+                    return;
+                }
+                grade = Math.round(parsed * 100) / 100;
+            }
 
             // Bấm "Yêu cầu nộp lại" mà chưa nhập nhận xét thì báo lỗi inline, không dùng alert
             if (status === 'REVISION_REQUESTED' && !feedback) {
@@ -409,9 +476,10 @@ function renderSubmissions(submissions) {
             if (status === 'APPROVED') {
                 let confirmed = true;
                 if (typeof window.showConfirmDialog === 'function') {
+                    const gradeMsg = (grade !== null) ? ` với điểm số ${grade}/10` : '';
                     confirmed = await window.showConfirmDialog({
                         title: 'Xác nhận duyệt báo cáo',
-                        message: 'Bạn có chắc chắn muốn duyệt bài nộp này cho nhóm sinh viên?',
+                        message: `Bạn có chắc chắn muốn duyệt bài nộp này cho nhóm sinh viên${gradeMsg}?`,
                         confirmText: 'Duyệt bài',
                         cancelText: 'Hủy bỏ',
                         danger: false
@@ -438,7 +506,7 @@ function renderSubmissions(submissions) {
                             'Content-Type': 'application/json',
                             Authorization: `Bearer ${auth.token}`
                         },
-                        body: JSON.stringify({ status, feedback })
+                        body: JSON.stringify({ status, feedback, grade })
                     }
                 );
                 const result = await response.json();

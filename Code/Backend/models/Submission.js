@@ -49,6 +49,12 @@ const submissionSchema = new mongoose.Schema({
         default: '',
         maxlength: 2000
     },
+    grade: {
+        type: Number,
+        min: 0,
+        max: 10,
+        default: null
+    },
     reviewed_by: {
         type: String,
         default: null

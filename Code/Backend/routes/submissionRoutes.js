@@ -26,7 +26,7 @@ if (!fs.existsSync(uploadDir)) {
 // Cấu hình lưu file đĩa
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -34,11 +34,54 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage, defParamCharset: 'utf8' });
+const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.zip', '.rar', '.7z', '.ppt', '.pptx'];
+const ALLOWED_MIME_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-rar-compressed',
+    'application/vnd.rar',
+    'application/x-7z-compressed',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/octet-stream'
+];
+
+const fileFilter = (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        return cb(new Error('Định dạng tệp không được hỗ trợ! Chỉ chấp nhận: PDF, Word (.doc, .docx), Nén (.zip, .rar, .7z), PowerPoint (.ppt, .pptx).'), false);
+    }
+    cb(null, true);
+};
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 25 * 1024 * 1024 }, // Giới hạn 25MB
+    fileFilter: fileFilter,
+    defParamCharset: 'utf8'
+});
+
+const handleUploadError = (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            if (err instanceof multer.MulterError) {
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return res.status(400).json({ success: false, message: 'Dung lượng tệp vượt quá giới hạn cho phép (tối đa 25MB).' });
+                }
+                return res.status(400).json({ success: false, message: `Lỗi tải tệp: ${err.message}` });
+            }
+            return res.status(400).json({ success: false, message: err.message });
+        }
+        next();
+    });
+};
 
 router.get('/topic/:topic_id', authMiddleware, requireSubmissionRole('STUDENT', 'LECTURER'), submissionController.listTopicSubmissions);
 router.get('/file/:filename', authMiddleware, requireSubmissionRole('STUDENT', 'LECTURER'), submissionController.downloadTopicSubmissionFile);
 router.patch('/topic/:topic_id/:submissionId/review', authMiddleware, requireSubmissionRole('LECTURER'), submissionController.reviewSubmission);
-router.post('/upload', authMiddleware, requireStudentRole, upload.single('file'), uploadMilestone);
+router.post('/upload', authMiddleware, requireStudentRole, handleUploadError, uploadMilestone);
 
 module.exports = router;

@@ -110,6 +110,20 @@
                     </div>
                 </div>
 
+                <!-- DẢI CHỮ CHẠY THÔNG BÁO HỌC VỤ & TIẾN ĐỘ (HƯỚNG A) -->
+                <div id="studentTickerBar" class="student-ticker-bar ticker-warning" role="region" aria-label="Tin tức &amp; Thông báo học vụ">
+                    <div class="ticker-badge badge-warning" id="tickerBadge">
+                        <i class="fa-solid fa-bullhorn"></i>
+                        <span id="tickerBadgeText">HỌC VỤ</span>
+                    </div>
+                    <div class="ticker-track-wrapper">
+                        <div class="ticker-track" id="tickerTrack">
+                            <span id="tickerContent" class="ticker-content"></span>
+                            <span id="tickerContentClone" class="ticker-content" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BANNER XANH NHẠT KHI ĐÃ CÓ ĐĂNG KÝ (THAY NÚT XÁM LẶP LẠI) -->
                 <div id="registeredTopicBanner" class="registered-topic-banner" hidden role="status" aria-live="polite">
                     <div class="banner-icon"><i class="fa-solid fa-circle-check"></i></div>
@@ -294,6 +308,7 @@
                                     <span class="field-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
                                     <select id="lecturerCode" required>
                                         <option value="">-- Chọn Giảng viên hướng dẫn --</option>
+                                        <option value="UNASSIGNED">-- Chưa có GVHD (Nhờ Khoa phân công) --</option>
                                     </select>
                                 </div>
                             </div>

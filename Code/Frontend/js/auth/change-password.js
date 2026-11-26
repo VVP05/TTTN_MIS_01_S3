@@ -100,14 +100,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     function checkProfileDirty() {
         const currentEmail = profileFields.email?.value.trim() || "";
         const currentPhone = profileFields.phone?.value.trim() || "";
-        const currentClass = profileFields.studentClass?.value.trim() || "";
-        const currentMajor = profileFields.major?.value.trim() || "";
 
         const isDirty = (
             currentEmail !== initialProfile.email ||
-            currentPhone !== initialProfile.phone ||
-            currentClass !== initialProfile.studentClass ||
-            currentMajor !== initialProfile.major
+            currentPhone !== initialProfile.phone
         );
 
         if (isDirty) {
@@ -123,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return isDirty;
     }
 
-    [profileFields.email, profileFields.phone, profileFields.studentClass, profileFields.major].forEach(input => {
+    [profileFields.email, profileFields.phone].forEach(input => {
         if (input) {
             input.addEventListener("input", () => {
                 checkProfileDirty();
@@ -181,8 +177,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const emailVal = profileFields.email.value.trim();
             const phoneVal = profileFields.phone.value.trim();
-            const classVal = profileFields.studentClass.value.trim();
-            const majorVal = profileFields.major.value.trim();
 
             try {
                 const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/auth/students/${encodeURIComponent(user.user_code)}/profile`, {
@@ -193,9 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
                     body: JSON.stringify({
                         email: emailVal,
-                        phone: phoneVal,
-                        class: classVal,
-                        major: majorVal
+                        phone: phoneVal
                     })
                 });
                 const result = await response.json();
@@ -205,8 +197,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 initialProfile = {
                     email: emailVal,
                     phone: phoneVal,
-                    studentClass: classVal,
-                    major: majorVal
+                    studentClass: initialProfile.studentClass,
+                    major: initialProfile.major
                 };
 
                 const updatedUser = { ...user, ...result.data };

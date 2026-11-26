@@ -40,10 +40,10 @@ const topicSchema = new mongoose.Schema({
         default: undefined
     },
 
-    // 3. GIẢNG VIÊN HƯỚNG DẪN
+    // 3. GIẢNG VIÊN HƯỚNG DẪN (Có thể để null nếu sinh viên tự đề xuất và nhờ Khoa phân công GVHD)
     lecturer_code: { 
         type: String, 
-        required: true 
+        default: null 
     },  // Mã Giảng viên (VD: "GV01")
 
     // 4. NỘI DUNG ĐỀ TÀI
