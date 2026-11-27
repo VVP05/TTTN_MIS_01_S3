@@ -84,7 +84,13 @@ app.get(['/', '/login', '/index.html'], (req, res) => {
 	res.sendFile(path.join(frontendDir, 'html', 'auth', 'index.html'));
 });
 
-app.use(express.static(frontendDir));
+app.use(express.static(frontendDir, {
+	setHeaders: (res, filePath) => {
+		if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
+			res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+		}
+	}
+}));
 
 // Routes API
 app.use('/api/auth', authRoutes);
