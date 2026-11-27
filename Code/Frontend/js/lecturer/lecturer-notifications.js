@@ -54,12 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const sidebarNotificationBadge = document.getElementById("sidebarNotificationBadge");
     const countAll = document.getElementById("countAll");
     const countUnread = document.getElementById("countUnread");
+    const countStudent = document.getElementById("countStudent");
     const btnMarkAllRead = document.getElementById("btnMarkAllRead");
     const notifSearchInput = document.getElementById("notifSearchInput");
     const btnClearSearch = document.getElementById("btnClearSearch");
 
     let allNotifications = []; // Biến lưu toàn bộ thông báo từ API
-    let currentFilter = "ALL";  // Tab đang active: ALL, UNREAD, FACULTY
+    let currentFilter = "ALL";  // Tab đang active: ALL, UNREAD, FACULTY, STUDENT
     let searchQuery = "";       // Từ khóa tìm kiếm client-side
     let displayLimit = 15;      // Số lượng hiển thị ban đầu
 
@@ -67,6 +68,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function getNotificationCategory(item) {
         const text = `${item.title || ""} ${item.content || ""}`.toLowerCase();
 
+        if (/(yêu cầu lịch hẹn|lịch hẹn mới)/.test(text)) {
+            return { colorClass: "type-indigo", icon: "fa-solid fa-calendar-plus", typeName: "Yêu cầu lịch hẹn" };
+        }
+        if (/(bài nộp mốc|nộp báo cáo mốc)/.test(text)) {
+            return { colorClass: "type-blue", icon: "fa-solid fa-file-arrow-up", typeName: "Bài nộp mới" };
+        }
         if (/(nhắc hạn nộp|hạn nộp|hạn chót|deadline|milestone|sắp đến hạn)/.test(text)) {
             return { colorClass: "type-orange", icon: "fa-solid fa-clock", typeName: "Nhắc hạn nộp" };
         }
@@ -99,6 +106,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (type === "LECTURER") {
             return { text: item.sender_name || "Giảng viên", cssClass: "lecturer" };
+        }
+        if (type === "STUDENT") {
+            return { text: item.sender_name || "Sinh viên", cssClass: "student" };
         }
         if (type === "SYSTEM") {
             return { text: "Hệ thống", cssClass: "system" };
@@ -214,6 +224,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 countUnread.classList.remove("unread-badge");
             }
         }
+        if (countStudent) {
+            countStudent.textContent = allNotifications.filter(
+                item => String(item.type || "").toUpperCase() === "STUDENT"
+            ).length;
+        }
 
         // Sidebar badge
         if (sidebarNotificationBadge) {
@@ -245,6 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (currentFilter === "ALL") return true;
             if (currentFilter === "UNREAD") return !item.is_read;
             if (currentFilter === "FACULTY") return item.type === "FACULTY" || item.type === "SYSTEM";
+            if (currentFilter === "STUDENT") return String(item.type || "").toUpperCase() === "STUDENT";
             return true;
         });
 
@@ -284,6 +300,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (currentFilter === "FACULTY") {
                     emptyTitle.textContent = "Chưa có thông báo từ Khoa / Hệ thống";
                     emptyDesc.textContent = "Các thông báo chính thức từ Khoa CNTT sẽ xuất hiện tại đây.";
+                } else if (currentFilter === "STUDENT") {
+                    emptyTitle.textContent = "Chưa có thông báo từ sinh viên";
+                    emptyDesc.textContent = "Thông báo nộp bài và hoạt động từ sinh viên sẽ xuất hiện tại đây.";
                 } else {
                     emptyTitle.textContent = "Bạn chưa có thông báo nào";
                     emptyDesc.textContent = "Bạn sẽ nhận được thông báo khi có hoạt động mới từ Khoa hoặc sinh viên.";

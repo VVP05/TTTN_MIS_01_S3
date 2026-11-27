@@ -248,10 +248,10 @@
 
 /* UNREAD CARD STATE */
 .notif-card-item.unread {
-    background-color: #EFF6FF;
-    border-color: #BFDBFE;
-    border-left: 4px solid var(--primary, #2563EB);
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+    background: linear-gradient(110deg, #E5EEFF 0%, #F0F4FF 100%);
+    border-color: #93B4FF;
+    border-left: 4px solid #1D4ED8;
+    box-shadow: 0 5px 18px rgba(37, 99, 235, 0.14);
 }
 
 .notif-card-item.unread:hover {
@@ -370,8 +370,8 @@
 }
 
 .source-badge.system {
-    background-color: #DCFCE7;
-    color: #15803D;
+    background-color: #BBF7D0;
+    color: #166534;
 }
 
 .source-badge.student {
@@ -638,6 +638,11 @@
     animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+#notifModal .modal-box {
+    border: 1px solid #BFDBFE;
+    box-shadow: 0 24px 56px rgba(30, 64, 175, 0.22), 0 8px 18px rgba(15, 23, 42, 0.1);
+}
+
 .modal-box.small {
     max-width: 400px;
     padding: 24px 28px;
@@ -661,6 +666,11 @@
     align-items: center;
     padding: 20px 24px;
     border-bottom: 1px solid #F1F5F9;
+}
+
+#notifModal .modal-header {
+    background: linear-gradient(110deg, #DBEAFE 0%, #EEF2FF 62%, #F5F3FF 100%);
+    border-bottom-color: #BFDBFE;
 }
 
 .modal-header-meta {
@@ -709,6 +719,10 @@
     margin-bottom: 12px;
 }
 
+#notifModal .notif-detail-title {
+    color: #1D4ED8;
+}
+
 .sender-info {
     font-size: 13.5px;
     color: #475569;
@@ -718,8 +732,21 @@
     margin-bottom: 16px;
 }
 
+#notifModal .sender-info {
+    width: fit-content;
+    padding: 9px 11px;
+    background: #EFF6FF;
+    border-left: 3px solid #3B82F6;
+    border-radius: 8px;
+    color: #1E3A8A;
+}
+
 .sender-info strong {
     color: #1E293B;
+}
+
+#notifModal .sender-info strong {
+    color: #1E40AF;
 }
 
 .divider {
@@ -728,11 +755,24 @@
     margin: 16px 0;
 }
 
+#notifModal .divider {
+    background: #DBEAFE;
+}
+
 .notif-detail-content {
     font-size: 14.5px;
     color: #334155;
     line-height: 1.7;
     white-space: pre-line;
+}
+
+#notifModal .notif-detail-content {
+    padding: 14px 16px;
+    background: #F7FAFF;
+    border: 1px solid #DBEAFE;
+    border-left: 3px solid #60A5FA;
+    border-radius: 8px;
+    color: #1E293B;
 }
 
 /* MODAL ATTACHMENT BOX */
@@ -805,6 +845,11 @@
     background: #FAFBFD;
 }
 
+#notifModal .modal-footer {
+    background: #EFF6FF;
+    border-top-color: #DBEAFE;
+}
+
 .modal-footer .btn-primary {
     height: 40px;
     padding: 0 20px;
@@ -818,8 +863,18 @@
     transition: all 0.2s ease;
 }
 
+#notifModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
 .modal-footer .btn-primary:hover {
     background: #1D4ED8;
+}
+
+#notifModal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
 }
 
 /* RESPONSIVE */

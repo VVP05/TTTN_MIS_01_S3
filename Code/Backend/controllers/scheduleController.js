@@ -194,6 +194,12 @@ exports.createMeeting = async (req, res) => {
         const meetingEnd = slot.time_end;
         const meetingType = slot.type;
         const meetingLocation = slot.location || location;
+        const student = req.user?.full_name
+            ? null
+            : await User.findOne({ user_code: studentCode, role: 'STUDENT' })
+                .select('full_name')
+                .lean();
+        const studentName = String(req.user?.full_name || student?.full_name || studentCode).trim();
 
         const newMeeting = new Meeting({
             topic_id,
@@ -212,8 +218,10 @@ exports.createMeeting = async (req, res) => {
         await newMeeting.save();
         await notifyUsers([lecturer_code], {
             title: 'Yêu cầu lịch hẹn mới',
-            content: `Nhóm đề tài "${topic.title}" đã gửi yêu cầu lịch hẹn "${title}" vào ${new Date(meetingDate).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}, ${meetingStart}-${meetingEnd}.`,
-            eventKey: `meeting-request:${newMeeting._id}`
+            content: `Sinh viên ${studentName} (${studentCode}) thuộc nhóm đề tài "${topic.title}" đã gửi yêu cầu lịch hẹn "${title}" vào ${new Date(meetingDate).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}, ${meetingStart}-${meetingEnd}.`,
+            eventKey: `meeting-request:${newMeeting._id}`,
+            type: 'STUDENT',
+            senderName: studentName
         });
         res.status(201).json({ 
             success: true,

@@ -1081,6 +1081,25 @@ exports.submitMilestoneDraft = async (req, res) => {
             throw error;
         }
 
+        try {
+            const student = req.user?.full_name
+                ? null
+                : await User.findOne({ user_code: studentCode, role: 'STUDENT' })
+                    .select('full_name')
+                    .lean();
+            const studentName = String(req.user?.full_name || student?.full_name || studentCode).trim();
+            await notifyUsers([topic.lecturer_code], {
+                title: `Bài nộp Mốc ${step} mới cần nhận xét`,
+                content: `Sinh viên ${studentName} (${studentCode}) vừa nộp báo cáo Mốc ${step} cho đề tài "${topic.title || 'đề tài'}". Vui lòng xem và nhận xét bài nộp.`,
+                eventKey: `submission-received:${submission._id}`,
+                priority: 'info',
+                type: 'STUDENT',
+                senderName: studentName
+            });
+        } catch (notificationError) {
+            console.error('Lỗi gửi thông báo bài nộp mới cho giảng viên:', notificationError);
+        }
+
         return res.json({ success: true, message: `Đã nộp chính thức bài làm Mốc ${step}.` });
     } catch (error) {
         console.error('Lỗi nộp chính thức bài làm:', error);

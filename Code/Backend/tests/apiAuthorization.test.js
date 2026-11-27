@@ -29,6 +29,7 @@ const {
 const { createMilestone } = require('../controllers/milestoneController');
 const {
     createLecturerNotification,
+    getLecturerNotifications,
     getAllNotifications
 } = require('../controllers/notificationController');
 const { getAllDocuments } = require('../controllers/documentController');
@@ -713,16 +714,27 @@ test('submitting a replacement supersedes the pending attempt', async t => {
 
 test('first official submission does not expect a previous attempt', async t => {
     const draft = {
+        _id: 'submission-new',
         is_draft: true,
         async save() {
             this.saved = true;
         }
     };
     let updateCalled = false;
+    let notificationFilter;
+    let notificationUpdate;
     t.mock.method(Topic, 'findOne', async () => ({
         _id: 'topic-1',
-        lecturer_code: 'GV01'
+        lecturer_code: 'GV01',
+        title: 'Đề tài kiểm thử'
     }));
+    t.mock.method(User, 'findOne', filter => {
+        assert.deepEqual(filter, { user_code: 'SV01', role: 'STUDENT' });
+        return {
+            select() { return this; },
+            lean: async () => ({ full_name: 'Sinh viên kiểm thử' })
+        };
+    });
     t.mock.method(Milestone, 'findOne', async () => ({
         startDate: new Date(Date.now() - 60_000),
         endDate: new Date(Date.now() + 60_000),
@@ -740,6 +752,10 @@ test('first official submission does not expect a previous attempt', async t => 
         updateCalled = true;
         return { modifiedCount: 1 };
     });
+    t.mock.method(Notification, 'findOneAndUpdate', async (filter, update) => {
+        notificationFilter = filter;
+        notificationUpdate = update;
+    });
 
     const response = {
         statusCode: 200,
@@ -756,6 +772,12 @@ test('first official submission does not expect a previous attempt', async t => 
     assert.equal(draft.saved, true);
     assert.equal(draft.review_status, 'PENDING_REVIEW');
     assert.equal(updateCalled, false);
+    assert.equal(notificationFilter.event_key, 'submission-received:submission-new:GV01');
+    assert.equal(notificationUpdate.$setOnInsert.recipient_code, 'GV01');
+    assert.equal(notificationUpdate.$setOnInsert.type, 'STUDENT');
+    assert.equal(notificationUpdate.$setOnInsert.sender_name, 'Sinh viên kiểm thử');
+    assert.equal(notificationUpdate.$setOnInsert.title, 'Bài nộp Mốc 1 mới cần nhận xét');
+    assert.match(notificationUpdate.$setOnInsert.content, /Sinh viên kiểm thử \(SV01\)/);
 });
 
 test('students can withdraw a pending submission within the deadline', async t => {
@@ -2132,6 +2154,55 @@ test('lecturers can send notifications only to students in their approved topics
         notification.sender_name === 'Giảng viên A' &&
         notification.status === 'published'
     ));
+});
+
+test('lecturer notifications resolve student names for previously saved submission alerts', async t => {
+    const savedNotification = {
+        title: 'Bài nộp Mốc 2 mới cần nhận xét',
+        content: 'Sinh viên SV01 (SV01) vừa nộp báo cáo Mốc 2 cho đề tài "Đề tài kiểm thử". Vui lòng xem và nhận xét bài nộp.',
+        type: 'SYSTEM',
+        target: 'all',
+        sender_name: 'Hệ thống',
+        read_by: [],
+        toObject() {
+            return { ...this };
+        }
+    };
+    const savedMeetingNotification = {
+        ...savedNotification,
+        title: 'Yêu cầu lịch hẹn mới',
+        content: 'Nhóm đề tài "Đề tài kiểm thử" đã gửi yêu cầu lịch hẹn "Báo cáo" vào 27/11/2026, 09:00-10:00.',
+        toObject() {
+            return { ...this };
+        }
+    };
+    t.mock.method(Notification, 'find', () => ({
+        sort: async () => [savedNotification, savedMeetingNotification]
+    }));
+    t.mock.method(User, 'find', filter => {
+        assert.deepEqual(filter, { user_code: { $in: ['SV01'] }, role: 'STUDENT' });
+        return {
+            select() { return this; },
+            lean: async () => [{ user_code: 'SV01', full_name: 'Sinh viên kiểm thử' }]
+        };
+    });
+
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    await getLecturerNotifications({
+        params: { lecturerCode: 'GV01' },
+        user: { role: 'LECTURER', user_code: 'GV01' }
+    }, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body.notifications[0].content, /^Sinh viên Sinh viên kiểm thử \(SV01\)/);
+    assert.equal(response.body.notifications[0].type, 'STUDENT');
+    assert.equal(response.body.notifications[0].sender_name, 'Sinh viên kiểm thử');
+    assert.equal(response.body.notifications[1].type, 'STUDENT');
+    assert.equal(response.body.notifications[1].sender_name, 'Sinh viên');
 });
 
 test('lecturers cannot send notifications to students outside their approved topics', async t => {

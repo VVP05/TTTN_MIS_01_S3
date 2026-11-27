@@ -11,6 +11,11 @@ function isOwnNotificationsRequest(req, requestedCode, expectedRole) {
         getUserCode(req) === String(requestedCode || '').trim().toUpperCase();
 }
 
+function isStudentOriginatedNotification(title) {
+    return /^Bài nộp Mốc \d+ mới cần nhận xét$/.test(title || '') ||
+        title === 'Yêu cầu lịch hẹn mới';
+}
+
 // 1. Lấy danh sách thông báo cho Sinh viên
 exports.getNotifications = async (req, res) => {
     try {
@@ -56,16 +61,48 @@ exports.getLecturerNotifications = async (req, res) => {
 
         const notifications = await Notification.find({
             status: 'published',
-            type: { $in: ['SYSTEM', 'FACULTY', 'LECTURER'] },
+            type: { $in: ['SYSTEM', 'FACULTY', 'LECTURER', 'STUDENT'] },
             $or: [
                 { recipient_code: lecturerCode },
                 { recipient_code: null, target: { $in: ['all', 'lecturers'] } }
             ]
         }).sort({ createdAt: -1 });
 
+        const studentNotifications = notifications.filter(notification =>
+            isStudentOriginatedNotification(notification.title)
+        );
+        const studentCodes = [...new Set(studentNotifications
+            .map(notification => notification.content?.match(/^Sinh viên .*?\(([^)]+)\)/)?.[1]?.trim().toUpperCase())
+            .filter(Boolean))];
+        const students = studentCodes.length
+            ? await User.find({ user_code: { $in: studentCodes }, role: 'STUDENT' })
+                .select('user_code full_name')
+                .lean()
+            : [];
+        const studentNames = new Map(students.map(student => [
+            String(student.user_code).toUpperCase(),
+            student.full_name
+        ]));
+
         const result = notifications.map(notification => {
             const item = notification.toObject();
             item.is_read = item.read_by.includes(lecturerCode);
+            if (isStudentOriginatedNotification(item.title)) {
+                const studentCode = item.content?.match(/^Sinh viên .*?\(([^)]+)\)/)?.[1]?.trim();
+                const studentName = studentNames.get(String(studentCode || '').toUpperCase());
+                item.type = 'STUDENT';
+                if (studentCode) {
+                    item.sender_name = studentName || studentCode;
+                } else if (item.sender_name === 'Hệ thống') {
+                    item.sender_name = 'Sinh viên';
+                }
+                if (studentName && studentCode) {
+                    item.content = item.content.replace(
+                        /^Sinh viên .*?\([^)]+\)/,
+                        `Sinh viên ${studentName} (${studentCode})`
+                    );
+                }
+            }
             if (item.target === 'lecturers' && ['Quản Trị Viên', 'Admin Hệ thống'].includes(item.sender_name)) {
                 item.type = 'SYSTEM';
                 item.sender_name = 'Hệ thống';
