@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 const { notifyUsers, notifyTopicStudents } = require('../services/notificationService');
+const { uploadFileToCloudinary, isCloudinaryConfigured } = require('../services/cloudinaryService');
 const { getLecturerQuotaStatus } = require('../services/lecturerQuota');
 const { getTopicMilestoneProgress } = require('../services/milestoneProgress');
 const { getAvailablePoolTopicSlot } = require('../services/poolTopicCapacity');
@@ -927,12 +928,25 @@ exports.uploadMilestone = async (req, res) => {
             is_draft: { $ne: true }
         });
 
+        let cloudinaryUrl = undefined;
+        if (isCloudinaryConfigured()) {
+            const uploadResult = await uploadFileToCloudinary(file.path, {
+                folder: 'tttn_submissions',
+                originalFilename: file.originalname,
+                removeLocal: true
+            });
+            if (uploadResult?.secure_url) {
+                cloudinaryUrl = uploadResult.secure_url;
+            }
+        }
+
         const fileInfo = {
             name: file.originalname,
-            path: file.path,
+            path: cloudinaryUrl || file.path,
             filename: file.filename,
             mimetype: file.mimetype,
             size: file.size,
+            cloudinary_url: cloudinaryUrl,
             submittedAt: new Date(),
             isDraft
         };
@@ -956,8 +970,9 @@ exports.uploadMilestone = async (req, res) => {
                 milestone: step,
                 file_name: file.originalname,
                 original_name: file.originalname,
-                file_path: file.path,
+                file_path: cloudinaryUrl || file.path,
                 stored_filename: file.filename,
+                cloudinary_url: cloudinaryUrl,
                 file_size: file.size,
                 is_draft: isDraft,
                 submitted_at: new Date(),

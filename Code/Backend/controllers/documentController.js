@@ -4,6 +4,7 @@ const Topic = require('../models/Topic');
 const Group = require('../models/Group');
 const User = require('../models/User');
 const { decodeLegacyFilename, normalizeDocumentFilename } = require('../utils/documentFilename');
+const { uploadFileToCloudinary, isCloudinaryConfigured } = require('../services/cloudinaryService');
 const fs = require('fs');
 
 // 1. Lấy danh sách tài liệu do 1 Giảng viên đã chia sẻ (trang "Quản lý tài liệu" của GVHD)
@@ -132,6 +133,18 @@ exports.uploadDocument = async (req, res) => {
         const uploaderName = uploader?.full_name || '';
         const originalName = decodeLegacyFilename(file.originalname);
 
+        let cloudinaryUrl = undefined;
+        if (isCloudinaryConfigured()) {
+            const uploadResult = await uploadFileToCloudinary(file.path, {
+                folder: 'tttn_documents',
+                originalFilename: originalName,
+                removeLocal: true
+            });
+            if (uploadResult?.secure_url) {
+                cloudinaryUrl = uploadResult.secure_url;
+            }
+        }
+
         const document = new Document({
             title,
             category: category || 'OTHER',
@@ -143,7 +156,8 @@ exports.uploadDocument = async (req, res) => {
             file_name: file.filename,
             original_name: originalName,
             file_path: `/uploads/documents/${file.filename}`,
-            file_size: file.size
+            file_size: file.size,
+            cloudinary_url: cloudinaryUrl
         });
 
         await document.save();

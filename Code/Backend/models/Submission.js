@@ -31,6 +31,10 @@ const submissionSchema = new mongoose.Schema({
     file_size: { 
         type: Number 
     },
+    cloudinary_url: {
+        type: String,
+        default: undefined
+    },
     is_draft: {
         type: Boolean,
         default: false

@@ -6,22 +6,21 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 function validateOrigin(origin) {
+    const trimmed = String(origin || '').trim().replace(/\/+$/, '');
     let parsedOrigin;
     try {
-        parsedOrigin = new URL(origin);
+        parsedOrigin = new URL(trimmed);
     } catch {
         throw new Error(`Invalid CORS origin: ${origin}`);
     }
 
     if (!['http:', 'https:'].includes(parsedOrigin.protocol) ||
-        parsedOrigin.origin !== origin ||
-        parsedOrigin.pathname !== '/' ||
         parsedOrigin.search ||
         parsedOrigin.hash) {
-        throw new Error(`CORS entries must be HTTP(S) origins without paths: ${origin}`);
+        throw new Error(`CORS entries must be HTTP(S) origins without query or hash: ${origin}`);
     }
 
-    return origin;
+    return parsedOrigin.origin;
 }
 
 function getAllowedOrigins(value = process.env.CORS_ORIGINS) {

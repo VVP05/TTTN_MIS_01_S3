@@ -126,6 +126,47 @@ test('sample data seeding is allowed only in development', () => {
     assert.throws(() => assertDevelopmentSeedEnvironment(undefined), /NODE_ENV=development/);
 });
 
+before(async () => {
+    server = app.listen(0, '127.0.0.1');
+    await new Promise((resolve, reject) => {
+        server.once('listening', resolve);
+        server.once('error', reject);
+    });
+    baseUrl = `http://127.0.0.1:${server.address().port}`;
+});
+
+after(async () => {
+    if (server) await new Promise((resolve, reject) => {
+        server.close(error => error ? reject(error) : resolve());
+    });
+});
+
+function tokenFor(role, userCode) {
+    return jwt.sign({ role, user_code: userCode }, secretKey, { expiresIn: '1m' });
+}
+
+async function request(path, { method = 'GET', role, userCode, body } = {}) {
+    const headers = {};
+    if (role && userCode) headers.Authorization = `Bearer ${tokenFor(role, userCode)}`;
+    if (body) headers['Content-Type'] = 'application/json';
+
+    return fetch(`${baseUrl}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined
+    });
+}
+
+async function requestExcelUpload(path, { role, userCode, fileName, fileBuffer }) {
+    const formData = new FormData();
+    formData.append('file', new Blob([fileBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }), fileName);
+    const headers = {};
+    if (role && userCode) headers.Authorization = `Bearer ${tokenFor(role, userCode)}`;
+    return fetch(`${baseUrl}${path}`, { method: 'POST', headers, body: formData });
+}
+
 test('login failures are rate-limited per account instead of blocking everyone on the same network', async t => {
     t.mock.method(User, 'findOne', async () => null);
 
@@ -416,47 +457,6 @@ test('non-leader students cannot read the lecturer chat room', async t => {
     assert.equal(response.status, 403);
     assert.equal(findMessages.mock.callCount(), 0);
 });
-
-before(async () => {
-    server = app.listen(0, '127.0.0.1');
-    await new Promise((resolve, reject) => {
-        server.once('listening', resolve);
-        server.once('error', reject);
-    });
-    baseUrl = `http://127.0.0.1:${server.address().port}`;
-});
-
-after(async () => {
-    if (server) await new Promise((resolve, reject) => {
-        server.close(error => error ? reject(error) : resolve());
-    });
-});
-
-function tokenFor(role, userCode) {
-    return jwt.sign({ role, user_code: userCode }, secretKey, { expiresIn: '1m' });
-}
-
-async function request(path, { method = 'GET', role, userCode, body } = {}) {
-    const headers = {};
-    if (role && userCode) headers.Authorization = `Bearer ${tokenFor(role, userCode)}`;
-    if (body) headers['Content-Type'] = 'application/json';
-
-    return fetch(`${baseUrl}${path}`, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined
-    });
-}
-
-async function requestExcelUpload(path, { role, userCode, fileName, fileBuffer }) {
-    const formData = new FormData();
-    formData.append('file', new Blob([fileBuffer], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    }), fileName);
-    const headers = {};
-    if (role && userCode) headers.Authorization = `Bearer ${tokenFor(role, userCode)}`;
-    return fetch(`${baseUrl}${path}`, { method: 'POST', headers, body: formData });
-}
 
 test('student can read the name of their assigned lecturer', async t => {
     t.mock.method(User, 'findOne', () => ({

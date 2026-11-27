@@ -29,11 +29,33 @@ const storage = multer.diskStorage({
     }
 });
 
+const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip', '.rar', '.7z', '.txt'];
+const fileFilter = (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        return cb(new Error('Định dạng tệp không được hỗ trợ! Chỉ chấp nhận: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), PowerPoint (.ppt, .pptx), File nén (.zip, .rar, .7z) và Text (.txt).'), false);
+    }
+    cb(null, true);
+};
+
 const upload = multer({
     storage,
     defParamCharset: 'utf8',
-    limits: { fileSize: 25 * 1024 * 1024 } // Giới hạn 25MB, đồng bộ với giới hạn báo cáo tiến độ
+    fileFilter,
+    limits: { fileSize: 25 * 1024 * 1024 } // Giới hạn 25MB
 });
+
+const handleDocumentUploadError = (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ success: false, message: 'Dung lượng tệp vượt quá giới hạn (tối đa 25MB).' });
+            }
+            return res.status(400).json({ success: false, message: err.message || 'Lỗi khi tải tệp lên.' });
+        }
+        next();
+    });
+};
 
 // GET  /api/documents/lecturer/:lecturerCode  -> Danh sách tài liệu do 1 GVHD chia sẻ
 router.get('/lecturer/:lecturerCode', authMiddleware, requireRole('LECTURER'), documentController.getLecturerDocuments);
@@ -45,7 +67,7 @@ router.get('/admin/all', authMiddleware, requireRole('ADMIN'), documentControlle
 router.get('/student', authMiddleware, requireRole('STUDENT'), documentController.getStudentDocuments);
 
 // POST /api/documents/upload  -> Tải lên & chia sẻ tài liệu mới
-router.post('/upload', authMiddleware, requireRole('ADMIN', 'LECTURER'), upload.single('file'), documentController.uploadDocument);
+router.post('/upload', authMiddleware, requireRole('ADMIN', 'LECTURER'), handleDocumentUploadError, documentController.uploadDocument);
 
 // DELETE /api/documents/:id  -> Xóa tài liệu
 router.delete('/:id', authMiddleware, requireRole('ADMIN', 'LECTURER'), documentController.deleteDocument);

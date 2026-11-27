@@ -157,7 +157,7 @@ exports.downloadTopicSubmissionFile = async (req, res) => {
                 { stored_filename: filename },
                 { file_path: { $regex: `[\\\\/]${escapedFilename}$`, $options: 'i' } }
             ]
-        }).select('topic_id file_path');
+        }).select('topic_id file_path cloudinary_url');
         if (!submission) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tệp báo cáo.' });
         }
@@ -180,6 +180,11 @@ exports.downloadTopicSubmissionFile = async (req, res) => {
         const authorizedTopic = await Topic.exists(topicFilter);
         if (!authorizedTopic) {
             return res.status(403).json({ success: false, message: 'Bạn không có quyền tải tệp báo cáo này.' });
+        }
+
+        // Nếu tệp được lưu trên Cloudinary hoặc URL từ xa -> Chuyển hướng trực tiếp
+        if (submission.cloudinary_url || submission.file_path?.startsWith('http://') || submission.file_path?.startsWith('https://')) {
+            return res.redirect(submission.cloudinary_url || submission.file_path);
         }
 
         const uploadRoot = path.resolve(__dirname, '../uploads');

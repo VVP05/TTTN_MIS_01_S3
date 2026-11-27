@@ -12,7 +12,8 @@ const documentSchema = new mongoose.Schema({
     original_name: { type: String, required: true },  // Tên file gốc do người dùng đặt
     file_path: { type: String, required: true },      // Đường dẫn public để tải xuống
     file_size: { type: Number, default: 0 },           // Dung lượng (byte)
-    download_count: { type: Number, default: 0 }
+    download_count: { type: Number, default: 0 },
+    cloudinary_url: { type: String, default: undefined }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Document', documentSchema);

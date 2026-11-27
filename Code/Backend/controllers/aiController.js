@@ -155,6 +155,13 @@ exports.chatWithStudentAdvisor = async (req, res) => {
                 }
             } catch (geminiError) {
                 console.warn('⚠️ Gemini Flash không phản hồi kịp hoặc lỗi, tự động chuyển sang Ollama dự phòng:', geminiError.message);
+                if (process.env.NODE_ENV === 'production') {
+                    return res.status(200).json({
+                        success: true,
+                        reply: 'Hiện tại hệ thống AI đang có lượng truy cập cao. Bạn vui lòng thử lại sau giây lát, hoặc xem hướng dẫn tại mục "Tài liệu & Biểu mẫu" nhé ✨',
+                        provider: 'fallback'
+                    });
+                }
             }
         }
 
@@ -167,11 +174,10 @@ exports.chatWithStudentAdvisor = async (req, res) => {
         });
     } catch (error) {
         console.error('Lỗi tư vấn đề tài bằng AI:', error.message);
-        return res.status(error.statusCode || 500).json({
-            success: false,
-            message: error.statusCode
-                ? error.message
-                : 'Không thể tạo câu trả lời lúc này. Vui lòng thử lại sau.'
+        return res.status(200).json({
+            success: true,
+            reply: 'Hiện tại Peanuts đang tạm bận một chút hoặc đường truyền AI gián đoạn. Bạn vui lòng thử lại sau giây lát nhé ✨',
+            provider: 'fallback'
         });
     }
 };

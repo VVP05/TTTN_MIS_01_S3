@@ -1,7 +1,10 @@
 const localHosts = new Set(["localhost", "127.0.0.1"]);
-const apiBaseUrl = localHosts.has(window.location.hostname)
-    ? `http://${window.location.hostname}:5000`
-    : "https://manage-tttn.onrender.com";
+const customApiUrl = window.localStorage.getItem("CUSTOM_API_BASE_URL");
+const apiBaseUrl = customApiUrl || (
+    localHosts.has(window.location.hostname) && window.location.port !== "5000"
+        ? `http://${window.location.hostname}:5000`
+        : window.location.origin
+);
 window.APP_CONFIG = Object.freeze({ API_BASE_URL: apiBaseUrl });
 
 const authStorageKeys = ["studentAuth", "lecturerAuth", "adminAuth"];
