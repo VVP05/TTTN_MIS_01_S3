@@ -5,7 +5,7 @@ const groupJoinRequestSchema = new mongoose.Schema({
     member_code: { type: String, required: true },
     status: {
         type: String,
-        enum: ['PENDING', 'ACCEPTED', 'REJECTED'],
+        enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'REMOVED'],
         default: 'PENDING'
     }
 }, { timestamps: true });

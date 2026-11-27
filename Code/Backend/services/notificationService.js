@@ -14,7 +14,9 @@ async function createEventNotification(recipientCode, {
     eventKey,
     priority = 'info',
     type = 'SYSTEM',
-    senderName = 'Hệ thống'
+    senderName = 'Hệ thống',
+    groupCode = null,
+    senderCode = null
 }) {
     const recipient = String(recipientCode || '').trim().toUpperCase();
     if (!recipient) return;
@@ -29,6 +31,8 @@ async function createEventNotification(recipientCode, {
                     type,
                     title,
                     content,
+                    group_code: groupCode,
+                    sender_code: senderCode,
                     priority,
                     status: 'published',
                     sender_name: senderName

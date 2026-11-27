@@ -339,13 +339,21 @@
                     <label class="form-label-new" for="lecturerSearchInput">
                         Chọn giảng viên hướng dẫn <span class="required-mark">*</span>
                     </label>
-                    <div class="search-wrap" style="margin-bottom:12px;">
-                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                        <input type="text" id="lecturerSearchInput" class="search-input"
-                            placeholder="Tìm theo tên hoặc mã giảng viên..."
-                            aria-label="Tìm giảng viên">
+                    <div id="adminLecturerPicker" class="admin-lecturer-picker">
+                        <div class="admin-lecturer-picker-control">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <input type="text" id="lecturerSearchInput" role="combobox"
+                                aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false"
+                                aria-controls="lecturerOptions" aria-label="Chọn hoặc tìm giảng viên hướng dẫn"
+                                placeholder="Chọn hoặc tìm giảng viên..." autocomplete="off">
+                            <button id="lecturerPickerToggle" type="button" aria-label="Hiện danh sách giảng viên" aria-expanded="false">
+                                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div id="lecturerOptions" class="admin-lecturer-picker-options" role="listbox"
+                            aria-label="Danh sách giảng viên hướng dẫn" hidden></div>
                     </div>
-                    <select id="lecturerHDSelect" class="form-select-new" aria-label="Danh sách giảng viên hướng dẫn">
+                    <select id="lecturerHDSelect" class="admin-lecturer-native-select" aria-hidden="true" tabindex="-1">
                         <option value="">-- Chọn Giảng Viên Hướng Dẫn --</option>
                     </select>
                     <div id="assignChangeNote" class="assign-change-note" style="display:none;"></div>

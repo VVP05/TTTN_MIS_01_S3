@@ -275,6 +275,11 @@ exports.registerTopic = async (req, res) => {
         }
 
         let existingTopic = await Topic.findOne({ leader_code: codePattern(leader_code) });
+        if (registrationRole === 'MEMBER' && existingTopic?.status === 'APPROVED') {
+            return res.status(400).json({
+                message: 'Nhóm đã có đề tài được phê duyệt và không nhận thêm thành viên.'
+            });
+        }
         if (registrationRole === 'MEMBER' || !existingTopic ||
             !['PENDING', 'NEED_REVISION'].includes(existingTopic.status)) {
             const activeSemester = await Semester.findOne({ is_active: true }).lean();
@@ -626,8 +631,12 @@ exports.getMyTopic = async (req, res) => {
         if (!topic) {
             joinRequest = await GroupJoinRequest.findOne({
                 member_code: codePattern(userCode),
-                status: { $in: ['PENDING', 'ACCEPTED', 'REJECTED'] }
+                status: { $in: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'] }
             }).sort({ createdAt: -1 }).lean();
+
+            if (['CANCELLED', 'REMOVED'].includes(joinRequest?.status)) {
+                return res.status(404).json({ message: 'Không tìm thấy yêu cầu tham gia nhóm đang hoạt động.' });
+            }
 
             if (joinRequest?.status === 'ACCEPTED') {
                 const leaderFilter = { leader_code: codePattern(joinRequest.leader_code) };
@@ -659,6 +668,7 @@ exports.getMyTopic = async (req, res) => {
                     : joinRequest.status === 'REJECTED' ? 'JOIN_REJECTED' : 'JOIN_PENDING';
                 return res.json({
                     status: joinStatus,
+                    join_request_id: joinRequest._id,
                     leader_code: joinRequest.leader_code,
                     member2_code: userCode,
                     member3_code: null,
@@ -1094,7 +1104,8 @@ exports.submitMilestoneDraft = async (req, res) => {
                 eventKey: `submission-received:${submission._id}`,
                 priority: 'info',
                 type: 'STUDENT',
-                senderName: studentName
+                senderName: studentName,
+                groupCode: topic.topic_code || null
             });
         } catch (notificationError) {
             console.error('Lỗi gửi thông báo bài nộp mới cho giảng viên:', notificationError);
@@ -1365,10 +1376,13 @@ exports.getStudentTopicMarketplace = async (req, res) => {
                 member_count: occupiedMembers.size + 1,
                 open_slots: openSlots,
                 request_status: ownRequest?.status || null,
-                cannot_join_reason: cannotJoinAnotherGroup
-                    ? 'Bạn đã tham gia hoặc đang chịu trách nhiệm một nhóm khác.'
+                cannot_join_reason: topic.status === 'APPROVED'
+                    ? 'Đề tài của nhóm đã được phê duyệt, không nhận thêm thành viên.'
+                    : cannotJoinAnotherGroup
+                        ? 'Bạn đã tham gia hoặc đang chịu trách nhiệm một nhóm khác.'
                     : null,
-                can_join: openSlots > 0 && !cannotJoinAnotherGroup && !ownRequest
+                can_join: topic.status !== 'APPROVED' && openSlots > 0 &&
+                    !cannotJoinAnotherGroup && !ownRequest
             };
         }).filter(topic => topic.open_slots > 0);
         const preRegistrationGroups = recruitments
@@ -2210,6 +2224,9 @@ exports.getGroupJoinRequests = async (req, res) => {
         }
         const requests = await GroupJoinRequest.find({ leader_code: leaderCode, status: { $in: ['PENDING', 'ACCEPTED'] } })
             .sort({ createdAt: 1 }).lean();
+        const hasRegisteredTopic = requests.some(request => request.status === 'ACCEPTED')
+            ? Boolean(await Topic.findOne({ leader_code: codeRegex(leaderCode) }).select('_id').lean())
+            : false;
         const memberCodes = requests.map(request => request.member_code);
         const members = await User.find({
             $or: memberCodes.map(code => ({
@@ -2219,6 +2236,7 @@ exports.getGroupJoinRequests = async (req, res) => {
         const memberMap = new Map(members.map(member => [member.user_code.toUpperCase(), member.full_name]));
         const requestsWithNames = requests.map(request => ({
             ...request,
+            can_remove: request.status === 'ACCEPTED' && !hasRegisteredTopic,
             member_name: memberMap.get(String(request.member_code).toUpperCase()) || 'Chưa có thông tin'
         }));
         return res.json({ success: true, requests: requestsWithNames });
@@ -2305,5 +2323,93 @@ exports.updateGroupJoinRequest = async (req, res) => {
     } catch (error) {
         console.error('Lỗi xác nhận yêu cầu tham gia nhóm:', error);
         return res.status(500).json({ message: 'Không thể xử lý yêu cầu tham gia nhóm!' });
+    }
+};
+
+exports.cancelGroupJoinRequest = async (req, res) => {
+    try {
+        const studentCode = String(req.user?.user_code || '').trim().toUpperCase();
+        const requestedCode = String(req.params.user_code || '').trim().toUpperCase();
+        const requestId = req.params.request_id;
+        if (String(req.user?.role || '').toUpperCase() !== 'STUDENT' ||
+            !studentCode || studentCode !== requestedCode) {
+            return res.status(403).json({ success: false, message: 'Bạn chỉ có thể hủy yêu cầu của mình.' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(requestId)) {
+            return res.status(400).json({ success: false, message: 'Yêu cầu tham gia nhóm không hợp lệ.' });
+        }
+
+        const request = await GroupJoinRequest.findOneAndUpdate(
+            {
+                _id: requestId,
+                member_code: codeRegex(studentCode),
+                status: 'PENDING'
+            },
+            { $set: { status: 'CANCELLED' } },
+            { new: true }
+        );
+        if (!request) {
+            return res.status(409).json({
+                success: false,
+                message: 'Yêu cầu không còn chờ xử lý. Có thể trưởng nhóm đã xác nhận hoặc từ chối.'
+            });
+        }
+
+        await notifyUsers([request.leader_code], {
+            title: 'Yêu cầu tham gia nhóm đã được hủy',
+            content: `Sinh viên ${studentCode} đã hủy yêu cầu tham gia nhóm của bạn.`,
+            eventKey: `group-join-cancelled:${request._id}`,
+            priority: 'info'
+        });
+        return res.json({ success: true, message: 'Đã hủy yêu cầu tham gia nhóm.' });
+    } catch (error) {
+        console.error('Lỗi hủy yêu cầu tham gia nhóm:', error);
+        return res.status(500).json({ success: false, message: 'Không thể hủy yêu cầu tham gia nhóm!' });
+    }
+};
+
+exports.removeAcceptedGroupMember = async (req, res) => {
+    try {
+        const leaderCode = String(req.params.leader_code || '').trim().toUpperCase();
+        const requestId = req.params.request_id;
+        if (String(req.user?.role || '').toUpperCase() !== 'STUDENT' ||
+            String(req.user?.user_code || '').trim().toUpperCase() !== leaderCode) {
+            return res.status(403).json({ success: false, message: 'Bạn chỉ có thể quản lý thành viên trong nhóm của mình.' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(requestId)) {
+            return res.status(400).json({ success: false, message: 'Yêu cầu tham gia nhóm không hợp lệ.' });
+        }
+
+        const registeredTopic = await Topic.findOne({ leader_code: codeRegex(leaderCode) })
+            .select('_id').lean();
+        if (registeredTopic) {
+            return res.status(409).json({
+                success: false,
+                message: 'Chỉ có thể loại thành viên trước khi nhóm đăng ký đề tài.'
+            });
+        }
+
+        const request = await GroupJoinRequest.findOneAndUpdate(
+            { _id: requestId, leader_code: codeRegex(leaderCode), status: 'ACCEPTED' },
+            { $set: { status: 'REMOVED' } },
+            { new: true }
+        );
+        if (!request) {
+            return res.status(409).json({
+                success: false,
+                message: 'Chỉ có thể loại thành viên đã được xác nhận.'
+            });
+        }
+
+        await notifyUsers([request.member_code], {
+            title: 'Bạn đã bị loại khỏi nhóm',
+            content: `Trưởng nhóm ${leaderCode} đã loại bạn khỏi nhóm. Bạn có thể gửi yêu cầu vào nhóm khác.`,
+            eventKey: `group-join-removed:${request._id}`,
+            priority: 'warning'
+        });
+        return res.json({ success: true, message: 'Đã loại thành viên khỏi nhóm.' });
+    } catch (error) {
+        console.error('Lỗi loại thành viên khỏi nhóm:', error);
+        return res.status(500).json({ success: false, message: 'Không thể loại thành viên khỏi nhóm!' });
     }
 };

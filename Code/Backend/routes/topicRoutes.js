@@ -101,6 +101,8 @@ const {
     registerTopic, 
     getGroupJoinRequests,
     updateGroupJoinRequest,
+    cancelGroupJoinRequest,
+    removeAcceptedGroupMember,
     getMyTopic, 
     publishGroupRecruitment,
     closeGroupRecruitment,
@@ -170,6 +172,8 @@ router.post('/register-pool', authMiddleware, requireStudentRole, registerPoolTo
 router.post('/register', authMiddleware, requireStudentRole, registerTopic);
 router.get('/join-requests/:leader_code', authMiddleware, requireStudentOwnCode, getGroupJoinRequests);
 router.patch('/join-requests/:leader_code/:request_id', authMiddleware, requireStudentOwnCode, updateGroupJoinRequest);
+router.delete('/join-requests/:user_code/:request_id', authMiddleware, requireStudentOwnCode, cancelGroupJoinRequest);
+router.delete('/join-requests/:leader_code/:request_id/remove', authMiddleware, requireStudentOwnCode, removeAcceptedGroupMember);
 
 // Lấy đề tài của sinh viên
 router.get('/my-topic/:user_code', authMiddleware, requireStudentOwnCode, getMyTopic);

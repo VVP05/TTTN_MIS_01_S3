@@ -379,6 +379,18 @@
     color: #B45309;
 }
 
+.group-code-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 6px;
+    padding: 2px 8px;
+    background: #DCFCE7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
 /* NOTIFICATION PREVIEW */
 .notif-preview-text {
     font-size: 14px;

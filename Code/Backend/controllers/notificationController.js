@@ -71,9 +71,44 @@ exports.getLecturerNotifications = async (req, res) => {
         const studentNotifications = notifications.filter(notification =>
             isStudentOriginatedNotification(notification.title)
         );
-        const studentCodes = [...new Set(studentNotifications
-            .map(notification => notification.content?.match(/^Sinh viên .*?\(([^)]+)\)/)?.[1]?.trim().toUpperCase())
+        const submissionDetails = studentNotifications.map(notification => {
+            const content = notification.content || '';
+            return {
+                studentCode: content.match(/^Sinh viên .*?\(([^)]+)\)/)?.[1]?.trim().toUpperCase()
+                    || String(notification.sender_code || '').trim().toUpperCase(),
+                topicTitle: content.match(/cho đề tài "([^"]+)"/)?.[1]?.trim(),
+                meetingTopicTitle: content.match(/Nhóm đề tài "([^"]+)"/)?.[1]?.trim(),
+                groupCode: notification.group_code || null
+            };
+        });
+        const studentCodesFromContent = [...new Set(submissionDetails
+            .map(detail => detail.studentCode)
             .filter(Boolean))];
+        const topicTitles = [...new Set(submissionDetails
+            .map(detail => detail.topicTitle || detail.meetingTopicTitle)
+            .filter(Boolean))];
+        const topicFilters = [];
+        if (studentCodesFromContent.length) {
+            topicFilters.push(
+                { leader_code: { $in: studentCodesFromContent } },
+                { member2_code: { $in: studentCodesFromContent } },
+                { member3_code: { $in: studentCodesFromContent } }
+            );
+        }
+        if (topicTitles.length) topicFilters.push({ title: { $in: topicTitles } });
+        const topics = topicFilters.length
+            ? await Topic.find({
+                $or: topicFilters
+            }).select('topic_code title leader_code member2_code member3_code').lean()
+            : [];
+        const studentCodes = [...new Set([
+            ...studentCodesFromContent,
+            ...submissionDetails.flatMap(detail => {
+                if (detail.studentCode || !detail.meetingTopicTitle) return [];
+                const topic = topics.find(candidate => candidate.title === detail.meetingTopicTitle);
+                return topic?.leader_code ? [String(topic.leader_code).toUpperCase()] : [];
+            })
+        ])];
         const students = studentCodes.length
             ? await User.find({ user_code: { $in: studentCodes }, role: 'STUDENT' })
                 .select('user_code full_name')
@@ -88,11 +123,35 @@ exports.getLecturerNotifications = async (req, res) => {
             const item = notification.toObject();
             item.is_read = item.read_by.includes(lecturerCode);
             if (isStudentOriginatedNotification(item.title)) {
-                const studentCode = item.content?.match(/^Sinh viên .*?\(([^)]+)\)/)?.[1]?.trim();
+                const studentCode = item.content?.match(/^Sinh viên .*?\(([^)]+)\)/)?.[1]?.trim()
+                    || item.sender_code
+                    || null;
                 const studentName = studentNames.get(String(studentCode || '').toUpperCase());
+                const meetingTopicTitle = item.content?.match(/Nhóm đề tài "([^"]+)"/)?.[1]?.trim();
+                const resolvedTopic = meetingTopicTitle
+                    ? topics.find(topic => topic.title === meetingTopicTitle)
+                    : null;
+                const notificationDetails = submissionDetails.find(detail =>
+                    detail.studentCode === String(studentCode || '').toUpperCase()
+                    && detail.groupCode === (item.group_code || null)
+                    && detail.topicTitle === (item.content?.match(/cho đề tài "([^"]+)"/)?.[1]?.trim() || undefined)
+                );
+                const candidateTopics = topics.filter(topic =>
+                    [topic.leader_code, topic.member2_code, topic.member3_code]
+                        .some(code => String(code || '').toUpperCase() === String(studentCode || '').toUpperCase())
+                );
+                const matchingTopic = notificationDetails?.topicTitle
+                    ? candidateTopics.find(topic => topic.title === notificationDetails.topicTitle)
+                    : resolvedTopic || (candidateTopics.length === 1 ? candidateTopics[0] : null);
+                item.group_code = item.group_code || matchingTopic?.topic_code || null;
                 item.type = 'STUDENT';
-                if (studentCode) {
+                if (studentName) {
+                    item.sender_name = studentName;
+                } else if (studentCode) {
                     item.sender_name = studentName || studentCode;
+                } else if (resolvedTopic?.leader_code) {
+                    item.sender_name = studentNames.get(String(resolvedTopic.leader_code).toUpperCase())
+                        || resolvedTopic.leader_code;
                 } else if (item.sender_name === 'Hệ thống') {
                     item.sender_name = 'Sinh viên';
                 }

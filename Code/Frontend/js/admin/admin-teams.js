@@ -44,6 +44,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const checkAll              = document.getElementById("checkAll");
     const activeFilterChips     = document.getElementById("activeFilterChips");
     const lecturerSearchInput   = document.getElementById("lecturerSearchInput");
+    const adminLecturerPicker   = document.getElementById("adminLecturerPicker");
+    const lecturerPickerToggle  = document.getElementById("lecturerPickerToggle");
+    const lecturerOptions       = document.getElementById("lecturerOptions");
     const assignChangeNote      = document.getElementById("assignChangeNote");
     const assignModalSubtitle   = document.getElementById("assignModalSubtitle");
 
@@ -519,6 +522,159 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    let activeAdminLecturerOptionIndex = -1;
+
+    function normalizeAdminLecturerSearch(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[đĐ]/g, "d")
+            .toLowerCase()
+            .trim();
+    }
+
+    function getSelectedAdminLecturerLabel() {
+        return lecturerHDSelect?.value
+            ? lecturerHDSelect.selectedOptions[0]?.textContent || ""
+            : "";
+    }
+
+    function syncAdminLecturerPicker() {
+        if (lecturerSearchInput) {
+            lecturerSearchInput.value = getSelectedAdminLecturerLabel();
+            lecturerSearchInput.disabled = lecturerList.length === 0;
+        }
+        if (lecturerPickerToggle) lecturerPickerToggle.disabled = lecturerList.length === 0;
+        closeAdminLecturerPicker(false);
+    }
+
+    function closeAdminLecturerPicker(restoreSelection = true) {
+        if (!adminLecturerPicker || !lecturerSearchInput || !lecturerOptions) return;
+        adminLecturerPicker.classList.remove("is-open");
+        lecturerOptions.hidden = true;
+        lecturerSearchInput.setAttribute("aria-expanded", "false");
+        lecturerPickerToggle?.setAttribute("aria-expanded", "false");
+        lecturerPickerToggle?.setAttribute("aria-label", "Hiện danh sách giảng viên");
+        lecturerSearchInput.removeAttribute("aria-activedescendant");
+        if (restoreSelection) lecturerSearchInput.value = getSelectedAdminLecturerLabel();
+    }
+
+    function setActiveAdminLecturerOption(index) {
+        if (!lecturerOptions || !lecturerSearchInput) return;
+        const options = Array.from(lecturerOptions.querySelectorAll('[role="option"]:not([aria-disabled="true"])'));
+        if (options.length === 0) return;
+        activeAdminLecturerOptionIndex = (index % options.length + options.length) % options.length;
+        options.forEach(option => option.classList.remove("active"));
+        const activeOption = options[activeAdminLecturerOptionIndex];
+        activeOption.classList.add("active");
+        lecturerSearchInput.setAttribute("aria-activedescendant", activeOption.id);
+        activeOption.scrollIntoView({ block: "nearest" });
+    }
+
+    function chooseAdminLecturer(code) {
+        if (!lecturerHDSelect) return;
+        lecturerHDSelect.value = code;
+        closeAdminLecturerPicker();
+    }
+
+    function renderAdminLecturerOptions(query) {
+        if (!lecturerOptions || !lecturerHDSelect) return;
+        const normalizedQuery = normalizeAdminLecturerSearch(query);
+        lecturerOptions.replaceChildren();
+
+        const matches = lecturerList.filter(lecturer => normalizeAdminLecturerSearch(
+            `${lecturer.name} ${lecturer.user_code} ${lecturer.degree} ${lecturer.department}`
+        ).includes(normalizedQuery));
+
+        matches.forEach(lecturer => {
+            const option = document.createElement("div");
+            const meta = [lecturer.degree, lecturer.department].filter(Boolean).join(" · ");
+            const label = `${lecturer.name}${meta ? ` — ${meta}` : ""} (${lecturer.user_code})`;
+            option.className = "admin-lecturer-picker-option";
+            option.id = `admin-lecturer-option-${lecturerOptions.children.length}`;
+            option.setAttribute("role", "option");
+            option.setAttribute("aria-selected", String(lecturerHDSelect.value === lecturer.user_code));
+            option.textContent = label;
+            if (lecturerHDSelect.value === lecturer.user_code) option.classList.add("selected");
+            option.addEventListener("mousedown", event => event.preventDefault());
+            option.addEventListener("click", () => chooseAdminLecturer(lecturer.user_code));
+            lecturerOptions.appendChild(option);
+        });
+
+        if (matches.length === 0) {
+            const emptyMessage = document.createElement("div");
+            emptyMessage.className = "admin-lecturer-picker-option";
+            emptyMessage.setAttribute("role", "option");
+            emptyMessage.setAttribute("aria-disabled", "true");
+            emptyMessage.textContent = lecturerList.length
+                ? "Không tìm thấy giảng viên phù hợp"
+                : "Chưa có danh sách giảng viên";
+            lecturerOptions.appendChild(emptyMessage);
+        }
+
+        activeAdminLecturerOptionIndex = -1;
+        const selectedOption = lecturerOptions.querySelector('[aria-selected="true"]');
+        if (selectedOption) {
+            setActiveAdminLecturerOption(Array.from(
+                lecturerOptions.querySelectorAll('[role="option"]:not([aria-disabled="true"])')
+            ).indexOf(selectedOption));
+        }
+    }
+
+    function openAdminLecturerPicker(clearSearch) {
+        if (!adminLecturerPicker || !lecturerSearchInput || !lecturerOptions || lecturerSearchInput.disabled) return;
+        if (clearSearch) lecturerSearchInput.value = "";
+        adminLecturerPicker.classList.add("is-open");
+        lecturerOptions.hidden = false;
+        lecturerSearchInput.setAttribute("aria-expanded", "true");
+        lecturerPickerToggle?.setAttribute("aria-expanded", "true");
+        lecturerPickerToggle?.setAttribute("aria-label", "Ẩn danh sách giảng viên");
+        renderAdminLecturerOptions(lecturerSearchInput.value);
+    }
+
+    if (lecturerSearchInput && lecturerOptions) {
+        lecturerSearchInput.addEventListener("focus", () => {
+            if (lecturerOptions.hidden) openAdminLecturerPicker(true);
+        });
+        lecturerSearchInput.addEventListener("input", () => {
+            if (lecturerOptions.hidden) openAdminLecturerPicker(false);
+            else renderAdminLecturerOptions(lecturerSearchInput.value);
+        });
+        lecturerSearchInput.addEventListener("keydown", event => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                if (lecturerOptions.hidden) openAdminLecturerPicker(true);
+                setActiveAdminLecturerOption(activeAdminLecturerOptionIndex + (event.key === "ArrowDown" ? 1 : -1));
+            } else if (event.key === "Enter" && !lecturerOptions.hidden) {
+                event.preventDefault();
+                lecturerOptions.querySelector(".admin-lecturer-picker-option.active")?.click();
+            } else if (event.key === "Escape" && !lecturerOptions.hidden) {
+                event.preventDefault();
+                closeAdminLecturerPicker();
+            } else if (event.key === "Tab") {
+                closeAdminLecturerPicker();
+            }
+        });
+    }
+
+    if (lecturerPickerToggle) {
+        lecturerPickerToggle.addEventListener("click", () => {
+            if (lecturerOptions?.hidden) {
+                lecturerSearchInput?.focus();
+                openAdminLecturerPicker(true);
+            } else {
+                closeAdminLecturerPicker();
+            }
+        });
+    }
+
+    document.addEventListener("pointerdown", event => {
+        if (adminLecturerPicker && !adminLecturerPicker.contains(event.target) &&
+            lecturerOptions && !lecturerOptions.hidden) {
+            closeAdminLecturerPicker();
+        }
+    });
+
     // ── OPEN ASSIGN MODAL ─────────────────────────────────────
     function openAssignModal(teamId) {
         selectedTeamId = teamId;
@@ -576,29 +732,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Populate lecturer select
-        lecturerHDSelect.innerHTML = `<option value="">-- Chọn Giảng Viên Hướng Dẫn --</option>`;
+        lecturerHDSelect.replaceChildren();
+        const promptOption = document.createElement("option");
+        promptOption.value = "";
+        promptOption.textContent = "-- Chọn Giảng Viên Hướng Dẫn --";
+        lecturerHDSelect.appendChild(promptOption);
         lecturerList.forEach(lec => {
-            const selected = (team.lecturer_code || team.lecturerHD) === lec.user_code ||
-                             team.lecturerHD === lec.name ? "selected" : "";
+            const option = document.createElement("option");
+            option.value = lec.user_code;
             const meta = [lec.degree, lec.department].filter(Boolean).join(" · ");
-            lecturerHDSelect.innerHTML += `<option value="${lec.user_code}" ${selected}>${lec.name}${meta ? " — " + meta : ""}</option>`;
+            option.textContent = `${lec.name}${meta ? " — " + meta : ""} (${lec.user_code})`;
+            option.selected = (team.lecturer_code || team.lecturerHD) === lec.user_code ||
+                team.lecturerHD === lec.name;
+            lecturerHDSelect.appendChild(option);
         });
 
-        // Clear lecturer search
-        if (lecturerSearchInput) lecturerSearchInput.value = "";
+        syncAdminLecturerPicker();
 
         assignModal.style.display = "flex";
-    }
-
-    // Lecturer search in modal
-    if (lecturerSearchInput) {
-        lecturerSearchInput.addEventListener("input", () => {
-            const q = lecturerSearchInput.value.toLowerCase().trim();
-            Array.from(lecturerHDSelect.options).forEach(opt => {
-                if (!opt.value) return;
-                opt.style.display = opt.textContent.toLowerCase().includes(q) ? "" : "none";
-            });
-        });
     }
 
     // ── SAVE ASSIGN ───────────────────────────────────────────

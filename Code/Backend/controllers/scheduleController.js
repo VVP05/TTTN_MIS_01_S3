@@ -221,7 +221,8 @@ exports.createMeeting = async (req, res) => {
             content: `Sinh viên ${studentName} (${studentCode}) thuộc nhóm đề tài "${topic.title}" đã gửi yêu cầu lịch hẹn "${title}" vào ${new Date(meetingDate).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}, ${meetingStart}-${meetingEnd}.`,
             eventKey: `meeting-request:${newMeeting._id}`,
             type: 'STUDENT',
-            senderName: studentName
+            senderName: studentName,
+            senderCode: studentCode
         });
         res.status(201).json({ 
             success: true,

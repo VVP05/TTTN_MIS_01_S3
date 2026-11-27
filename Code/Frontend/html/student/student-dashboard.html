@@ -303,14 +303,21 @@
 
                             <!-- GIẢNG VIÊN HƯỚNG DẪN -->
                             <div class="form-group">
-                                <label class="form-label" for="lecturerCode">Giảng viên hướng dẫn <span class="required">*</span></label>
-                                <div class="input-icon-wrapper">
-                                    <span class="field-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
-                                    <select id="lecturerCode" required>
-                                        <option value="">-- Chọn Giảng viên hướng dẫn --</option>
-                                        <option value="UNASSIGNED">-- Chưa có GVHD (Nhờ Khoa phân công) --</option>
-                                    </select>
+                                <label class="form-label" for="lecturerSearch">Giảng viên hướng dẫn <span class="required">*</span></label>
+                                <div id="lecturerPicker" class="lecturer-picker">
+                                    <div class="input-icon-wrapper lecturer-picker-control">
+                                        <span class="field-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+                                        <input id="lecturerSearch" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="lecturerOptions" aria-required="true" placeholder="Chọn hoặc tìm giảng viên..." autocomplete="off" disabled>
+                                        <button id="lecturerPickerToggle" class="lecturer-picker-toggle" type="button" aria-label="Hiện danh sách giảng viên" aria-expanded="false" disabled>
+                                            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <div id="lecturerOptions" class="lecturer-picker-options" role="listbox" aria-label="Danh sách giảng viên" hidden></div>
                                 </div>
+                                <select id="lecturerCode" class="lecturer-native-select" aria-hidden="true" tabindex="-1">
+                                    <option value="">-- Chọn Giảng viên hướng dẫn --</option>
+                                    <option value="UNASSIGNED">-- Chưa có GVHD (Nhờ Khoa phân công) --</option>
+                                </select>
                             </div>
 
                             <!-- ĐỀ TÀI ĐỀ XUẤT & TÊN ĐỀ TÀI -->
@@ -399,6 +406,18 @@
             <div class="modal-actions">
                 <button id="closeCancelBtn" class="btn-cancel">Đóng</button>
                 <button id="confirmCancelBtn" class="btn-confirm" style="background-color: #ef4444; color: white;">Đồng ý Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="removeMemberModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="removeMemberModalTitle">
+            <div class="modal-icon"><i class="fa-solid fa-user-minus"></i></div>
+            <h3 id="removeMemberModalTitle">Xác nhận loại thành viên</h3>
+            <p>Bạn có chắc chắn muốn loại thành viên này khỏi nhóm? Thành viên sẽ có thể gửi yêu cầu vào nhóm khác.</p>
+            <div class="modal-actions">
+                <button type="button" id="cancelRemoveMemberBtn" class="btn-cancel">Không, giữ lại</button>
+                <button type="button" id="confirmRemoveMemberBtn" class="btn-confirm">Loại khỏi nhóm</button>
             </div>
         </div>
     </div>

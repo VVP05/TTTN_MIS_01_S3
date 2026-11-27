@@ -726,7 +726,8 @@ test('first official submission does not expect a previous attempt', async t => 
     t.mock.method(Topic, 'findOne', async () => ({
         _id: 'topic-1',
         lecturer_code: 'GV01',
-        title: 'Đề tài kiểm thử'
+        title: 'Đề tài kiểm thử',
+        topic_code: 'N09'
     }));
     t.mock.method(User, 'findOne', filter => {
         assert.deepEqual(filter, { user_code: 'SV01', role: 'STUDENT' });
@@ -777,6 +778,7 @@ test('first official submission does not expect a previous attempt', async t => 
     assert.equal(notificationUpdate.$setOnInsert.type, 'STUDENT');
     assert.equal(notificationUpdate.$setOnInsert.sender_name, 'Sinh viên kiểm thử');
     assert.equal(notificationUpdate.$setOnInsert.title, 'Bài nộp Mốc 1 mới cần nhận xét');
+    assert.equal(notificationUpdate.$setOnInsert.group_code, 'N09');
     assert.match(notificationUpdate.$setOnInsert.content, /Sinh viên kiểm thử \(SV01\)/);
 });
 
@@ -1364,6 +1366,35 @@ test('students can request to join an active registered group', async t => {
     assert.deepEqual(createdRequest, { leader_code: 'SV02', member_code: 'SV01' });
 });
 
+test('students cannot request to join a group whose topic is approved', async t => {
+    t.mock.method(User, 'find', () => ({
+        select: async () => [{ user_code: 'SV01' }, { user_code: 'SV02' }]
+    }));
+    t.mock.method(Topic, 'findOne', async filter => filter.leader_code ? ({
+        _id: 'approved-topic-sv02',
+        status: 'APPROVED',
+        leader_code: 'SV02',
+        member2_code: null,
+        member3_code: null
+    }) : null);
+
+    const response = await request('/api/topics/register', {
+        method: 'POST',
+        role: 'STUDENT',
+        userCode: 'SV01',
+        body: {
+            registration_role: 'MEMBER',
+            leader_code: 'SV02',
+            member2_code: 'SV01',
+            member3_code: null
+        }
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(result.message, /đề tài được phê duyệt/i);
+});
+
 test('students can request to join a public group before its leader registers a topic', async t => {
     const now = new Date();
     let createdRequest;
@@ -1437,6 +1468,182 @@ test('a leader can accept a member before registering the group topic', async t 
     assert.equal(result.success, true);
     assert.equal(updatedRequest.filter.leader_code, 'SV02');
     assert.equal(updatedRequest.update.$set.status, 'ACCEPTED');
+});
+
+test('a student can cancel only their own pending group join request', async t => {
+    const requestId = '507f1f77bcf86cd799439011';
+    let updateAttempt;
+    t.mock.method(GroupJoinRequest, 'findOneAndUpdate', async (filter, update) => {
+        updateAttempt = { filter, update };
+        return {
+            _id: requestId,
+            leader_code: 'SV02',
+            member_code: 'SV01',
+            status: 'CANCELLED'
+        };
+    });
+    t.mock.method(Notification, 'findOneAndUpdate', async () => ({}));
+
+    const response = await request(`/api/topics/join-requests/SV01/${requestId}`, {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.success, true);
+    assert.equal(updateAttempt.filter.member_code.test('sv01'), true);
+    assert.equal(updateAttempt.filter.status, 'PENDING');
+    assert.equal(updateAttempt.update.$set.status, 'CANCELLED');
+});
+
+test('cancelling another student\'s join request is forbidden and processed requests cannot be cancelled', async t => {
+    let updateAttempted = false;
+    t.mock.method(GroupJoinRequest, 'findOneAndUpdate', async () => {
+        updateAttempted = true;
+        return null;
+    });
+
+    const anotherStudentsRequest = await request('/api/topics/join-requests/SV02/507f1f77bcf86cd799439011', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    assert.equal(anotherStudentsRequest.status, 403);
+    assert.equal(updateAttempted, false);
+
+    const alreadyProcessedRequest = await request('/api/topics/join-requests/SV01/507f1f77bcf86cd799439011', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await alreadyProcessedRequest.json();
+
+    assert.equal(alreadyProcessedRequest.status, 409);
+    assert.equal(result.success, false);
+    assert.equal(updateAttempted, true);
+});
+
+test('a cancelled join request is no longer returned as an active student status', async t => {
+    const requestId = '507f1f77bcf86cd799439011';
+    t.mock.method(Topic, 'findOne', () => ({
+        sort() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupJoinRequest, 'findOne', () => ({
+        sort() { return this; },
+        lean: async () => ({
+            _id: requestId,
+            leader_code: 'SV02',
+            member_code: 'SV01',
+            status: 'CANCELLED'
+        })
+    }));
+
+    const response = await request('/api/topics/student/SV01', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 404);
+    assert.match(result.message, /không tìm thấy yêu cầu tham gia nhóm đang hoạt động/i);
+});
+
+test('accepted members can be removed before the leader registers a topic', async t => {
+    const requestId = '507f1f77bcf86cd799439011';
+    let updateAttempt;
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => null
+    }));
+    t.mock.method(GroupJoinRequest, 'findOneAndUpdate', async (filter, update) => {
+        updateAttempt = { filter, update };
+        return {
+            _id: requestId,
+            leader_code: 'SV01',
+            member_code: 'SV02',
+            status: 'REMOVED'
+        };
+    });
+    t.mock.method(Notification, 'findOneAndUpdate', async () => ({}));
+
+    const response = await request(`/api/topics/join-requests/SV01/${requestId}/remove`, {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.success, true);
+    assert.equal(updateAttempt.filter.leader_code.test('sv01'), true);
+    assert.equal(updateAttempt.filter.status, 'ACCEPTED');
+    assert.equal(updateAttempt.update.$set.status, 'REMOVED');
+});
+
+test('accepted members cannot be removed after the leader registers a topic', async t => {
+    let updateAttempted = false;
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => ({ _id: 'topic-sv01' })
+    }));
+    t.mock.method(GroupJoinRequest, 'findOneAndUpdate', async () => {
+        updateAttempted = true;
+        return null;
+    });
+
+    const response = await request('/api/topics/join-requests/SV01/507f1f77bcf86cd799439011/remove', {
+        method: 'DELETE',
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 409);
+    assert.equal(result.success, false);
+    assert.equal(updateAttempted, false);
+});
+
+test('join-request list enables member removal only before a topic is registered', async t => {
+    let hasTopic = false;
+    t.mock.method(GroupJoinRequest, 'find', () => ({
+        sort() { return this; },
+        lean: async () => [{
+            _id: 'join-request-1',
+            leader_code: 'SV01',
+            member_code: 'SV02',
+            status: 'ACCEPTED'
+        }]
+    }));
+    t.mock.method(Topic, 'findOne', () => ({
+        select() { return this; },
+        lean: async () => hasTopic ? { _id: 'topic-sv01' } : null
+    }));
+    t.mock.method(User, 'find', () => ({
+        select() { return this; },
+        lean: async () => [{ user_code: 'SV02', full_name: 'Sinh viên Hai' }]
+    }));
+
+    const response = await request('/api/topics/join-requests/SV01', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const result = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(result.requests[0].can_remove, true);
+
+    hasTopic = true;
+    const registeredGroupResponse = await request('/api/topics/join-requests/SV01', {
+        role: 'STUDENT',
+        userCode: 'SV01'
+    });
+    const registeredGroupResult = await registeredGroupResponse.json();
+
+    assert.equal(registeredGroupResponse.status, 200);
+    assert.equal(registeredGroupResult.requests[0].can_remove, false);
 });
 
 test('accepting a join request adds the student to an already registered topic', async t => {
@@ -2186,6 +2393,26 @@ test('lecturer notifications resolve student names for previously saved submissi
             lean: async () => [{ user_code: 'SV01', full_name: 'Sinh viên kiểm thử' }]
         };
     });
+    t.mock.method(Topic, 'find', filter => {
+        assert.deepEqual(filter, {
+            $or: [
+                { leader_code: { $in: ['SV01'] } },
+                { member2_code: { $in: ['SV01'] } },
+                { member3_code: { $in: ['SV01'] } },
+                { title: { $in: ['Đề tài kiểm thử'] } }
+            ]
+        });
+        return {
+            select() { return this; },
+            lean: async () => [{
+                topic_code: 'N09',
+                title: 'Đề tài kiểm thử',
+                leader_code: 'SV01',
+                member2_code: null,
+                member3_code: null
+            }]
+        };
+    });
 
     const response = {
         statusCode: 200,
@@ -2199,10 +2426,12 @@ test('lecturer notifications resolve student names for previously saved submissi
 
     assert.equal(response.statusCode, 200);
     assert.match(response.body.notifications[0].content, /^Sinh viên Sinh viên kiểm thử \(SV01\)/);
+    assert.equal(response.body.notifications[0].group_code, 'N09');
     assert.equal(response.body.notifications[0].type, 'STUDENT');
     assert.equal(response.body.notifications[0].sender_name, 'Sinh viên kiểm thử');
     assert.equal(response.body.notifications[1].type, 'STUDENT');
-    assert.equal(response.body.notifications[1].sender_name, 'Sinh viên');
+    assert.equal(response.body.notifications[1].sender_name, 'Sinh viên kiểm thử');
+    assert.equal(response.body.notifications[1].group_code, 'N09');
 });
 
 test('lecturers cannot send notifications to students outside their approved topics', async t => {

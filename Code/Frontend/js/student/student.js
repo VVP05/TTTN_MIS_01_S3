@@ -94,6 +94,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const joinRequestsList = document.getElementById("joinRequestsList");
     const proposedSelect = document.getElementById("proposedTopic");
     const lecturerSelect = document.getElementById("lecturerCode");
+    const lecturerSearch = document.getElementById("lecturerSearch");
+    const lecturerPicker = document.getElementById("lecturerPicker");
+    const lecturerPickerToggle = document.getElementById("lecturerPickerToggle");
+    const lecturerOptions = document.getElementById("lecturerOptions");
     const topicTitleInput = document.getElementById("topicTitle");
     const topicDescInput = document.getElementById("topicDescription");
     const topicDetailsSection = document.getElementById("topicDetailsSection");
@@ -122,6 +126,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cancelModal = document.getElementById("cancelModal");
     const closeCancelBtn = document.getElementById("closeCancelBtn");
     const confirmCancelBtn = document.getElementById("confirmCancelBtn");
+    const removeMemberModal = document.getElementById("removeMemberModal");
+    const cancelRemoveMemberBtn = document.getElementById("cancelRemoveMemberBtn");
+    const confirmRemoveMemberBtn = document.getElementById("confirmRemoveMemberBtn");
+    let resolveRemoveMemberConfirmation = null;
+
+    function finishRemoveMemberConfirmation(confirmed) {
+        if (removeMemberModal) removeMemberModal.style.display = "none";
+        const resolve = resolveRemoveMemberConfirmation;
+        resolveRemoveMemberConfirmation = null;
+        if (resolve) resolve(confirmed);
+    }
+
+    function requestRemoveMemberConfirmation() {
+        if (!removeMemberModal || !cancelRemoveMemberBtn || !confirmRemoveMemberBtn) {
+            showMessage("error", "Không thể mở hộp xác nhận loại thành viên.");
+            return Promise.resolve(false);
+        }
+
+        removeMemberModal.style.display = "flex";
+        confirmRemoveMemberBtn.focus();
+        return new Promise(resolve => {
+            resolveRemoveMemberConfirmation = resolve;
+        });
+    }
+
+    cancelRemoveMemberBtn?.addEventListener("click", () => finishRemoveMemberConfirmation(false));
+    confirmRemoveMemberBtn?.addEventListener("click", () => finishRemoveMemberConfirmation(true));
+    removeMemberModal?.addEventListener("click", event => {
+        if (event.target === removeMemberModal) finishRemoveMemberConfirmation(false);
+    });
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && removeMemberModal?.style.display === "flex") {
+            finishRemoveMemberConfirmation(false);
+        }
+    });
 
     // Hiển thị thông tin cơ bản của Sinh viên
     if (userNameEl) userNameEl.textContent = user.full_name || user.name || "";
@@ -277,6 +316,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         roleRadios.forEach(r => r.disabled = disabled);
         if (lecturerSelect) lecturerSelect.disabled = disabled || selectedRole === "MEMBER";
+        syncLecturerPickerDisabled();
         if (proposedSelect) proposedSelect.disabled = disabled || selectedRole === "MEMBER";
         if (topicTitleInput) topicTitleInput.disabled = disabled || selectedRole === "MEMBER";
         if (topicDescInput) topicDescInput.disabled = disabled || selectedRole === "MEMBER";
@@ -417,22 +457,194 @@ document.addEventListener("DOMContentLoaded", async () => {
                             maxQuota: Number.isInteger(quota) && quota >= 0 ? quota : 5
                         };
                     });
-                    lecturerSelect.innerHTML = `<option value="">-- Chọn Giảng viên hướng dẫn --</option><option value="UNASSIGNED">-- Chưa có GVHD (Nhờ Khoa phân công) --</option>` +
-                        allLecturers.map(lecturer =>
-                            `<option value="${lecturer.code}">${lecturer.name} (${lecturer.code})</option>`
-                        ).join('');
+                    lecturerSelect.innerHTML = `<option value="">-- Chọn Giảng viên hướng dẫn --</option><option value="UNASSIGNED">-- Chưa có GVHD (Nhờ Khoa phân công) --</option>`;
+                    allLecturers.forEach(lecturer => {
+                        const option = document.createElement("option");
+                        option.value = lecturer.code;
+                        option.textContent = `${lecturer.name} (${lecturer.code})`;
+                        lecturerSelect.appendChild(option);
+                    });
+                    if (lecturerSearch) lecturerSearch.disabled = false;
+                    if (lecturerPickerToggle) lecturerPickerToggle.disabled = false;
+                    syncLecturerPicker();
                 } else {
                     allLecturers = [];
                     lecturerSelect.innerHTML = `<option value="">-- Chưa có dữ liệu giảng viên --</option>`;
+                    if (lecturerSearch) lecturerSearch.disabled = true;
+                    if (lecturerPickerToggle) lecturerPickerToggle.disabled = true;
+                    syncLecturerPicker();
                 }
             } else {
                 console.error("Lỗi HTTP khi tải danh sách giảng viên:", res.status, res.statusText);
                 lecturerSelect.innerHTML = `<option value="">-- Không thể tải danh sách giảng viên (Lỗi ${res.status}) --</option>`;
+                if (lecturerSearch) lecturerSearch.disabled = true;
+                if (lecturerPickerToggle) lecturerPickerToggle.disabled = true;
+                syncLecturerPicker();
             }
         } catch (err) {
             console.error("Lỗi tải danh sách giảng viên:", err);
             lecturerSelect.innerHTML = `<option value="">-- Lỗi kết nối máy chủ --</option>`;
+            if (lecturerSearch) lecturerSearch.disabled = true;
+            if (lecturerPickerToggle) lecturerPickerToggle.disabled = true;
+            syncLecturerPicker();
         }
+    };
+
+    const normalizeLecturerSearch = value => String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase()
+        .trim();
+
+    let activeLecturerOptionIndex = -1;
+
+    const getSelectedLecturerLabel = () => {
+        const selectedCode = lecturerSelect?.value || "";
+        if (selectedCode === "UNASSIGNED") return "-- Chưa có GVHD (Nhờ Khoa phân công) --";
+        const selectedLecturer = allLecturers.find(lecturer => lecturer.code === selectedCode);
+        if (selectedLecturer) return `${selectedLecturer.name} (${selectedLecturer.code})`;
+        return lecturerSelect?.selectedOptions?.[0]?.textContent || "";
+    };
+
+    const closeLecturerPicker = (restoreSelection = true) => {
+        if (!lecturerPicker || !lecturerSearch || !lecturerOptions) return;
+        lecturerPicker.classList.remove("is-open");
+        lecturerOptions.hidden = true;
+        lecturerSearch.setAttribute("aria-expanded", "false");
+        lecturerPickerToggle?.setAttribute("aria-expanded", "false");
+        lecturerPickerToggle?.setAttribute("aria-label", "Hiện danh sách giảng viên");
+        lecturerSearch.removeAttribute("aria-activedescendant");
+        if (restoreSelection) lecturerSearch.value = getSelectedLecturerLabel();
+    };
+
+    const syncLecturerPicker = () => {
+        if (lecturerSearch) lecturerSearch.value = getSelectedLecturerLabel();
+        closeLecturerPicker(false);
+    };
+
+    const setActiveLecturerOption = index => {
+        if (!lecturerOptions || !lecturerSearch) return;
+        const options = Array.from(lecturerOptions.querySelectorAll('[role="option"]:not([aria-disabled="true"])'));
+        if (options.length === 0) return;
+        activeLecturerOptionIndex = (index % options.length + options.length) % options.length;
+        options.forEach(option => option.classList.remove("active"));
+        const activeOption = options[activeLecturerOptionIndex];
+        activeOption.classList.add("active");
+        lecturerSearch.setAttribute("aria-activedescendant", activeOption.id);
+        activeOption.scrollIntoView({ block: "nearest" });
+    };
+
+    const chooseLecturer = code => {
+        if (!lecturerSelect) return;
+        lecturerSelect.value = code;
+        closeLecturerPicker();
+        lecturerSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
+    const renderLecturerOptions = query => {
+        if (!lecturerOptions || !lecturerSelect) return;
+        const normalizedQuery = normalizeLecturerSearch(query);
+        lecturerOptions.replaceChildren();
+
+        const appendOption = (code, label) => {
+            const option = document.createElement("div");
+            option.className = "lecturer-picker-option";
+            option.id = `lecturer-option-${lecturerOptions.children.length}`;
+            option.setAttribute("role", "option");
+            option.setAttribute("aria-selected", String(lecturerSelect.value === code));
+            option.textContent = label;
+            if (lecturerSelect.value === code) option.classList.add("selected");
+            option.addEventListener("mousedown", event => event.preventDefault());
+            option.addEventListener("click", () => chooseLecturer(code));
+            lecturerOptions.appendChild(option);
+        };
+
+        appendOption("UNASSIGNED", "-- Chưa có GVHD (Nhờ Khoa phân công) --");
+        const matchingLecturers = allLecturers.filter(lecturer =>
+            normalizeLecturerSearch(`${lecturer.name} ${lecturer.code}`).includes(normalizedQuery)
+        );
+        matchingLecturers.forEach(lecturer =>
+            appendOption(lecturer.code, `${lecturer.name} (${lecturer.code})`)
+        );
+        if (normalizedQuery && matchingLecturers.length === 0) {
+            const emptyMessage = document.createElement("div");
+            emptyMessage.className = "lecturer-picker-option";
+            emptyMessage.setAttribute("role", "option");
+            emptyMessage.setAttribute("aria-disabled", "true");
+            emptyMessage.textContent = "Không tìm thấy giảng viên phù hợp";
+            lecturerOptions.appendChild(emptyMessage);
+        }
+
+        activeLecturerOptionIndex = -1;
+        const selectedOption = lecturerOptions.querySelector('[aria-selected="true"]');
+        if (selectedOption) {
+            setActiveLecturerOption(Array.from(
+                lecturerOptions.querySelectorAll('[role="option"]:not([aria-disabled="true"])')
+            ).indexOf(selectedOption));
+        }
+    };
+
+    const openLecturerPicker = clearSearch => {
+        if (!lecturerPicker || !lecturerSearch || !lecturerOptions || lecturerSearch.disabled) return;
+        if (clearSearch) lecturerSearch.value = "";
+        lecturerPicker.classList.add("is-open");
+        lecturerOptions.hidden = false;
+        lecturerSearch.setAttribute("aria-expanded", "true");
+        lecturerPickerToggle?.setAttribute("aria-expanded", "true");
+        lecturerPickerToggle?.setAttribute("aria-label", "Ẩn danh sách giảng viên");
+        renderLecturerOptions(lecturerSearch.value);
+    };
+
+    if (lecturerSearch && lecturerOptions) {
+        lecturerSearch.addEventListener("focus", () => {
+            if (lecturerOptions.hidden) openLecturerPicker(true);
+        });
+        lecturerSearch.addEventListener("input", () => {
+            if (lecturerOptions.hidden) openLecturerPicker(false);
+            else renderLecturerOptions(lecturerSearch.value);
+        });
+        lecturerSearch.addEventListener("keydown", event => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                if (lecturerOptions.hidden) openLecturerPicker(true);
+                setActiveLecturerOption(activeLecturerOptionIndex + (event.key === "ArrowDown" ? 1 : -1));
+            } else if (event.key === "Enter" && !lecturerOptions.hidden && activeLecturerOptionIndex >= 0) {
+                event.preventDefault();
+                lecturerOptions.querySelector(".lecturer-picker-option.active")?.click();
+            } else if (event.key === "Enter" && !lecturerOptions.hidden) {
+                event.preventDefault();
+            } else if (event.key === "Escape" && !lecturerOptions.hidden) {
+                event.preventDefault();
+                closeLecturerPicker();
+            } else if (event.key === "Tab") {
+                closeLecturerPicker();
+            }
+        });
+    }
+
+    if (lecturerPickerToggle) {
+        lecturerPickerToggle.addEventListener("click", () => {
+            if (lecturerOptions?.hidden) {
+                lecturerSearch?.focus();
+                openLecturerPicker(true);
+            } else {
+                closeLecturerPicker();
+            }
+        });
+    }
+
+    document.addEventListener("pointerdown", event => {
+        if (lecturerPicker && !lecturerPicker.contains(event.target) && lecturerOptions && !lecturerOptions.hidden) {
+            closeLecturerPicker();
+        }
+    });
+
+    const syncLecturerPickerDisabled = () => {
+        const disabled = Boolean(lecturerSelect?.disabled) || allLecturers.length === 0;
+        if (lecturerSearch) lecturerSearch.disabled = disabled;
+        if (lecturerPickerToggle) lecturerPickerToggle.disabled = disabled;
     };
 
     /**
@@ -546,14 +758,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 leaderNameEl.placeholder = "Nhập MSSV Trưởng nhóm...";
             }
             if (partnerInput) {
-                partnerInput.placeholder = "Nhập MSSV Thành viên 2 (VD: SV02)...";
+                partnerInput.placeholder = "Nhập MSSV Thành viên 2...";
                 partnerInput.disabled = false;
             }
             if (member3Input) {
-                member3Input.placeholder = "Nhập MSSV Thành viên 3 (VD: SV03)...";
+                member3Input.placeholder = "Nhập MSSV Thành viên 3...";
                 member3Input.disabled = false;
             }
         }
+        syncLecturerPickerDisabled();
+        syncLecturerPicker();
     };
 
     roleRadios.forEach(radio => {
@@ -567,6 +781,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (lecturerSelect) {
         lecturerSelect.addEventListener("change", (e) => {
             hideMessage();
+            syncLecturerPicker();
             const selectedLecturer = allLecturers.find(lecturer => lecturer.code === e.target.value);
             if (!isEditing) {
                 if (topicTitleInput) topicTitleInput.value = "";
@@ -595,7 +810,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 if (topicTitleInput && topicTitle) topicTitleInput.value = topicTitle;
                 if (topicDescInput && topicDesc) topicDescInput.value = topicDesc;
-                if (lecturerSelect && lecturerCode) lecturerSelect.value = lecturerCode;
+                if (lecturerSelect && lecturerCode) {
+                    lecturerSelect.value = lecturerCode;
+                    syncLecturerPicker();
+                }
             }
         });
     }
@@ -866,7 +1084,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const hasAlreadyRegistered = studentHasRegisteredTopic || (!topic.can_register_as_leader && !isGroupTopic);
 
         if (isGroupTopic) {
-            statusEl.textContent = `Còn ${topic.open_slots} vị trí`;
+            statusEl.textContent = topic.status === "APPROVED"
+                ? "Nhóm đã chốt"
+                : `Còn ${topic.open_slots} vị trí`;
             const requestStatus = String(topic.request_status || "").toUpperCase();
 
             if (requestStatus === "PENDING") {
@@ -881,6 +1101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 actionBtn.textContent = topic.cannot_join_reason
                     ? "Không thể tham gia"
                     : "Không thể đăng ký";
+                if (topic.cannot_join_reason) actionBtn.title = topic.cannot_join_reason;
                 actionBtn.disabled = true;
                 footer.append(statusEl, actionBtn);
             } else if (!registrationWindowOpen) {
@@ -1118,6 +1339,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (leaderRole) leaderRole.checked = true;
         updateRoleUI("LEADER");
         if (lecturerSelect) lecturerSelect.value = topic.lecturer_code || "";
+        syncLecturerPicker();
         renderProposedTopics(topic.lecturer_code || "");
         if (proposedSelect) {
             proposedSelect.value = String(topic._id || "");
@@ -1313,6 +1535,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         
         if (lecturerSelect) lecturerSelect.value = "";
+        syncLecturerPicker();
         renderProposedTopics("");
 
         const defaultRadio = document.querySelector('input[name="userRole"][value="LEADER"]');
@@ -1377,6 +1600,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (proposeOwnTopicBtn) proposeOwnTopicBtn.style.display = isApproved ? "none" : "";
 
                     if (lecturerSelect) lecturerSelect.value = topic.lecturer_code || "";
+                    syncLecturerPicker();
                     renderProposedTopics(topic.lecturer_code || "");
                     if (proposedSelect) proposedSelect.value = topic.proposed_topic_id || topic.proposed_topic || "";
                     if (topicTitleInput) topicTitleInput.value = topic.title || "";
@@ -1388,7 +1612,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         await loadPartnerInfo(member3Input, topic.member3_code);
                     }
 
-                    if (topic.status === "JOIN_PENDING" || topic.status === "JOIN_ACCEPTED" || topic.status === "JOIN_REJECTED") {
+                    if (topic.status === "JOIN_PENDING" || topic.status === "JOIN_ACCEPTED" ||
+                        topic.status === "JOIN_REJECTED") {
                         updateRoleUI("MEMBER");
                         await loadPartnerInfo(leaderNameEl, topic.leader_code);
                         if (statusEl) {
@@ -1421,13 +1646,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                         const joinMessageIcon = topic.status === "JOIN_ACCEPTED"
                             ? "fa-circle-check" : topic.status === "JOIN_REJECTED" ? "fa-circle-xmark" : "fa-circle-info";
                         showMessage("info", "", `
-                            <div style="background-color: ${joinMessageBackground}; border: 1px solid ${joinMessageBorder}; color: ${joinMessageColor}; padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 15px;">
-                                <i class="fa-solid ${joinMessageIcon}" style="color: ${joinMessageColor}; margin-right: 6px;"></i>
-                                ${topic.status === "JOIN_ACCEPTED"
-                                    ? `Trưởng nhóm <strong>${topic.leader_code}</strong> đã xác nhận bạn. Vui lòng chờ Trưởng nhóm đăng ký đề tài.`
-                                    : topic.status === "JOIN_REJECTED"
-                                        ? `Yêu cầu tham gia nhóm của bạn đã bị từ chối. Bạn có thể nhập mã Trưởng nhóm khác để gửi lại yêu cầu.`
-                                        : `Đã gửi yêu cầu đến Trưởng nhóm <strong>${topic.leader_code}</strong>. Vui lòng chờ xác nhận.`}
+                            <div class="join-request-feedback" style="background-color: ${joinMessageBackground}; border: 1px solid ${joinMessageBorder}; color: ${joinMessageColor};">
+                                <span>
+                                    <i class="fa-solid ${joinMessageIcon}" style="color: ${joinMessageColor}; margin-right: 6px;"></i>
+                                    ${topic.status === "JOIN_ACCEPTED"
+                                        ? `Trưởng nhóm <strong>${escapeHtml(topic.leader_code)}</strong> đã xác nhận bạn. Vui lòng chờ Trưởng nhóm đăng ký đề tài.`
+                                        : topic.status === "JOIN_REJECTED"
+                                            ? `Yêu cầu tham gia nhóm của bạn đã bị từ chối. Bạn có thể nhập mã Trưởng nhóm khác để gửi lại yêu cầu.`
+                                            : `Đã gửi yêu cầu đến Trưởng nhóm <strong>${escapeHtml(topic.leader_code)}</strong>. Vui lòng chờ xác nhận.`}
+                                </span>
+                                ${topic.status === "JOIN_PENDING" && topic.join_request_id
+                                    ? `<button type="button" class="cancel-join-request-btn" data-request-id="${escapeHtml(topic.join_request_id)}">Hủy yêu cầu</button>`
+                                    : ""}
                             </div>
                         `);
                         renderMarketplace();
@@ -1513,6 +1743,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
+    document.addEventListener("click", async event => {
+        const target = event.target;
+        const button = target instanceof Element ? target.closest(".cancel-join-request-btn") : null;
+        if (!button) return;
+
+        const requestId = button.dataset.requestId;
+        if (!requestId) {
+            showMessage("error", "Không tìm thấy mã yêu cầu cần hủy.");
+            return;
+        }
+
+        button.disabled = true;
+        try {
+            const response = await apiFetch(
+                `${window.APP_CONFIG.API_BASE_URL}/api/topics/join-requests/${encodeURIComponent(user.user_code)}/${encodeURIComponent(requestId)}`,
+                { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }
+            );
+            const result = await response.json();
+            if (!response.ok) {
+                await checkTopicStatus();
+                showMessage("error", result.message || "Không thể hủy yêu cầu tham gia nhóm.");
+                return;
+            }
+
+            await checkTopicStatus();
+            showMessage("success", result.message || "Đã hủy yêu cầu tham gia nhóm.");
+        } catch (error) {
+            console.error("Lỗi hủy yêu cầu tham gia nhóm:", error);
+            button.disabled = false;
+            showMessage("error", "Không thể kết nối máy chủ để hủy yêu cầu.");
+        }
+    });
+
     async function loadJoinRequests() {
         if (!joinRequestsSection || !joinRequestsList) return;
         try {
@@ -1525,28 +1788,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             const data = await res.json();
             const requests = data.requests || [];
-            const selectedRole = document.querySelector('input[name="userRole"]:checked')?.value || "LEADER";
-            if (selectedRole === "LEADER") {
-                const acceptedMembers = requests
-                    .filter(request => request.status === "ACCEPTED")
-                    .map(request => ({
-                        code: extractCode(request.member_code),
-                        name: String(request.member_name || "").trim()
-                    }))
-                    .filter(member => member.code);
-                const memberFields = [partnerInput, member3Input];
-                acceptedMembers.forEach(member => {
-                    if (memberFields.some(field => extractCode(field?.value || "") === member.code)) return;
-                    const emptyField = memberFields.find(field => !extractCode(field?.value || ""));
-                    if (emptyField) {
-                        emptyField.value = member.name
-                            ? `${member.name} (${member.code})`
-                            : member.code;
-                        hasEditedMemberCodes = true;
-                    }
-                });
-            }
-            setMemberRoleLocked(requests.some(request => request.status === "ACCEPTED"));
+            const hasAcceptedMember = requests.some(request => request.status === "ACCEPTED");
+            setMemberRoleLocked(hasAcceptedMember);
+            const acceptedMembers = requests
+                .filter(request => request.status === "ACCEPTED")
+                .map(request => ({
+                    code: extractCode(request.member_code),
+                    name: String(request.member_name || "").trim()
+                }))
+                .filter(member => member.code);
+            const memberFields = [partnerInput, member3Input];
+            acceptedMembers.forEach(member => {
+                if (memberFields.some(field => extractCode(field?.value || "") === member.code)) return;
+                const emptyField = memberFields.find(field => !extractCode(field?.value || ""));
+                if (emptyField) {
+                    emptyField.value = member.name
+                        ? `${member.name} (${member.code})`
+                        : member.code;
+                    hasEditedMemberCodes = true;
+                }
+            });
             joinRequestsSection.style.display = requests.length ? "block" : "none";
             joinRequestsList.innerHTML = requests.length
                 ? requests.map(request => `
@@ -1558,37 +1819,64 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ${request.status === "PENDING" ? `<span class="join-request-actions">
                             <button type="button" class="btn-primary-action accept-join-btn" data-id="${request._id}" data-member-code="${String(request.member_code || "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]))}" data-status="ACCEPTED">Xác nhận</button>
                             <button type="button" class="reject-join-btn" data-id="${request._id}" data-status="REJECTED"><i class="fa-solid fa-xmark"></i> Từ chối</button>
+                        </span>` : request.status === "ACCEPTED" && request.can_remove ? `<span class="join-request-actions">
+                            <button type="button" class="remove-accepted-member-btn" data-id="${request._id}" data-action="remove-member" data-member-code="${escapeHtml(request.member_code)}">
+                                <i class="fa-solid fa-user-minus"></i> Loại khỏi nhóm
+                            </button>
                         </span>` : ""}
                     </div>`).join("")
                 : "";
 
             joinRequestsList.querySelectorAll("button[data-id]").forEach(button => {
                 button.addEventListener("click", async () => {
+                    const isRemovingMember = button.dataset.action === "remove-member";
+                    if (isRemovingMember && !await requestRemoveMemberConfirmation()) return;
+
                     button.disabled = true;
-                    const response = await apiFetch(`${window.APP_CONFIG.API_BASE_URL}/api/topics/join-requests/${encodeURIComponent(user.user_code)}/${button.dataset.id}`, {
-                        method: "PATCH",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ status: button.dataset.status })
-                    });
-                    const result = await response.json();
-                    showMessage(response.ok ? "success" : "error", result.message || "Không thể xử lý yêu cầu!");
-                    if (response.ok && button.dataset.status === "ACCEPTED") {
-                        const memberCode = String(button.dataset.memberCode || "").trim();
-                        if (memberCode) {
-                            if (!extractCode(partnerInput?.value || "")) {
-                                await loadPartnerInfo(partnerInput, memberCode);
-                                hasEditedMemberCodes = true;
-                            } else if (!extractCode(member3Input?.value || "") &&
-                                extractCode(partnerInput?.value || "") !== memberCode) {
-                                await loadPartnerInfo(member3Input, memberCode);
-                                hasEditedMemberCodes = true;
+                    try {
+                        const requestUrl = `${window.APP_CONFIG.API_BASE_URL}/api/topics/join-requests/${encodeURIComponent(user.user_code)}/${button.dataset.id}`;
+                        const response = await apiFetch(
+                            isRemovingMember ? `${requestUrl}/remove` : requestUrl,
+                            {
+                                method: isRemovingMember ? "DELETE" : "PATCH",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`
+                                },
+                                ...(isRemovingMember ? {} : {
+                                    body: JSON.stringify({ status: button.dataset.status })
+                                })
+                            }
+                        );
+                        const result = await response.json();
+                        showMessage(response.ok ? "success" : "error", result.message || "Không thể xử lý yêu cầu!");
+                        if (response.ok && isRemovingMember) {
+                            const removedCode = extractCode(button.dataset.memberCode || "");
+                            [partnerInput, member3Input].forEach(field => {
+                                if (extractCode(field?.value || "") === removedCode) field.value = "";
+                            });
+                            hasEditedMemberCodes = [partnerInput, member3Input]
+                                .some(field => extractCode(field?.value || ""));
+                        }
+                        if (response.ok && button.dataset.status === "ACCEPTED") {
+                            const memberCode = String(button.dataset.memberCode || "").trim();
+                            if (memberCode) {
+                                if (!extractCode(partnerInput?.value || "")) {
+                                    await loadPartnerInfo(partnerInput, memberCode);
+                                    hasEditedMemberCodes = true;
+                                } else if (!extractCode(member3Input?.value || "") &&
+                                    extractCode(partnerInput?.value || "") !== memberCode) {
+                                    await loadPartnerInfo(member3Input, memberCode);
+                                    hasEditedMemberCodes = true;
+                                }
                             }
                         }
+                        await Promise.all([checkTopicStatus(), loadJoinRequests(), loadMarketplace()]);
+                    } catch (error) {
+                        console.error("Lỗi xử lý yêu cầu tham gia nhóm:", error);
+                        showMessage("error", error.message || "Không thể xử lý yêu cầu tham gia nhóm.");
+                        button.disabled = false;
                     }
-                    await Promise.all([checkTopicStatus(), loadJoinRequests(), loadMarketplace()]);
                 });
             });
         } catch (error) {

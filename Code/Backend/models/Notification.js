@@ -12,6 +12,8 @@ const notificationSchema = new mongoose.Schema({
     },
     title: { type: String, required: true },
     content: { type: String, required: true },
+    group_code: { type: String, default: null },
+    sender_code: { type: String, default: null },
     attachment: {
         name: { type: String, default: null },
         url: { type: String, default: null }

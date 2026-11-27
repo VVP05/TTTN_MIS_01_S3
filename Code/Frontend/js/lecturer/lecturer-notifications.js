@@ -271,7 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const titleMatch = (item.title || "").toLowerCase().includes(query);
                 const contentMatch = (item.content || "").toLowerCase().includes(query);
                 const senderMatch = (item.sender_name || "").toLowerCase().includes(query);
-                return titleMatch || contentMatch || senderMatch;
+                const groupMatch = (item.group_code || "").toLowerCase().includes(query);
+                return titleMatch || contentMatch || senderMatch || groupMatch;
             });
         }
 
@@ -379,6 +380,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const fullTime = item.createdAt ? new Date(item.createdAt).toLocaleString("vi-VN") : "";
         const category = getNotificationCategory(item);
         const senderBadge = getSenderBadge(item);
+        const groupName = item.group_code
+            ? (item.group_code.startsWith("Nhóm ") ? item.group_code : `Nhóm ${item.group_code}`)
+            : "";
 
         const card = document.createElement("div");
         card.className = `notif-card-item ${isUnread ? 'unread' : ''}`;
@@ -393,6 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="notif-title-row">
                     ${isUnread ? '<span class="unread-indicator-dot" title="Chưa đọc"></span>' : ''}
                     <h4 class="notif-title">${escapeHtml(item.title || "Thông báo mới")}</h4>
+                    ${groupName ? `<span class="group-code-badge">${escapeHtml(groupName)}</span>` : ""}
                     <span class="source-badge ${senderBadge.cssClass}">${escapeHtml(senderBadge.text)}</span>
                 </div>
                 <p class="notif-preview-text" title="Bấm vào card để xem chi tiết">${escapeHtml(item.content || "")}</p>
@@ -561,11 +566,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const modalSender = document.getElementById("modalSender");
         const modalContent = document.getElementById("modalContent");
         const modalSenderTag = document.getElementById("modalSenderTag");
+        const modalGroupInfo = document.getElementById("modalGroupInfo");
+        const modalGroupName = document.getElementById("modalGroupName");
+        const groupName = item.group_code
+            ? (item.group_code.startsWith("Nhóm ") ? item.group_code : `Nhóm ${item.group_code}`)
+            : "";
 
         if (modalTitle) modalTitle.textContent = item.title || "Thông báo";
         if (modalTime) modalTime.textContent = item.createdAt ? new Date(item.createdAt).toLocaleString("vi-VN") : "Vừa xong";
         if (modalSender) modalSender.textContent = item.sender_name || "Khoa CNTT / Hệ thống";
         if (modalContent) modalContent.textContent = item.content || "";
+        if (modalGroupInfo && modalGroupName) {
+            modalGroupInfo.style.display = groupName ? "flex" : "none";
+            modalGroupName.textContent = groupName.replace(/^Nhóm\s+/i, "");
+        }
 
         if (modalSenderTag) {
             const senderBadge = getSenderBadge(item);
