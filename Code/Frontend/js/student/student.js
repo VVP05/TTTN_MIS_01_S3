@@ -1183,6 +1183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (marketplaceSearch) marketplaceSearch.value = "";
                     if (marketplaceCategory) marketplaceCategory.value = "";
                     renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
                 });
             }
             if (marketplaceMessage) marketplaceMessage.textContent = "";
@@ -1218,6 +1219,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         previousButton.addEventListener("click", () => {
             marketplacePage -= 1;
             renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
         });
 
         const pageStatus = document.createElement("span");
@@ -1232,6 +1234,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         nextButton.addEventListener("click", () => {
             marketplacePage += 1;
             renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
         });
 
         marketplacePagination.append(previousButton, pageStatus, nextButton);
@@ -1276,6 +1279,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (lecturerTopicCount) lecturerTopicCount.textContent = String(marketplaceData.lecturerTopics.length);
             if (groupTopicCount) groupTopicCount.textContent = String(marketplaceData.groupTopics.length);
             renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
         } catch (error) {
             console.error("Lỗi tải sàn đề tài:", error);
             if (marketplaceMessage) marketplaceMessage.textContent =
@@ -1390,6 +1394,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 item.setAttribute("aria-selected", String(isActive));
             });
             renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
         });
     });
     marketplaceSearch?.addEventListener("input", () => {
@@ -1487,9 +1492,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 timingItem = { icon: "fa-clock", text: "Cổng đăng ký đề tài Thực tập Tốt nghiệp đang mở!" };
             }
 
+            const topicCount = marketplaceData?.lecturerTopics?.length || 0;
+            const exploreText = topicCount > 0
+                ? `Khám phá ${topicCount} đề tài gợi ý từ Giảng viên hoặc Tự đề xuất đề tài mới của nhóm.`
+                : "Khám phá các đề tài gợi ý từ Giảng viên hoặc Tự đề xuất đề tài mới của nhóm.";
+
             items = [
                 timingItem,
-                { icon: "fa-lightbulb", text: "Khám phá hơn 24 đề tài gợi ý từ Giảng viên hoặc Tự đề xuất đề tài mới của nhóm." },
+                { icon: "fa-lightbulb", text: exploreText },
                 { icon: "fa-thumbtack", text: "Nếu chưa có Giảng viên hướng dẫn, bạn có thể chọn 'Nhờ Khoa phân công' để Khoa sắp xếp GVHD." },
                 { icon: "fa-users", text: "Tìm thêm đồng đội nhanh chóng bằng cách bấm 'Công khai nhóm' hoặc xin vào các nhóm đang tuyển." }
             ];
@@ -1661,6 +1671,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             </div>
                         `);
                         renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
                         return;
                     }
 
@@ -1730,6 +1741,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
 
                     renderMarketplace();
+            updateStudentTicker(studentRegisteredTopicData?.status || "");
                 } else {
                     resetToUnregisteredState();
                 }
