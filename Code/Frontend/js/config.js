@@ -178,7 +178,10 @@ window.verifyAuthSession = async (expectedRole) => {
     const result = await response.json().catch(() => null);
     if (response.status === 401) {
         window.clearAuthUser(expectedRole);
-        if (!window.location.pathname.endsWith("/auth/index.html")) {
+        const isAuthPage = window.location.pathname.endsWith("/auth/index.html") ||
+            window.location.pathname === "/" ||
+            window.location.pathname === "/login";
+        if (!isAuthPage) {
             window.location.replace(new URL("../auth/index.html", document.baseURI).href);
         }
         return null;
@@ -255,7 +258,9 @@ window.apiFetch = async (input, init = {}) => {
         credentials: "include"
     });
 
-    const isLoginPage = window.location.pathname.endsWith("/auth/index.html");
+    const isLoginPage = window.location.pathname.endsWith("/auth/index.html") ||
+        window.location.pathname === "/" ||
+        window.location.pathname === "/login";
     const isAuthEntry = /\/api\/auth\/(login|forgot-password|logout)$/.test(requestUrl.pathname);
     if (response.status === 401 && !isLoginPage && !isAuthEntry) {
         window.clearAuthUser();

@@ -78,12 +78,13 @@ app.use('/uploads/documents', express.static(path.join(__dirname, 'uploads', 'do
 
 // Phục vụ giao diện Frontend tĩnh từ cùng máy chủ (Chung 1 tên miền)
 const frontendDir = path.join(__dirname, '..', 'Frontend');
-app.use(express.static(frontendDir));
 
-// Chuyển hướng trang chủ / thẳng vào trang đăng nhập
-app.get('/', (req, res) => {
+// Phục vụ trang đăng nhập tại /, /login và /index.html mà không đổi URL trên thanh địa chỉ
+app.get(['/', '/login', '/index.html'], (req, res) => {
 	res.sendFile(path.join(frontendDir, 'html', 'auth', 'index.html'));
 });
+
+app.use(express.static(frontendDir));
 
 // Routes API
 app.use('/api/auth', authRoutes);
