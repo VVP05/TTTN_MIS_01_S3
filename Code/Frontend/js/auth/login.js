@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Điều hướng trang theo Role (STUDENT, LECTURER, ADMIN)
                 setTimeout(() => {
                     if (data.user.must_change_password) {
-                        window.location.href = "../auth/force-change-password.html";
+                        window.location.href = "/force-change-password";
                         return;
                     }
 

@@ -208,9 +208,10 @@ window.verifyAuthSession = async (expectedRole) => {
     }
 
     window.storeAuthUser(user);
-    if (user.must_change_password &&
-        !window.location.pathname.endsWith("/auth/force-change-password.html")) {
-        window.location.replace(new URL("../auth/force-change-password.html", document.baseURI).href);
+    const isForceChangePage = window.location.pathname.endsWith("/auth/force-change-password.html") ||
+        window.location.pathname === "/force-change-password";
+    if (user.must_change_password && !isForceChangePage) {
+        window.location.replace("/force-change-password");
         return null;
     }
 

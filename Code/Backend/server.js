@@ -89,6 +89,16 @@ app.get('/html/auth/index.html', (req, res) => {
 	res.redirect(302, '/login');
 });
 
+// Phục vụ trang đổi mật khẩu bắt buộc tại /force-change-password
+app.get('/force-change-password', (req, res) => {
+	res.sendFile(path.join(frontendDir, 'html', 'auth', 'force-change-password.html'));
+});
+
+// Chuyển hướng đường dẫn đổi mật khẩu cũ sang /force-change-password
+app.get('/html/auth/force-change-password.html', (req, res) => {
+	res.redirect(302, '/force-change-password');
+});
+
 app.use(express.static(frontendDir, {
 	setHeaders: (res, filePath) => {
 		if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
