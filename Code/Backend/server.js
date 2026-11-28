@@ -15,6 +15,7 @@ const helmet = require('helmet');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db.js');
 const { createCorsMiddleware } = require('./config/cors');
+const { registerCleanFrontendRoutes } = require('./config/cleanRoutes');
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
@@ -79,25 +80,8 @@ app.use('/uploads/documents', express.static(path.join(__dirname, 'uploads', 'do
 // Phục vụ giao diện Frontend tĩnh từ cùng máy chủ (Chung 1 tên miền)
 const frontendDir = path.join(__dirname, '..', 'Frontend');
 
-// Phục vụ trang đăng nhập tại /, /login và /index.html mà không đổi URL trên thanh địa chỉ
-app.get(['/', '/login', '/index.html'], (req, res) => {
-	res.sendFile(path.join(frontendDir, 'html', 'auth', 'index.html'));
-});
-
-// Chuyển hướng đường dẫn đăng nhập cũ sang /login cho sạch đẹp
-app.get('/html/auth/index.html', (req, res) => {
-	res.redirect(302, '/login');
-});
-
-// Phục vụ trang đổi mật khẩu bắt buộc tại /force-change-password
-app.get('/force-change-password', (req, res) => {
-	res.sendFile(path.join(frontendDir, 'html', 'auth', 'force-change-password.html'));
-});
-
-// Chuyển hướng đường dẫn đổi mật khẩu cũ sang /force-change-password
-app.get('/html/auth/force-change-password.html', (req, res) => {
-	res.redirect(302, '/force-change-password');
-});
+// Đăng ký toàn bộ Clean URLs & tự động chuyển hướng đường dẫn cũ
+registerCleanFrontendRoutes(app, frontendDir);
 
 app.use(express.static(frontendDir, {
 	setHeaders: (res, filePath) => {

@@ -12,8 +12,9 @@ function getAuthForRole(role) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const pageName = window.location.pathname.split('/').pop().toLowerCase();
-    const isLecturerPage = pageName === 'lecturer-notifications.html';
+    const pathname = window.location.pathname.toLowerCase();
+    const pageName = pathname.split('/').pop();
+    const isLecturerPage = pathname.startsWith('/lecturer') || pageName === 'lecturer-notifications.html';
     const studentAuth = getAuthForRole("STUDENT");
     const lecturerAuth = getAuthForRole("LECTURER");
     const auth = isLecturerPage ? lecturerAuth : studentAuth;

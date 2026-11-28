@@ -197,9 +197,9 @@ window.verifyAuthSession = async (expectedRole) => {
     const user = result.user;
     const role = String(user.role || "").toUpperCase();
     const rolePages = {
-        ADMIN: "../admin/admin-dashboard.html",
-        LECTURER: "../lecturer/lecturer-dashboard.html",
-        STUDENT: "../student/student-dashboard.html"
+        ADMIN: "/admin",
+        LECTURER: "/lecturer",
+        STUDENT: "/student"
     };
     if (!rolePages[role]) {
         window.clearAuthUser();

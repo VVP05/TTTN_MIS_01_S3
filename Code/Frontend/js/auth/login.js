@@ -94,11 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const role = data.user.role;
                     if (role === "STUDENT") {
-                        window.location.href = "../student/student-dashboard.html";
+                        window.location.href = "/student";
                     } else if (role === "LECTURER") {
-                        window.location.href = "../lecturer/lecturer-dashboard.html";
+                        window.location.href = "/lecturer";
                     } else if (role === "ADMIN") {
-                        window.location.href = "../admin/admin-dashboard.html";
+                        window.location.href = "/admin";
                     } else {
                         showError("Quyền truy cập không hợp lệ!");
                         setLoginLoading(false);

@@ -19,8 +19,9 @@
     }
 
     function resolveCurrentUser() {
-        const pageName = window.location.pathname.split("/").pop().toLowerCase();
-        const pageRole = pageName.startsWith("lecturer-") ? "LECTURER" : "STUDENT";
+        const pathname = window.location.pathname.toLowerCase();
+        const pageName = pathname.split("/").pop();
+        const pageRole = (pathname.startsWith("/lecturer") || pageName.startsWith("lecturer-")) ? "LECTURER" : "STUDENT";
         const pageAuth = getAuthForRole(pageRole);
 
         if (pageAuth && pageAuth.user) return pageAuth.user;
