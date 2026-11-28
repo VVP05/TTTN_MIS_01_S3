@@ -1,16 +1,34 @@
 const nodemailer = require('nodemailer');
 
+const parseSender = (fromValue, fallbackEmail) => {
+    const raw = String(fromValue || '').trim().replace(/^["']|["']$/g, '');
+    const match = raw.match(/^(.*?)\s*<([^<>]+)>$/);
+    if (match) {
+        return {
+            name: match[1].trim() || 'Hệ thống Quản lý TTTN',
+            email: match[2].trim()
+        };
+    }
+    if (raw.includes('@')) {
+        return { name: 'Hệ thống Quản lý TTTN', email: raw };
+    }
+    return {
+        name: 'Hệ thống Quản lý TTTN',
+        email: String(fallbackEmail || '').trim()
+    };
+};
+
 const getSettings = () => {
-    const required = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'FRONTEND_RESET_URL'];
-    const missing = required.filter(name => !String(process.env[name] || '').trim());
-    if (missing.length) {
-        throw new Error(`Thiếu cấu hình email: ${missing.join(', ')}.`);
+    const brevoApiKey = String(process.env.BREVO_API_KEY || '').trim();
+    const hasSmtpConfig = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM']
+        .every(name => Boolean(String(process.env[name] || '').trim()));
+
+    if (!brevoApiKey && !hasSmtpConfig) {
+        throw new Error('Thiếu cấu hình email: cần BREVO_API_KEY hoặc bộ cấu hình SMTP.');
     }
 
-    // Mặc định dùng port 465 (SSL) để tương thích với các cloud hosting chặn port 587
-    const port = Number(process.env.SMTP_PORT || 465);
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
-        throw new Error('SMTP_PORT không hợp lệ.');
+    if (!String(process.env.FRONTEND_RESET_URL || '').trim()) {
+        throw new Error('Thiếu cấu hình email: FRONTEND_RESET_URL.');
     }
 
     let resetPageUrl;
@@ -24,10 +42,27 @@ const getSettings = () => {
         throw new Error('FRONTEND_RESET_URL phải dùng HTTPS trong môi trường production.');
     }
 
+    const sender = parseSender(
+        process.env.SMTP_FROM,
+        process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || 'vovanphung20112005@gmail.com'
+    );
+    if (!sender.email) {
+        throw new Error('Thiếu email người gửi (SMTP_FROM hoặc BREVO_SENDER_EMAIL).');
+    }
+
+    if (brevoApiKey) {
+        return { mode: 'brevo', apiKey: brevoApiKey, sender, resetPageUrl };
+    }
+
+    const port = Number(process.env.SMTP_PORT || 465);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error('SMTP_PORT không hợp lệ.');
+    }
+
     return {
+        mode: 'smtp',
         host: process.env.SMTP_HOST.trim(),
         port,
-        // port 465 dùng SSL, port 587 dùng STARTTLS
         secure: port === 465 ? true : (String(process.env.SMTP_SECURE || '').toLowerCase() === 'true'),
         auth: {
             user: process.env.SMTP_USER.trim(),
@@ -133,6 +168,35 @@ const sendPasswordResetEmail = async ({ to, token, userName, userCode }) => {
     const resetUrl = new URL(settings.resetPageUrl);
     resetUrl.searchParams.set('token', token);
 
+    const subject = 'Đặt lại mật khẩu tài khoản - Hệ thống Quản lý TTTN';
+    const textContent = `Xin chào ${userName || 'bạn'},\n\nBạn vừa gửi yêu cầu đặt lại mật khẩu cho tài khoản ${userCode ? `(${userCode})` : ''}.\nVui lòng truy cập liên kết sau để đặt lại mật khẩu. Liên kết chỉ dùng 1 lần và có hiệu lực trong 15 phút:\n${resetUrl.toString()}\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này.`;
+    const htmlContent = buildEmailHtml({ resetUrl, userName, userCode });
+
+    if (settings.mode === 'brevo') {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'api-key': settings.apiKey
+            },
+            body: JSON.stringify({
+                sender: settings.sender,
+                to: [{ email: to, name: userName || to }],
+                subject,
+                textContent,
+                htmlContent
+            }),
+            signal: AbortSignal.timeout(15000)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Brevo gửi email thất bại (${response.status}): ${errorData.message || response.statusText}`);
+        }
+        return;
+    }
+
     const transporter = nodemailer.createTransport({
         host: settings.host,
         port: settings.port,
@@ -144,9 +208,9 @@ const sendPasswordResetEmail = async ({ to, token, userName, userCode }) => {
         await transporter.sendMail({
             from: settings.from,
             to,
-            subject: 'Đặt lại mật khẩu tài khoản - Hệ thống Quản lý TTTN',
-            text: `Xin chào ${userName || 'bạn'},\n\nBạn vừa gửi yêu cầu đặt lại mật khẩu cho tài khoản ${userCode ? `(${userCode})` : ''}.\nVui lòng truy cập liên kết sau để đặt lại mật khẩu. Liên kết chỉ dùng 1 lần và có hiệu lực trong 15 phút:\n${resetUrl.toString()}\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này.`,
-            html: buildEmailHtml({ resetUrl, userName, userCode })
+            subject,
+            text: textContent,
+            html: htmlContent
         });
     } finally {
         transporter.close();
