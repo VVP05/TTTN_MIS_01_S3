@@ -7,7 +7,8 @@ const getSettings = () => {
         throw new Error(`Thiếu cấu hình email: ${missing.join(', ')}.`);
     }
 
-    const port = Number(process.env.SMTP_PORT || 587);
+    // Mặc định dùng port 465 (SSL) để tương thích với các cloud hosting chặn port 587
+    const port = Number(process.env.SMTP_PORT || 465);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new Error('SMTP_PORT không hợp lệ.');
     }
@@ -26,7 +27,8 @@ const getSettings = () => {
     return {
         host: process.env.SMTP_HOST.trim(),
         port,
-        secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true',
+        // port 465 dùng SSL, port 587 dùng STARTTLS
+        secure: port === 465 ? true : (String(process.env.SMTP_SECURE || '').toLowerCase() === 'true'),
         auth: {
             user: process.env.SMTP_USER.trim(),
             pass: process.env.SMTP_PASS
