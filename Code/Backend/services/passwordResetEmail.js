@@ -109,7 +109,7 @@ function buildEmailHtml({ resetUrl, userName, userCode }) {
             <td style="padding: 32px 30px 24px;">
                 <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: #0F172A;">Yêu cầu đặt lại mật khẩu</h2>
                 <p style="margin: 0 0 14px; font-size: 14.5px; color: #334155; line-height: 1.6;">
-                    Xin chào <strong>${greetingName}</strong>${codeTag},
+                    Hi <strong>${greetingName}</strong>${codeTag},
                 </p>
                 <p style="margin: 0 0 24px; font-size: 14px; color: #475569; line-height: 1.6;">
                     Hệ thống nhận được yêu cầu khôi phục mật khẩu cho tài khoản của bạn. Vui lòng nhấn vào nút bên dưới để tiến hành thiết lập mật khẩu mới:
@@ -129,14 +129,6 @@ function buildEmailHtml({ resetUrl, userName, userCode }) {
                     </p>
                 </div>
 
-                <!-- Backup Link -->
-                <p style="margin: 20px 0 0; font-size: 12.5px; color: #64748B; line-height: 1.5;">
-                    Nếu nút bấm trên không hoạt động, bạn có thể sao chép liên kết dưới đây và dán vào thanh địa chỉ của trình duyệt:
-                </p>
-                <p style="margin: 6px 0 0; word-break: break-all; font-size: 12px;">
-                    <a href="${safeUrl}" style="color: #2563EB; text-decoration: underline;">${safeUrl}</a>
-                </p>
-
                 <!-- Security Alert Box -->
                 <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 14px 16px; margin-top: 26px;">
                     <p style="margin: 0; font-size: 12.5px; color: #991B1B; line-height: 1.5;">
@@ -148,12 +140,9 @@ function buildEmailHtml({ resetUrl, userName, userCode }) {
 
         <!-- Footer -->
         <tr>
-            <td style="padding: 20px 30px 28px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
-                <p style="margin: 0 0 6px; font-size: 12px; color: #94A3B8;">
+            <td style="padding: 20px 30px 24px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+                <p style="margin: 0; font-size: 12px; color: #94A3B8;">
                     Đây là email tự động từ Hệ thống Quản lý Thực tập Tốt nghiệp. Vui lòng không phản hồi thư này.
-                </p>
-                <p style="margin: 0; font-size: 12px; color: #64748B; font-weight: 500;">
-                    © 2026 Khoa Công Nghệ Thông Tin. All rights reserved.
                 </p>
             </td>
         </tr>
