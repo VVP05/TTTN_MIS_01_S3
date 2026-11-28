@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         event.preventDefault();
         if (passwordUpdated) {
             await window.logoutSession();
-            window.location.replace("/login");
+            window.location.replace(window.resolveAppRoute("/login", "index.html"));
             return;
         }
 

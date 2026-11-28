@@ -7,6 +7,15 @@ const apiBaseUrl = customApiUrl || (
 );
 window.APP_CONFIG = Object.freeze({ API_BASE_URL: apiBaseUrl });
 
+window.resolveAppRoute = (cleanPath, legacyRelativePath) => {
+    const isStaticLiveServer = localHosts.has(window.location.hostname) &&
+        window.location.port !== "" &&
+        window.location.port !== "5000";
+    return isStaticLiveServer
+        ? new URL(legacyRelativePath, document.baseURI).href
+        : cleanPath;
+};
+
 const authStorageKeys = ["studentAuth", "lecturerAuth", "adminAuth"];
 const authSessionIdKey = "authSessionId";
 const authLastActivityKey = "authLastActivityAt";
@@ -197,9 +206,9 @@ window.verifyAuthSession = async (expectedRole) => {
     const user = result.user;
     const role = String(user.role || "").toUpperCase();
     const rolePages = {
-        ADMIN: "/admin",
-        LECTURER: "/lecturer",
-        STUDENT: "/student"
+        ADMIN: window.resolveAppRoute("/admin", "../admin/admin-dashboard.html"),
+        LECTURER: window.resolveAppRoute("/lecturer", "../lecturer/lecturer-dashboard.html"),
+        STUDENT: window.resolveAppRoute("/student", "../student/student-dashboard.html")
     };
     if (!rolePages[role]) {
         window.clearAuthUser();
@@ -211,7 +220,7 @@ window.verifyAuthSession = async (expectedRole) => {
     const isForceChangePage = window.location.pathname.endsWith("/auth/force-change-password.html") ||
         window.location.pathname === "/force-change-password";
     if (user.must_change_password && !isForceChangePage) {
-        window.location.replace("/force-change-password");
+        window.location.replace(window.resolveAppRoute("/force-change-password", "../auth/force-change-password.html"));
         return null;
     }
 

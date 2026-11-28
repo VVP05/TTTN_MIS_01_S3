@@ -88,17 +88,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Điều hướng trang theo Role (STUDENT, LECTURER, ADMIN)
                 setTimeout(() => {
                     if (data.user.must_change_password) {
-                        window.location.href = "/force-change-password";
+                        window.location.href = window.resolveAppRoute("/force-change-password", "../auth/force-change-password.html");
                         return;
                     }
 
                     const role = data.user.role;
                     if (role === "STUDENT") {
-                        window.location.href = "/student";
+                        window.location.href = window.resolveAppRoute("/student", "../student/student-dashboard.html");
                     } else if (role === "LECTURER") {
-                        window.location.href = "/lecturer";
+                        window.location.href = window.resolveAppRoute("/lecturer", "../lecturer/lecturer-dashboard.html");
                     } else if (role === "ADMIN") {
-                        window.location.href = "/admin";
+                        window.location.href = window.resolveAppRoute("/admin", "../admin/admin-dashboard.html");
                     } else {
                         showError("Quyền truy cập không hợp lệ!");
                         setLoginLoading(false);
