@@ -248,12 +248,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             currentRegistrationStatusData = data;
             registrationWindowOpen = data.is_open === true;
 
-            // Thống nhất cách viết Học kỳ & đồng bộ tên học kỳ (ví dụ "Học kỳ 2026-2028")
-            if (data.semester?.name) {
-                const semesterText = document.getElementById("heroSemesterText");
-                if (semesterText) {
+            // Thống nhất cách viết Học kỳ & đồng bộ tên học kỳ từ CSDL
+            const semesterText = document.getElementById("heroSemesterText");
+            if (semesterText) {
+                if (data.semester?.name) {
                     let semName = String(data.semester.name).replace(/Học kì/g, "Học kỳ");
                     semesterText.textContent = semName;
+                } else {
+                    semesterText.textContent = "Chưa có học kỳ";
                 }
             }
 
