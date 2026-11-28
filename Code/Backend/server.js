@@ -84,6 +84,11 @@ app.get(['/', '/login', '/index.html'], (req, res) => {
 	res.sendFile(path.join(frontendDir, 'html', 'auth', 'index.html'));
 });
 
+// Chuyển hướng đường dẫn đăng nhập cũ sang /login cho sạch đẹp
+app.get('/html/auth/index.html', (req, res) => {
+	res.redirect(302, '/login');
+});
+
 app.use(express.static(frontendDir, {
 	setHeaders: (res, filePath) => {
 		if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
