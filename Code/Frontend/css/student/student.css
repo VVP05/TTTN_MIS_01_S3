@@ -1875,5 +1875,13 @@ body {
     .marketplace-heading { flex-direction: column; align-items: flex-start; }
     .marketplace-heading-actions { flex-direction: column; width: 100%; }
     .marketplace-own-topic, .marketplace-recruitment-toggle { width: 100%; justify-content: center; }
-    .user-name { display: none; }
+    .user-name {
+        display: inline-block !important;
+        font-size: 13px;
+        font-weight: 600;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
