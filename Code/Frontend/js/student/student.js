@@ -1126,15 +1126,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                 detailBtn.innerHTML = `<i class="fa-regular fa-eye"></i> Xem chi tiết`;
                 detailBtn.addEventListener("click", () => showTopicDetailModal(topic));
                 footer.append(statusEl, detailBtn);
-            } else if (!registrationWindowOpen) {
-                actionBtn.textContent = "Ngoài hạn";
-                actionBtn.disabled = true;
-                footer.append(statusEl, actionBtn);
             } else {
-                // Khi chưa có đăng ký: nút "Đăng ký" primary
-                actionBtn.textContent = "Đăng ký";
-                actionBtn.addEventListener("click", () => chooseLecturerTopic(topic));
-                footer.append(statusEl, actionBtn);
+                // Khi chưa đăng ký: luôn có nút Xem chi tiết (icon mắt) cạnh nút Đăng ký / Ngoài hạn
+                const actionsWrap = document.createElement("div");
+                actionsWrap.className = "marketplace-card-actions";
+
+                const detailIconBtn = document.createElement("button");
+                detailIconBtn.type = "button";
+                detailIconBtn.className = "btn-view-detail btn-view-detail-icon";
+                detailIconBtn.title = "Xem chi tiết đề tài";
+                detailIconBtn.setAttribute("aria-label", "Xem chi tiết đề tài");
+                detailIconBtn.innerHTML = `<i class="fa-regular fa-eye"></i>`;
+                detailIconBtn.addEventListener("click", () => showTopicDetailModal(topic));
+
+                if (!registrationWindowOpen) {
+                    actionBtn.textContent = "Ngoài hạn";
+                    actionBtn.disabled = true;
+                } else {
+                    actionBtn.textContent = "Đăng ký";
+                    actionBtn.addEventListener("click", () => chooseLecturerTopic(topic));
+                }
+
+                actionsWrap.append(detailIconBtn, actionBtn);
+                footer.append(statusEl, actionsWrap);
             }
         }
 
