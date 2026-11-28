@@ -44,7 +44,7 @@ const getSettings = () => {
 
     const sender = parseSender(
         process.env.SMTP_FROM,
-        process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || 'vovanphung20112005@gmail.com'
+        process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER
     );
     if (!sender.email) {
         throw new Error('Thiếu email người gửi (SMTP_FROM hoặc BREVO_SENDER_EMAIL).');

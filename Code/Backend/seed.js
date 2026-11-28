@@ -58,9 +58,17 @@ const seedData = async () => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(adminPassword, salt);
 
+        const adminEmail = String(process.env.ADMIN_DEFAULT_EMAIL || process.env.SMTP_USER || '').trim();
+
         // Chỉ tạo tài khoản Admin duy nhất — GV & SV sẽ được Admin import từ file Excel sau khi deploy
         const users = [
-            { user_code: 'ADMIN01', password: hashedPassword, full_name: 'Quản Trị Viên', role: 'ADMIN', email: 'vovanphung20112005@gmail.com' },
+            {
+                user_code: 'ADMIN01',
+                password: hashedPassword,
+                full_name: 'Quản Trị Viên',
+                role: 'ADMIN',
+                ...(adminEmail ? { email: adminEmail } : {})
+            },
         ];
 
         await User.insertMany(users.map(user => ({ ...user, must_change_password: true })));
