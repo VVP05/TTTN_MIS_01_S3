@@ -85,8 +85,7 @@ exports.getAdminDashboardStats = async (req, res) => {
         const rejectedStatusRegex = /^(rejected|tu_choi|từ chối|3)$/i;
         const revisionStatusRegex = /^(need_revision|revision|yeu_cau_sua|yêu cầu sửa|2)$/i;
 
-        // 1. Thống kê KPI cơ bản
-        const includeGlobalPool = !registrationRange;
+        // 1. Thống kê KPI cơ bản (chỉ tính các đề tài thực tế nhóm sinh viên đã đăng ký)
         const [
             totalStudents,
             totalLecturers,
@@ -95,10 +94,7 @@ exports.getAdminDashboardStats = async (req, res) => {
             pendingTopicsFromTopic,
             rejectedTopicsFromTopic,
             needRevisionTopicsFromTopic,
-            approvedTopicsFromPool,
-            rejectedTopicsFromPool,
-            allTopics,
-            allPoolTopics
+            allTopics
         ] = await Promise.all([
             User.countDocuments({ role: 'STUDENT' }),
             User.countDocuments({ role: 'LECTURER' }),
@@ -107,30 +103,19 @@ exports.getAdminDashboardStats = async (req, res) => {
             Topic.countDocuments({ ...topicFilter, status: { $regex: pendingStatusRegex } }),
             Topic.countDocuments({ ...topicFilter, status: { $regex: rejectedStatusRegex } }),
             Topic.countDocuments({ ...topicFilter, status: { $regex: revisionStatusRegex } }),
-            includeGlobalPool ? LecturerTopic.countDocuments({
-                $or: [
-                    { status: { $regex: approvedStatusRegex } },
-                    { status: 'PENDING' }
-                ]
-            }) : 0,
-            includeGlobalPool ? LecturerTopic.countDocuments({ status: { $regex: rejectedStatusRegex } }) : 0,
-            Topic.find(topicFilter).lean(),
-            includeGlobalPool ? LecturerTopic.find({}).lean() : []
+            Topic.find(topicFilter).lean()
         ]);
 
         const totalPendingFromTopic = allTopics.filter(item => matchesStatus(item.status, [pendingStatusRegex, 'pending', 'chờ duyệt', 'cho duyet', 'cho_duyet', 'chờ phe duyet', 'cho phe duyet'])).length;
         const totalApprovedFromTopic = allTopics.filter(item => matchesStatus(item.status, [approvedStatusRegex, 'approved', 'registered', 'da phe duyet', 'đã phê duyệt', 'đã duyệt'])).length;
-        const totalApprovedFromPool = allPoolTopics.filter(item =>
-            matchesStatus(item.status, [approvedStatusRegex, 'approved', 'registered', 'da phe duyet', 'đã phê duyệt', 'đã duyệt']) || item.status === 'PENDING'
-        ).length;
         const approvedTopicsBySource = source => allTopics.filter(item =>
             String(item.source || 'STUDENT').trim().toUpperCase() === source &&
             matchesStatus(item.status, [approvedStatusRegex])
         ).length;
 
-        const approvedTopics = totalApprovedFromTopic + totalApprovedFromPool;
+        const approvedTopics = totalApprovedFromTopic;
         const pendingTopics = totalPendingFromTopic;
-        const rejectedTopics = rejectedTopicsFromTopic + rejectedTopicsFromPool;
+        const rejectedTopics = rejectedTopicsFromTopic;
         const needRevisionTopics = needRevisionTopicsFromTopic;
 
         // Đề tài đang thực hiện = Đã duyệt
